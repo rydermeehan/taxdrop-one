@@ -827,6 +827,32 @@
     throw lastErr;
   }
 
+  // The engine has known duplicate rows where a prior-year record and the
+  // current-year record share an address. ZIP-less queries resolve to the
+  // stale row; ZIP-included queries resolve to the canonical current row.
+  // Force ZIP on every lookup and refuse to render anything older than
+  // CURRENT_TAX_YEAR. (2026-06-22 — Mike: "why did this use 2025 data?")
+  const CURRENT_TAX_YEAR = 2026;
+  async function ensureAddressZip(addr) {
+    const raw = String(addr || '').trim();
+    if (!raw) return raw;
+    if (/\b\d{5}(-\d{4})?\b/.test(raw)) return raw;
+    const ready = await _waitForGoogleMaps(3000);
+    if (!ready) return raw;
+    return new Promise(resolve => {
+      new google.maps.Geocoder().geocode(
+        { address: raw, componentRestrictions: { country: 'us' } },
+        (results, status) => {
+          if (status === 'OK' && results && results[0] && results[0].formatted_address) {
+            resolve(results[0].formatted_address);
+          } else {
+            resolve(raw);
+          }
+        }
+      );
+    });
+  }
+
   // ────────── Search + fetch ──────────
   async function submitSearch() {
     const addr = ($('addr-input').value || '').trim();
@@ -842,13 +868,15 @@
 
     showState('loading');
     try {
+      // Force the ZIP into the lookup so we don't hit the stale dupe.
+      const lookupAddress = await ensureAddressZip(addr);
       // Route through the same-origin CAD proxy: it injects the API key
       // server-side, so the page works with zero setup and sidesteps browser
       // cross-origin blocking (extensions, privacy shields, network filters).
       const resp = await fetchWithRetry('/api/cad-proxy?path=/api/evidence-pack/lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: addr }),
+        body: JSON.stringify({ address: lookupAddress }),
       }, { attempts: 2, timeoutMs: 30000 });
 
       if (!resp.ok) {
@@ -874,6 +902,18 @@
       }
 
       const data = await resp.json();
+      // Reject stale-year records. With the ZIP forced above, the canonical
+      // current-year row should always be returned — if we got an older
+      // row, it's the duplicate-dupe bug, not "no current data yet".
+      const ty = Number(data && data.subject && data.subject.tax_year);
+      if (ty && ty < CURRENT_TAX_YEAR) {
+        $('error-detail').innerHTML =
+          '<p><b>Engine returned stale ' + ty + ' data for this property.</b></p>' +
+          '<p>We have ' + CURRENT_TAX_YEAR + ' data on file. This is a known stale-record ' +
+          'issue (duplicate row in the engine). Please report this address so we can dedupe it.</p>';
+        showState('error');
+        return;
+      }
       renderReport(data);
       showState('report');
     } catch (e) {

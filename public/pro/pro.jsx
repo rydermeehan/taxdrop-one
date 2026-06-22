@@ -12,6 +12,34 @@ const { useState, useRef, useCallback, useEffect } = React;
 
 const TAX_RATE = 2.2; // % effective; used only for the est-savings line
 const TOKEN_PCT = 0.03; // 3% token settlement when nothing beats the notice
+// Engine has a known stale-record bug: certain address normalizations
+// (e.g. "5749 La Vista Ct, Dallas, TX" with no ZIP) resolve to a duplicate
+// prior-year row while the same address WITH ZIP resolves to the canonical
+// current-year row. We force the ZIP on every lookup and refuse to render
+// pre-CURRENT_TAX_YEAR data. (2026-06-22 — Mike: "why did this use 2025?")
+const CURRENT_TAX_YEAR = 2026;
+
+// Resolve an address to "Street, City, State ZIP" via the Google Maps
+// geocoder before sending it to the engine. Returns the input unchanged
+// if it already has a ZIP or if the geocoder isn't loaded yet.
+function ensureAddressZip(addr) {
+  return new Promise((resolve) => {
+    const raw = String(addr || "").trim();
+    if (!raw) return resolve(raw);
+    if (/\b\d{5}(-\d{4})?\b/.test(raw)) return resolve(raw);
+    if (!(window.google && window.google.maps && window.google.maps.Geocoder)) {
+      return resolve(raw);
+    }
+    const gc = new window.google.maps.Geocoder();
+    gc.geocode({ address: raw, componentRestrictions: { country: "us" } }, (results, status) => {
+      if (status === "OK" && results && results[0] && results[0].formatted_address) {
+        resolve(results[0].formatted_address);
+      } else {
+        resolve(raw);
+      }
+    });
+  });
+}
 
 const fmt = (n) => (n == null || isNaN(n) ? "—" : "$" + Math.round(n).toLocaleString("en-US"));
 const signed = (n) => (n < 0 ? "−" : "+") + "$" + Math.abs(Math.round(n)).toLocaleString("en-US");
@@ -549,19 +577,42 @@ function App() {
       } catch (e) { /* CAD parse failed — fall through with cad=null */ }
       setStep(1);
 
-      // 2) our comps from the engine (same-origin proxy injects the key)
+      // 2) our comps from the engine (same-origin proxy injects the key).
+      // Force ZIP into the address before lookup — see ensureAddressZip
+      // for the duplicate-record bug this defends against.
       let our = null;
+      let staleYearError = null;
       try {
+        const lookupAddress = await ensureAddressZip(address.trim());
         const resp = await fetch("/api/cad-proxy?path=/api/evidence-pack/lookup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address: address.trim() }),
+          body: JSON.stringify({ address: lookupAddress }),
         });
         if (resp.ok) {
           const data = await resp.json();
-          if (data && data.subject) our = data;
+          if (data && data.subject) {
+            const ty = Number(data.subject.tax_year);
+            if (ty && ty < CURRENT_TAX_YEAR) {
+              // The engine returned a prior-year duplicate row. We have
+              // CURRENT_TAX_YEAR data for Dallas (and every Texas county
+              // we ingest), so this is the stale-dupe, not "no data yet".
+              staleYearError = ty;
+            } else {
+              our = data;
+            }
+          }
         }
       } catch (e) { /* our lookup failed — fall through with our=null */ }
+      if (staleYearError) {
+        setError(
+          "The engine returned " + staleYearError + " data for this property, but " +
+          CURRENT_TAX_YEAR + " data is on file. This is a known stale-record issue " +
+          "on the engine (duplicate row). Please report this address so we can dedupe."
+        );
+        setStatus("error");
+        return;
+      }
       setStep(2);
 
       if (!cad && !our) {
