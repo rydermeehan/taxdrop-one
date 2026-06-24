@@ -487,7 +487,6 @@ function Header() {
         <img src={LOGO} alt="TaxDrop" style={{ height: narrow ? 26 : 30, width: "auto", display: "block" }} />
         <div style={{ width: 1, height: 18, background: "#dde4dd" }}></div>
         <span style={{ fontWeight: 600, fontSize: 15, color: "#41524799" }}>One</span>
-        {narrow ? null : <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".08em", color: "#2c8350", background: "#eef3ee", border: "1px solid #d8e4db", borderRadius: 6, padding: "2px 7px" }}>V2 PREVIEW</span>}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: narrow ? 10 : 18 }}>
         {narrow ? null : <span style={{ fontSize: 13, color: "#8a988f", fontWeight: 500, letterSpacing: ".01em" }}>Tax Year {CURRENT_TAX_YEAR}</span>}

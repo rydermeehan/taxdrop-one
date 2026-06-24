@@ -61,13 +61,15 @@ export default function middleware(req: Request) {
     return next();
   }
 
-  // Root → /pro/index.html
+  // Root → /v2/index.html. The v2 Strategy Recommender is now the live One
+  // experience; the legacy /pro tree stays reachable at /pro for rollback.
+  // (2026-06-24 — promote v2 to one.taxdrop.com root.)
   if (path === '/' || path === '/index.html') {
-    url.pathname = '/pro/index.html';
+    url.pathname = '/v2/index.html';
     return rewrite(url);
   }
 
-  // Other paths → /pro/<path>
+  // Other paths → /pro/<path> (legacy assets/sub-paths)
   url.pathname = '/pro' + path;
   return rewrite(url);
 }
