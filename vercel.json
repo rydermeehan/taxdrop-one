@@ -5,6 +5,8 @@
     { "source": "/evidence-analyzer", "destination": "/evidence-analyzer/index.html" },
     { "source": "/pro", "destination": "/pro/index.html" },
     { "source": "/pro/(.*)", "destination": "/pro/$1" },
+    { "source": "/v2", "destination": "/v2/index.html" },
+    { "source": "/v2/(.*)", "destination": "/v2/$1" },
     { "source": "/", "destination": "/pro/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]

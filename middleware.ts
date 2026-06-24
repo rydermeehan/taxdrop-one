@@ -31,8 +31,11 @@ export default function middleware(req: Request) {
   const path = url.pathname;
 
   // API + /pro pass through unchanged (resolve from filesystem normally).
+  // /v2 is the Strategy Recommender design preview — it lives at its own path
+  // and must not be rewritten under /pro. (2026-06-23)
   if (path.startsWith('/api/') || path === '/api' ||
-      path.startsWith('/pro/') || path === '/pro') {
+      path.startsWith('/pro/') || path === '/pro' ||
+      path.startsWith('/v2/') || path === '/v2') {
     return next();
   }
 
