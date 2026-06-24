@@ -436,8 +436,11 @@ function useNarrow(bp) {
   return narrow;
 }
 
-// Smooth-scroll the header pill to the Refer-a-friend block. The block now
-// renders on BOTH the intake and results pages, so #refer always resolves.
+// ⚠️ REFERRAL PAUSED 2026-06-24 — scrollToRefer + ReferBlock are intentionally
+// KEPT (currently unused) so the referral can be brought back with the same
+// design. To re-enable: restore the header pill <a> in Header() and the two
+// <ReferBlock /> renders (intake footer + end of Result). Do not delete.
+// Smooth-scroll the header pill to the Refer-a-friend block.
 function scrollToRefer(e) {
   if (e) e.preventDefault();
   const el = document.getElementById("refer");
@@ -489,8 +492,11 @@ function Header() {
         <span style={{ fontWeight: 600, fontSize: 15, color: "#41524799" }}>One</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: narrow ? 10 : 18 }}>
-        {narrow ? null : <span style={{ fontSize: 13, color: "#8a988f", fontWeight: 500, letterSpacing: ".01em" }}>Tax Year {CURRENT_TAX_YEAR}</span>}
+        <span style={{ fontSize: 13, color: "#8a988f", fontWeight: 500, letterSpacing: ".01em" }}>Tax Year {CURRENT_TAX_YEAR}</span>
+        {/* Refer-a-friend pill removed 2026-06-24 (referral paused). Re-enable
+            by restoring this <a> + the <ReferBlock/> renders below:
         <a href="#refer" onClick={scrollToRefer} style={{ display: "inline-flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", textDecoration: "none", background: "#eef3ee", border: "1px solid #d8e4db", borderRadius: 30, padding: narrow ? "7px 13px" : "7px 15px", fontSize: 13, fontWeight: 700, color: "#1d6b41", cursor: "pointer" }}><span>🎁</span>{narrow ? "$15 off" : "Refer a friend — $15 off"}</a>
+        */}
       </div>
     </header>
   );
@@ -812,14 +818,9 @@ function App() {
 
         {status === "done" && result ? <Result r={result} onReset={reset} address={result.address || address} cadRaw={cadRaw} cadMethod={cadMethod} /> : null}
 
-        {/* Refer-a-friend also lives on the intake page so the header pill
-            always has a target to scroll to. On the results page the same
-            block is rendered inside <Result>, so it never doubles up. */}
+        {/* Refer-a-friend paused 2026-06-24 — ReferBlock kept for later. */}
         {showForm ? (
-          <div style={{ marginTop: 8 }}>
-            <ReferBlock />
-            <p style={{ textAlign: "center", fontSize: 12.5, color: "#a4b0a7", lineHeight: 1.55, maxWidth: 620, margin: "0 auto" }}>Evidence is read in your browser for this session only. This analysis supports a Texas §41.43 protest filing — it isn't a USPAP appraisal, legal, or tax advice.</p>
-          </div>
+          <p style={{ textAlign: "center", fontSize: 12.5, color: "#a4b0a7", lineHeight: 1.55, maxWidth: 620, margin: "0 auto" }}>Evidence is read in your browser for this session only. This analysis supports a Texas §41.43 protest filing — it isn't a USPAP appraisal, legal, or tax advice.</p>
         ) : null}
       </main>
     </div>
@@ -983,7 +984,7 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
   );
 
   return (
-    <section style={{ paddingTop: 8, animation: "fadeUp .5s ease both" }}>
+    <section style={{ paddingTop: narrow ? 28 : 52, animation: "fadeUp .5s ease both" }}>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
@@ -1247,8 +1248,8 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
         <p style={{ margin: "16px 0 0", fontSize: 12.5, color: "#9aa69d", lineHeight: 1.5 }}>PDF opens your browser's print dialog (save as PDF). DOCX downloads directly. Both pull live engine data — no re-uploading the county PDF.</p>
       </section>
 
-      {/* REFER A FRIEND */}
-      <ReferBlock />
+      {/* REFER A FRIEND — paused 2026-06-24. Component kept (ReferBlock) so the
+          design can be brought back by re-adding <ReferBlock /> here. */}
 
       <p style={{ textAlign: "center", fontSize: 12.5, color: "#a4b0a7", lineHeight: 1.55, maxWidth: 620, margin: "0 auto" }}>Evidence is read in your browser for this session only. This analysis supports a {j.statuteShort || "Texas §41.43"} protest filing — it isn't a USPAP appraisal, legal, or tax advice.</p>
     </section>
