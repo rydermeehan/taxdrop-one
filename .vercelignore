@@ -1,0 +1,7 @@
+# Prevent Vercel CLI from walking up to the workspace root and trying to
+# upload massive CAD data files (the workspace has a 2.18 GB clearcapital
+# CSV at the parent dir). These globs apply relative to the project root.
+screenshots/
+*.csv
+*.zip
+*.rar
