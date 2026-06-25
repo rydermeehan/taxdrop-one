@@ -15,8 +15,10 @@ const TOKEN_PCT = 0.03; // 3% token settlement when nothing beats the notice
 // Engine has a known stale-record bug: certain address normalizations
 // (e.g. "5749 La Vista Ct, Dallas, TX" with no ZIP) resolve to a duplicate
 // prior-year row while the same address WITH ZIP resolves to the canonical
-// current-year row. We force the ZIP on every lookup and refuse to render
-// pre-CURRENT_TAX_YEAR data. (2026-06-22 — Mike: "why did this use 2025?")
+// current-year row. We force the ZIP on every lookup and drop (never lead
+// with) any pre-CURRENT_TAX_YEAR row the engine returns, degrading to the
+// uploaded CAD packet instead of blocking. (2026-06-22 — Mike: "why did this
+// use 2025?"; 2026-06-24 — stop dead-ending when only an old row exists.)
 const CURRENT_TAX_YEAR = 2026;
 
 // Resolve an address to "Street, City, State ZIP" via the Google Maps
@@ -559,10 +561,13 @@ function App() {
     }
   };
 
-  const canAnalyze = !!address.trim() && files.length > 0 && status !== "analyzing";
+  // CAD packet is optional — an address alone runs on the engine's own comps.
+  // (When the engine has no comps for the county, the result falls to the
+  // "fairly assessed" path rather than blocking.)
+  const canAnalyze = !!address.trim() && status !== "analyzing";
 
   const analyze = useCallback(async () => {
-    if (!address.trim() || !files.length) return;
+    if (!address.trim()) return;
     setStatus("analyzing"); setStep(0); setError("");
     try {
       // 1) CAD evidence from the uploaded files (any mix of PDF, Excel, CSV)
@@ -581,7 +586,8 @@ function App() {
       // Force ZIP into the address before lookup — see ensureAddressZip
       // for the duplicate-record bug this defends against.
       let our = null;
-      let staleYearError = null;
+      let staleYear = null;   // DB-path prior-year row we refuse to lead with
+      let thinData = false;   // engine found the parcel but data is too sparse
       try {
         const lookupAddress = await ensureAddressZip(address.trim());
         const resp = await fetch("/api/cad-proxy?path=/api/evidence-pack/lookup", {
@@ -593,30 +599,43 @@ function App() {
           const data = await resp.json();
           if (data && data.subject) {
             const ty = Number(data.subject.tax_year);
-            if (ty && ty < CURRENT_TAX_YEAR) {
-              // The engine returned a prior-year duplicate row. We have
-              // CURRENT_TAX_YEAR data for Dallas (and every Texas county
-              // we ingest), so this is the stale-dupe, not "no data yet".
-              staleYearError = ty;
+            const isAttom = data.data_source === "ATTOM";
+            const subjVal = Number(data.subject.total_market) || 0;
+            const subjSqft = Number(data.subject.living_sqft) || 0;
+            if (!isAttom && ty && ty < CURRENT_TAX_YEAR) {
+              // DB-path prior-year row: a stale/duplicate record while a newer
+              // one exists (the 5749 La Vista Ct, Dallas case). We never LEAD
+              // with pre-CURRENT_TAX_YEAR DB numbers (Mike 2026-06-22, "why did
+              // this use 2025?"), so drop it and keep going on the CAD packet.
+              // This guard is DB-ONLY on purpose: an ATTOM fallback legitimately
+              // returns the latest assessment year ATTOM has (often the prior
+              // year), and gating that was dead-ending EVERY ATTOM-served county
+              // — the 2026-06-24 regression behind "still not working".
+              staleYear = ty;
+            } else if (isAttom && (!subjVal || !subjSqft)) {
+              // ATTOM found the parcel but has no usable value/size to anchor a
+              // case — typical of rural/land parcels (1144 Private Road 1539,
+              // Bridgeport: market $82K, no sqft, and nonsensical comps like a
+              // 355-sqft home at $1.46M). Don't fabricate a reduction off junk
+              // comps; route to the packet path instead. (2026-06-24.)
+              thinData = true;
             } else {
               our = data;
             }
           }
         }
       } catch (e) { /* our lookup failed — fall through with our=null */ }
-      if (staleYearError) {
-        setError(
-          "The engine returned " + staleYearError + " data for this property, but " +
-          CURRENT_TAX_YEAR + " data is on file. This is a known stale-record issue " +
-          "on the engine (duplicate row). Please report this address so we can dedupe."
-        );
-        setStatus("error");
-        return;
-      }
       setStep(2);
 
       if (!cad && !our) {
-        setError("We couldn't read the evidence or find this property. Check the address and that the PDF is the county's evidence packet (not a scan).");
+        setError(
+          (staleYear || thinData)
+            ? "We couldn't pull enough current data on file to build this " +
+              "property's case automatically. Upload your county's " +
+              CURRENT_TAX_YEAR + " evidence packet above and we'll build the " +
+              "case straight from it."
+            : "We couldn't read the evidence or find this property. Check the address and that the PDF is the county's evidence packet (not a scan)."
+        );
         setStatus("error");
         return;
       }
@@ -665,7 +684,7 @@ function App() {
         <section style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 38px" }}>
           <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: ".16em", color: "#2f9468", textTransform: "uppercase", marginBottom: 14 }}>Property Tax · One</div>
           <h1 style={{ fontSize: 46, lineHeight: 1.04, fontWeight: 800, letterSpacing: "-.03em", margin: "0 0 16px" }}>One upload. Your strongest&nbsp;reduction.</h1>
-          <p style={{ fontSize: 18, lineHeight: 1.5, color: "#5e6b64", margin: 0, fontWeight: 500 }}>Enter the property, drop the county's evidence packet, and we'll test every method — automatic wins, backup comps, our own report — and hand you the lowest defensible value to file.</p>
+          <p style={{ fontSize: 18, lineHeight: 1.5, color: "#5e6b64", margin: 0, fontWeight: 500 }}>Enter the property — and optionally drop the county's evidence packet — and we'll test every method — automatic wins, backup comps, our own report — and hand you the lowest defensible value to file.</p>
         </section>
 
         {/* INPUT CARD */}
@@ -676,7 +695,7 @@ function App() {
               style={{ flex: 1, minWidth: 0, fontFamily: "inherit", fontSize: 15.5, fontWeight: 500, color: "#18241f", background: "#f6f9f7", border: "1.5px solid #e4ebe7", borderRadius: 12, padding: "13px 15px", outline: "none" }} />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}><StepNum n={2} /><span style={{ fontWeight: 700, fontSize: 15.5 }}>CAD evidence packet</span></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}><StepNum n={2} /><span style={{ fontWeight: 700, fontSize: 15.5 }}>CAD evidence packet</span><span style={{ fontSize: 12, fontWeight: 600, color: "#8a988f", background: "#eef3ee", padding: "3px 9px", borderRadius: 20 }}>Optional</span></div>
 
           <div onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }} onDragLeave={(e) => { e.preventDefault(); setDragging(false); }} onDrop={onDrop} onClick={() => fileRef.current && fileRef.current.click()} style={dropStyle}>
             <input
@@ -691,7 +710,7 @@ function App() {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1c6b47" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M5 20h14" /></svg>
             </div>
             <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 5 }}>Drop CAD evidence — PDF, Excel, or CSV</div>
-            <div style={{ fontSize: 14, color: "#5e6b64", marginBottom: 16, fontWeight: 500 }}>Drop one file or several at once (e.g. the cover-letter PDF plus a comparables spreadsheet). Up to 10 MB per file.</div>
+            <div style={{ fontSize: 14, color: "#5e6b64", marginBottom: 16, fontWeight: 500 }}>Drop one file or several at once (e.g. the cover-letter PDF plus a comparables spreadsheet). Up to 10 MB per file. No packet? We'll build the case from our own comps.</div>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(180deg,#23845a,#155e3c)", color: "#fff", fontWeight: 700, fontSize: 14, padding: "11px 18px", borderRadius: 11, boxShadow: "0 8px 20px -10px rgba(21,94,60,.7)" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M5 20h14" /></svg>
               {files.length ? "Add more files" : "Choose files"}

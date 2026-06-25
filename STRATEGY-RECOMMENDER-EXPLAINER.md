@@ -118,6 +118,7 @@ A single object (the shape the UI is built around — design accordingly):
 {
   ok: boolean,                  // false if no target at all (rare — usually means engine returned nothing)
   tier: "automatic" | "potential" | "our" | "token",
+  fair: boolean,                // true → "fairly assessed", no protest worth filing (see §6.1)
   target: number,               // the requested value we lead with
   notice: number,               // current assessed value (from engine)
   reduction: number,            // notice − target
@@ -149,6 +150,27 @@ The `tier` field is the **type of recommendation**, not the magnitude. Design tr
 | `our` | Our equity report is the primary (most common) | "We built the case ourselves from independent comps" |
 | `token` | Nothing beats the notice | "No reduction case this cycle; we negotiate a 3% courtesy at the informal" |
 
+### 6.1 The "fairly assessed" gate (`fair`)
+
+Independent of `tier`, we set `fair: true` when there's no protest worth filing:
+
+```
+fair = tier === "token"      // nothing beats the notice at all
+     || pct < 1              // best supportable reduction is under 1% of the notice
+     || taxSaved < 100       // …or under ~$100/yr at the effective rate
+```
+
+(Token fabricates a nominal 3% courtesy figure, so it never trips the `pct`/`$`
+tests on its own — it's caught explicitly.)
+
+When `fair` is true the UI **does not recommend a protest**. It replaces the
+recommendation hero, step-by-step protest guide, strategy comparison, and filing
+export packets with a calm "Your property is fairly assessed" read and two no-cost
+options: **save the report for next year**, or **request a refund now**. The
+evidence section is kept (re-titled "What we checked") as proof of the analysis.
+
+This supersedes the old token behavior, which used to push a 3% courtesy filing.
+
 ### Ladder statuses
 For each strategy we ran:
 - `selected` — the lead (`target`)
@@ -166,7 +188,7 @@ These are constraints from real incidents, not preferences:
 2. **The value on the screen must match the value on the PDF export.** Same calculation, same number. Both call `computeV3Strategy`.
 3. **Always name the backup.** When a primary exists, the rationale and ladder must surface the defensible fallback — agents and homeowners both need to know what holds if the lead is challenged.
 4. **Don't show dead-ends.** Strategies that land at or above the notice are hidden; the token row is hidden when real reductions exist.
-5. **Token isn't a failure state.** It's the floor when nothing else beats the notice. Treat it as a valid recommendation, not an error.
+5. **Token / trivial savings → "fairly assessed."** When nothing beats the notice (token) or the best supportable reduction is under 1% / ~$100/yr, the result is `fair: true`: we tell the homeowner they're fairly assessed and offer save-for-next-year or a refund — we do **not** push a protest (see §6.1). This replaced the old 3% courtesy-filing behavior.
 6. **CAD-bound output (the document we hand the CAD)** has a separate threshold: if the supportable reduction is **< $200**, we don't send a copy-and-send request — we send a "no realistic opportunity" explainer instead. This applies to the Evidence Analyzer's county-mode export, not to the /pro recommendation UI.
 
 ---

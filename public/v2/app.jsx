@@ -239,6 +239,19 @@ function decide(cad, our, address) {
     null;
   const notice = engineNotice || cadAssessed || null;
 
+  // Year the analyzed notice value actually comes from. The engine always
+  // returns the freshest row it has for a parcel (every lookup query is
+  // ORDER BY tax_year DESC LIMIT 1), so when this is < CURRENT_TAX_YEAR it
+  // means the county's newer roll simply isn't ingested yet — not a stale
+  // duplicate. We label honestly with this year rather than the platform year.
+  const dataYear = (our && our.subject && Number(our.subject.tax_year)) || null;
+  const noticeYear = dataYear || CURRENT_TAX_YEAR;
+  // True when this run leans on a prior-year engine row with no current-year
+  // packet to anchor it (county's current roll not ingested yet). Drives a
+  // soft, non-blocking nudge to upload the current notice — the analysis still
+  // runs and is labeled with its actual data year.
+  const priorYearOnly = !cad && dataYear != null && dataYear < CURRENT_TAX_YEAR;
+
   const cadMedians = [];
   if (effectiveCad) {
     if (effectiveCad.salesMedian != null) cadMedians.push({ key: "salesMedian", label: "Median market value", value: effectiveCad.salesMedian, source: "CAD sales evidence" });
@@ -293,6 +306,14 @@ function decide(cad, our, address) {
   const target = primary.value;
   const reduction = notice != null && target != null ? notice - target : 0;
   const pct = notice ? (reduction / notice) * 100 : 0;
+  const taxSaved = reduction * (TAX_RATE / 100);
+  // "Fairly assessed" gate. We don't push a protest when there's nothing real to
+  // win: either no indicator beats the notice (token), or the best supportable
+  // reduction is too small to be worth filing — under 1% of the notice OR under
+  // ~$100/yr. (Token fabricates a nominal 3% courtesy number, so it never trips
+  // the pct/$ tests on its own — catch it explicitly.) In all these cases we tell
+  // the homeowner they're fairly assessed and offer save-for-next-year / refund.
+  const fair = tier === "token" || pct < 1 || taxSaved < 100;
   const backupInfo = backup ? { key: backup.key, name: backup.name, value: backup.value, kind: backup.kind, tier: backup.tier, defRank: backup.defRank } : null;
 
   const backupLine = backup
@@ -314,6 +335,12 @@ function decide(cad, our, address) {
       "No strategy in the set beats your notice this cycle — every indicator lands above it. We pursue a token " +
       Math.round(TOKEN_PCT * 100) + "% courtesy reduction at the informal hearing: modest relief now, with the full case rebuilt next year.",
   }[tier];
+
+  // When the property is fairly assessed, the protest rationale is replaced with a
+  // straight, reassuring read — no filing recommended this year.
+  const fairRationale = tier === "token"
+    ? "Good news — your property is fairly assessed. We tested every angle — the county's own indicators, the strongest backup comp, and our independent equity report — and none lands below your " + noticeYear + " notice of " + fmt(notice) + ". There's no protest worth filing this year. Save your report and we'll re-check automatically next season, when the roll resets."
+    : "Good news — your property looks fairly assessed. The most we could support is " + fmt(target) + " — a reduction of just " + fmt(reduction) + " (about " + fmt(taxSaved) + "/yr). That's below the threshold where a protest is worth the time and risk, so we don't recommend filing this " + CURRENT_TAX_YEAR + " season.";
 
   const tokenRow = { key: "token", tier: "token", defRank: 3, kind: "token", name: TIER_NAME.token, value: tokenValue };
   const allRows = [...strategies, tokenRow];
@@ -371,10 +398,10 @@ function decide(cad, our, address) {
 
   return {
     ok: target != null,
-    tier, target, notice, reduction, pct, subjSqft,
-    address, rationale,
+    tier, target, notice, reduction, pct, subjSqft, fair, dataYear, priorYearOnly,
+    address, rationale: fair ? fairRationale : rationale,
     ladder, medianCards, comps: rawComps,
-    taxSaved: reduction * (TAX_RATE / 100),
+    taxSaved,
     cadMismatch: cadMismatchInfo,
     backupInfo,
     jurisdiction: deriveJurisdiction(our),
@@ -386,7 +413,7 @@ const SAMPLE_RESULT = (() => {
   const notice = 988470, target = 968801, backupVal = 974900, SF = 3977;
   const reduction = notice - target;
   return {
-    ok: true, tier: "our", target, notice, reduction, pct: (reduction / notice) * 100, subjSqft: SF,
+    ok: true, tier: "our", fair: false, target, notice, reduction, pct: (reduction / notice) * 100, subjSqft: SF,
     address: "5051 Forest Bend Rd, Dallas, TX 75244",
     rationale: "Our highest-savings play is TaxDrop's independent equity comps at " + fmt(target) + " — " + fmt(reduction) +
       " under your notice, and the evidence we build the protest around. Your most defensible fallback, the second-lowest comparable at " + fmt(backupVal) + ", stays ready in case the lead is challenged.",
@@ -648,7 +675,7 @@ function App() {
       setStep(1);
 
       let our = null;
-      let staleYearError = null;
+      let engineStale = false;
       try {
         const lookupAddress = await ensureAddressZip(address.trim());
         const resp = await fetch("/api/cad-proxy?path=/api/evidence-pack/lookup", {
@@ -658,25 +685,25 @@ function App() {
         });
         if (resp.ok) {
           const data = await resp.json();
+          // The engine always returns the freshest row it has for a parcel
+          // (every lookup query is ORDER BY tax_year DESC LIMIT 1), so an
+          // older tax_year here just means the county's current roll isn't
+          // ingested yet — it's the latest available, not a stale duplicate.
           if (data && data.subject) {
             const ty = Number(data.subject.tax_year);
-            if (ty && ty < CURRENT_TAX_YEAR) {
-              staleYearError = ty;
-            } else {
-              our = data;
-            }
+            engineStale = !!(ty && ty < CURRENT_TAX_YEAR);
+            our = data;
           }
         }
       } catch (e) { /* our lookup failed — fall through with our=null */ }
-      if (staleYearError) {
-        setError(
-          "The engine returned " + staleYearError + " data for this property, but " +
-          CURRENT_TAX_YEAR + " data is on file. This is a known stale-record issue " +
-          "on the engine (duplicate row). Please report this address so we can dedupe."
-        );
-        setStatus("error");
-        return;
-      }
+
+      // When the engine only has a prior-year row (the county's current roll
+      // isn't ingested yet) AND the homeowner uploaded their current county
+      // evidence packet, that packet is the authoritative current-year source.
+      // Drop the stale engine row so it can't (a) set the notice to a prior-year
+      // value or (b) trip the >25% cad-mismatch guard and discard the real
+      // packet. The analysis then runs solely on the uploaded CAD evidence.
+      if (engineStale && cad) our = null;
       setStep(2);
 
       if (!cad && !our) {
@@ -729,7 +756,7 @@ function App() {
 
         {showForm ? (
           <section style={{ textAlign: "center", padding: narrow ? "40px 0 28px" : "64px 0 40px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".16em", color: "#2c8350", marginBottom: 18 }}>PROPERTY TAX PROTEST · ONE</div>
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".16em", color: "#2c8350", marginBottom: 18 }}>ONE PLATFORM FOR LOWER PROPERTY TAXES</div>
             <h1 style={{ fontSize: narrow ? 34 : 58, lineHeight: 1.06, fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 20px", color: "#16241c" }}>Win the lowest assessment<br />you can actually <span style={{ color: "#2c8350" }}>defend.</span></h1>
             <p style={{ maxWidth: 620, margin: "0 auto", fontSize: narrow ? 16 : 18, lineHeight: 1.55, color: "#5d6f64", fontWeight: 500 }}>Drop in your address and the county's evidence packet. We test every angle — their own numbers, the strongest backup comp, and our independent equity report — then hand you the biggest reduction that holds up at hearing, plus the step-by-step plan to win it.</p>
           </section>
@@ -891,6 +918,18 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
   const [openPopup, setOpenPopup] = React.useState(null);
   const j = r.jurisdiction || {};
   const backup = r.backupInfo;
+  const isFair = !!r.fair;
+
+  // TODO(wiring): no real refund flow exists in this UI yet. Placeholder routes a
+  // refund request to support; swap for the real endpoint/checkout once it's built.
+  const REFUND_EMAIL = "support@taxdrop.com";
+  const onRefund = () => {
+    const subject = "TaxDrop One refund request — " + (address || "");
+    const body = "My property came back fairly assessed for " + CURRENT_TAX_YEAR +
+      ", so no protest is recommended. I'd like a refund.\n\nProperty: " + (address || "");
+    window.location.href = "mailto:" + REFUND_EMAIL +
+      "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  };
 
   const HANDOFF_KEY = "taxdrop-analyzer-handoff";
   const triggerExport = (which, format) => {
@@ -1001,7 +1040,15 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
         </div>
       ) : null}
 
+      {r.priorYearOnly ? (
+        <div style={{ background: "#eef4fb", border: "1px solid #bcd6f0", borderLeft: "4px solid #3b7dc4", borderRadius: 10, padding: "12px 16px", marginBottom: 14, color: "#244966", fontSize: 13.5, lineHeight: 1.5 }}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>Based on your {r.dataYear} county data</div>
+          Your county's {CURRENT_TAX_YEAR} roll isn't published yet, so this analysis uses the most recent values on file ({r.dataYear}). For a {CURRENT_TAX_YEAR}-current read, upload your {CURRENT_TAX_YEAR} notice or evidence packet above and we'll re-run it on that.
+        </div>
+      ) : null}
+
       {/* RECOMMENDATION HERO */}
+      {isFair ? <FairHero r={r} narrow={narrow} /> : (
       <section style={{ position: "relative", overflow: "hidden", borderRadius: 22, background: th.grad, boxShadow: "0 16px 46px " + th.shadow, padding: narrow ? "26px 22px" : "36px 38px", color: "#fff", marginBottom: 18 }}>
         <div style={{ position: "absolute", top: -90, right: -60, width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,255,255,.16),transparent 70%)", pointerEvents: "none" }}></div>
         <div style={{ position: "relative" }}>
@@ -1017,7 +1064,7 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
             </div>
             <div style={{ display: "flex", gap: narrow ? 24 : 42, paddingBottom: 6 }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#ffffffaa", marginBottom: 7 }}>Your {CURRENT_TAX_YEAR} notice</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#ffffffaa", marginBottom: 7 }}>Your {r.dataYear || CURRENT_TAX_YEAR} notice</div>
                 <div style={{ fontSize: 21, fontWeight: 700, color: "#ffffffcc", textDecoration: "line-through", textDecorationColor: "#ffffff66", fontVariantNumeric: "tabular-nums" }}>{fmt(r.notice)}</div>
               </div>
               <div>
@@ -1035,15 +1082,21 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
           </div>
         </div>
       </section>
+      )}
 
       {/* RATIONALE */}
-      <section style={{ background: "#fff", border: "1px solid #e6ebe6", borderLeft: "4px solid " + th.main, borderRadius: 14, padding: "22px 26px", marginBottom: 64 }}>
+      <section style={{ background: "#fff", border: "1px solid #e6ebe6", borderLeft: "4px solid " + (isFair ? "#1d6b41" : th.main), borderRadius: 14, padding: "22px 26px", marginBottom: isFair ? 28 : 64 }}>
         <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "#34433a", fontWeight: 500 }}>{r.rationale}</p>
       </section>
 
-      <ProtestGuide r={r} j={j} backup={backup} />
+      {isFair ? (
+        <FairNextSteps narrow={narrow} exporting={exporting} onSaveReport={() => triggerExport("our", "pdf")} onRefund={onRefund} />
+      ) : null}
+
+      {!isFair ? <ProtestGuide r={r} j={j} backup={backup} /> : null}
 
       {/* COMPARE STRATEGIES */}
+      {!isFair ? (
       <section style={{ marginBottom: 64 }}>
         <SectionHead icon="◇" title="Compare every strategy" sub={<React.Fragment>Each angle balances <strong style={{ color: "#34433a" }}>potential savings</strong> against <strong style={{ color: "#34433a" }}>chance of success</strong>. We lead with the play that saves the most while staying defensible — and keep the safest qualifier in reserve.</React.Fragment>} />
 
@@ -1144,29 +1197,32 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
           </div>
         </div>
       </section>
+      ) : null}
 
       {/* EVIDENCE */}
       <section style={{ marginBottom: 64 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
           <div style={{ width: 30, height: 30, borderRadius: 8, background: "#1d6b41", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 }}>$</div>
-          <h2 style={{ margin: 0, fontSize: 23, fontWeight: 800, letterSpacing: "-0.02em", color: "#16241c" }}>The evidence behind it</h2>
+          <h2 style={{ margin: 0, fontSize: 23, fontWeight: 800, letterSpacing: "-0.02em", color: "#16241c" }}>{isFair ? "What we checked" : "The evidence behind it"}</h2>
         </div>
 
         {r.medianCards.length ? (
           <div style={{ display: "grid", gridTemplateColumns: (narrow || r.medianCards.length <= 1) ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 18 }}>
             {r.medianCards.map((m, i) => {
               const d = m.value - r.notice; const below = d < 0;
+              // No "CHOSEN" highlight when fairly assessed — we're not filing a value.
+              const winner = m.winner && !isFair;
               return (
-                <div key={i} style={{ background: m.winner ? "#fdf9ef" : "#fff", border: m.winner ? "1.5px solid #e6cf94" : "1px solid #e6ebe6", borderRadius: 16, padding: "22px 24px" }}>
+                <div key={i} style={{ background: winner ? "#fdf9ef" : "#fff", border: winner ? "1.5px solid #e6cf94" : "1px solid #e6ebe6", borderRadius: 16, padding: "22px 24px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: m.winner ? "#8a6311" : "#5d6f64" }}>{m.label}</span>
-                    <span style={m.winner
+                    <span style={{ fontSize: 14, fontWeight: 600, color: winner ? "#8a6311" : "#5d6f64" }}>{m.label}</span>
+                    <span style={winner
                       ? { fontSize: 11, fontWeight: 800, letterSpacing: ".04em", color: "#fff", background: "#b1851a", padding: "4px 11px", borderRadius: 20 }
-                      : { fontSize: 11, fontWeight: 700, color: below ? "#1d6b41" : "#b03f2c", background: below ? "#e3efe6" : "#fbeae6", padding: "4px 10px", borderRadius: 20 }}>{m.winner ? "CHOSEN" : (below ? "below notice" : "above notice")}</span>
+                      : { fontSize: 11, fontWeight: 700, color: below ? "#1d6b41" : "#b03f2c", background: below ? "#e3efe6" : "#fbeae6", padding: "4px 10px", borderRadius: 20 }}>{winner ? "CHOSEN" : (below ? "below notice" : "above notice")}</span>
                   </div>
-                  <div style={{ fontSize: 34, fontWeight: 800, color: m.winner ? "#8a6311" : "#16241c", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{fmt(m.value)}</div>
+                  <div style={{ fontSize: 34, fontWeight: 800, color: winner ? "#8a6311" : "#16241c", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{fmt(m.value)}</div>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: below ? "#1d6b41" : "#b03f2c", marginTop: 8 }}>{below ? "↓ " : "↑ "}{signed(d)} vs your notice</div>
-                  <div style={{ fontSize: 12.5, color: m.winner ? "#b59a55" : "#9aa69d", marginTop: 4 }}>{m.source}</div>
+                  <div style={{ fontSize: 12.5, color: winner ? "#b59a55" : "#9aa69d", marginTop: 4 }}>{m.source}</div>
                 </div>
               );
             })}
@@ -1195,7 +1251,8 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
         ) : null}
       </section>
 
-      {/* EXPORT PACKETS */}
+      {/* EXPORT PACKETS — protest-filing packets; hidden when fairly assessed. */}
+      {!isFair ? (
       <section style={{ marginBottom: 48 }}>
         <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".13em", color: "#2c8350", marginBottom: 18 }}>EXPORT PACKETS</div>
         <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "1fr 1fr", gap: 18 }}>
@@ -1247,11 +1304,14 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
         </div>
         <p style={{ margin: "16px 0 0", fontSize: 12.5, color: "#9aa69d", lineHeight: 1.5 }}>PDF opens your browser's print dialog (save as PDF). DOCX downloads directly. Both pull live engine data — no re-uploading the county PDF.</p>
       </section>
+      ) : null}
 
       {/* REFER A FRIEND — paused 2026-06-24. Component kept (ReferBlock) so the
           design can be brought back by re-adding <ReferBlock /> here. */}
 
-      <p style={{ textAlign: "center", fontSize: 12.5, color: "#a4b0a7", lineHeight: 1.55, maxWidth: 620, margin: "0 auto" }}>Evidence is read in your browser for this session only. This analysis supports a {j.statuteShort || "Texas §41.43"} protest filing — it isn't a USPAP appraisal, legal, or tax advice.</p>
+      <p style={{ textAlign: "center", fontSize: 12.5, color: "#a4b0a7", lineHeight: 1.55, maxWidth: 620, margin: "0 auto" }}>{isFair
+        ? "Evidence is read in your browser for this session only. We checked your property against the county's own indicators and our independent comps — this isn't a USPAP appraisal, legal, or tax advice."
+        : <React.Fragment>Evidence is read in your browser for this session only. This analysis supports a {j.statuteShort || "Texas §41.43"} protest filing — it isn't a USPAP appraisal, legal, or tax advice.</React.Fragment>}</p>
     </section>
   );
 }
@@ -1264,6 +1324,68 @@ function shortName(name) {
     .replace("Median equity value", "CAD median")
     .replace("Median market value", "CAD median")
     .replace("Median of comparables", "CAD median");
+}
+
+/* ───────── fairly-assessed hero (shown instead of the protest hero) ─────────
+   Calm, reassuring read for properties where no protest is worth filing:
+   nothing beats the notice, or the best supportable reduction is under 1% / $100/yr. */
+function FairHero({ r, narrow }) {
+  const isToken = r.tier === "token";
+  const best = isToken ? 0 : r.reduction;   // token's nominal 3% isn't a real reduction
+  const bestTax = isToken ? 0 : r.taxSaved;
+  return (
+    <section style={{ position: "relative", overflow: "hidden", borderRadius: 22, background: "linear-gradient(135deg,#1d6b41,#16542f)", boxShadow: "0 16px 46px rgba(22,84,47,.30)", padding: narrow ? "26px 22px" : "36px 38px", color: "#fff", marginBottom: 18 }}>
+      <div style={{ position: "absolute", top: -90, right: -60, width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,255,255,.16),transparent 70%)", pointerEvents: "none" }}></div>
+      <div style={{ position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>
+          <span style={{ background: "#fff", color: "#16542f", fontSize: 13, fontWeight: 800, padding: "6px 14px", borderRadius: 30, letterSpacing: ".01em" }}>Fairly Assessed</span>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".14em", color: "#ffffffcc", border: "1px solid #ffffff55", padding: "5px 10px", borderRadius: 6 }}>NO PROTEST NEEDED</span>
+        </div>
+
+        <div style={{ fontSize: narrow ? 27 : 38, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: 26 }}>Your property is fairly assessed.</div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: narrow ? 22 : 46 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".13em", color: "#ffffffbb", marginBottom: 8 }}>YOUR {r.dataYear || CURRENT_TAX_YEAR} ASSESSED VALUE</div>
+            <div style={{ fontSize: narrow ? 40 : 56, fontWeight: 800, lineHeight: .92, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>{fmt(r.notice)}</div>
+          </div>
+          <div style={{ paddingBottom: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#ffffffaa", marginBottom: 7 }}>Most we could support</div>
+            <div style={{ fontSize: 21, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{best > 0 ? "−" + fmt(best) : "$0"} <span style={{ fontSize: 14, fontWeight: 600, color: "#ffffffbb" }}>{best > 0 ? "(~" + fmt(bestTax) + "/yr)" : "(no reduction)"}</span></div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 28 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#ffffff22", border: "1px solid #ffffff33", borderRadius: 30, padding: "9px 18px", fontSize: 14, fontWeight: 700 }}>✓ No protest recommended for {CURRENT_TAX_YEAR}</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── fairly-assessed next steps (replaces the protest guide / exports) ─────────
+   Two no-cost options. Handlers are placeholders — wire to the real save/refund
+   flows once they exist (see onRefund TODO in Result; save = evidence-pack PDF). */
+function FairNextSteps({ narrow, exporting, onSaveReport, onRefund }) {
+  const card = { background: "#fff", border: "1px solid #e6ebe6", borderRadius: 16, padding: "22px 24px", display: "flex", flexDirection: "column" };
+  const btn = (primary) => ({ marginTop: "auto", alignSelf: "flex-start", borderRadius: 10, padding: "11px 22px", fontSize: 14, fontWeight: 800, fontFamily: "inherit", cursor: "pointer", border: primary ? "none" : "1.5px solid #1d6b41", background: primary ? "#1d6b41" : "#fff", color: primary ? "#fff" : "#1d6b41" });
+  return (
+    <section style={{ marginBottom: 64 }}>
+      <SectionHead icon="→" title="What now?" sub="Nothing to file this year. Two options — neither costs you anything." />
+      <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "1fr 1fr", gap: 18 }}>
+        <div style={card}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "#16241c", marginBottom: 7 }}>Save your report for next year</div>
+          <p style={{ margin: "0 0 18px", fontSize: 13.5, lineHeight: 1.5, color: "#5d6f64" }}>Keep this analysis on file. We'll re-check your assessment when the {CURRENT_TAX_YEAR + 1} roll lands — values move, and next year may be different.</p>
+          <button onClick={onSaveReport} disabled={!!exporting} style={{ ...btn(true), opacity: exporting ? 0.6 : 1 }}>{exporting ? "Saving…" : "Save my report"}</button>
+        </div>
+        <div style={card}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "#16241c", marginBottom: 7 }}>Get a refund now</div>
+          <p style={{ margin: "0 0 18px", fontSize: 13.5, lineHeight: 1.5, color: "#5d6f64" }}>No savings, no fee — that's the deal. If you'd rather not wait for next year, request a full refund and we'll take care of it.</p>
+          <button onClick={onRefund} style={btn(false)}>Request a refund</button>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 /* ───────── step-by-step protest guide (timeline) ───────── */
