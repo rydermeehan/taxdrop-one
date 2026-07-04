@@ -1558,7 +1558,10 @@ function ReviewIntake(p) {
           <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "#5d6f64", fontWeight: 500 }}>This report is locked to the property you purchased. Follow the steps below to file and finish your report.</p>
         ) : null}
         <JurisChips jIn={jIn} />
-        <DarkBtn onClick={() => { if (address.trim()) onMarkDone(0); }}>{linked ? "Yes, this is my property →" : "Continue →"}</DarkBtn>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <DarkBtn onClick={() => { if (address.trim()) onMarkDone(0); }}>{linked ? "Yes, this is my property →" : "Continue →"}</DarkBtn>
+          <span style={{ fontSize: 13.5, color: "#8a988f", fontWeight: 500 }}>Not right? Contact us at <a href="mailto:admin@taxdrop.com" style={{ color: "#5d6f64", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>admin@taxdrop.com</a></span>
+        </div>
       </StepCard>
 
       {/* STEP 2 — File your protest */}
