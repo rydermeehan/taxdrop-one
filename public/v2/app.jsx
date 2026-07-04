@@ -1538,6 +1538,40 @@ function ReviewIntake(p) {
   const s3Summary = "Optional — add the " + jIn.authorityType + "'s evidence packet once it arrives and we'll push for an even lower value.";
   const s4Summary = "Where to send your finished report. A TaxDrop tax agent reviews every case before it goes out.";
 
+  // County filing portal for step 2, item (a). /api/form-schema resolves the
+  // county from the locked address and returns its curated filing record
+  // (efileUrl/website, from _tx-cads.ts). undefined = still loading (plain text,
+  // no link yet); null = county not in the registry → fall back to an
+  // address-scoped web search, never a guessed URL. Own fetch (ProtestFormCard
+  // keeps its own) — a cheap extra call on a low-volume paid flow.
+  const [filing, setFiling] = React.useState(undefined);
+  React.useEffect(() => {
+    const addr = (lockAddr || address || "").trim();
+    if (!addr) { setFiling(undefined); return; }
+    let live = true;
+    setFiling(undefined);
+    fetch("/api/form-schema", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ address: addr }) })
+      .then((r) => r.json().catch(() => ({})))
+      .then((d) => { if (live) setFiling(d && typeof d === "object" ? (d.filing || null) : null); })
+      .catch(() => { if (live) setFiling(null); });
+    return () => { live = false; };
+  }, [lockAddr, address]);
+
+  const linkStyle = { color: "#1d6b41", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 2 };
+  const whose = (filing && filing.cadName) ? filing.cadName + "'s" : ("your " + jIn.authorityType + "'s");
+  const portalWord = jIn.proceeding + " portal";
+  let filingItemA;
+  if (filing === undefined) {
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jIn.authorityType}'s {portalWord}.</React.Fragment>;
+  } else if (filing && filing.efileUrl) {
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online at {whose} <a href={filing.efileUrl} target="_blank" rel="noopener" style={linkStyle}>{portalWord} ↗</a>.</React.Fragment>;
+  } else if (filing && filing.website) {
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online at {whose} <a href={filing.website} target="_blank" rel="noopener" style={linkStyle}>website ↗</a> — look for “Online {titleCase(jIn.proceeding)}”.</React.Fragment>;
+  } else {
+    const q = encodeURIComponent((String(lockAddr || address || "").replace(/,?\s*USA$/i, "").trim() || jIn.authorityType) + " appraisal district online " + jIn.proceeding);
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jIn.authorityType}'s {jIn.proceeding} portal — <a href={"https://www.google.com/search?q=" + q} target="_blank" rel="noopener" style={linkStyle}>find your district's portal ↗</a>.</React.Fragment>;
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
 
@@ -1572,7 +1606,7 @@ function ReviewIntake(p) {
           <span>{jIn.deadline || "see your notice"}. File first — the county only shares the evidence behind your value after you {fileWord}.</span>
         </div>
         <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 11, ...body }}>
-          <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>a.</span><span><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jIn.authorityType}'s {jIn.proceeding} portal.</span></div>
+          <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>a.</span><span>{filingItemA}</span></div>
           <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>b.</span><span><strong style={{ color: "#16241c" }}>Or by mail:</strong> print, sign, and post the form to the address on it — postmark by your deadline.</span></div>
           <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>c.</span><span>After you file, request the {jIn.authorityType}'s evidence — that's the packet you add in step 3.</span></div>
         </div>
