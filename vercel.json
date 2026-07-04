@@ -7,6 +7,8 @@
     { "source": "/pro/(.*)", "destination": "/pro/$1" },
     { "source": "/v2", "destination": "/v2/index.html" },
     { "source": "/v2/(.*)", "destination": "/v2/$1" },
+    { "source": "/customer-first", "destination": "/customer-first/index.html" },
+    { "source": "/customer-first/(.*)", "destination": "/customer-first/$1" },
     { "source": "/", "destination": "/v2/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]

@@ -37,6 +37,7 @@ const ACCESS_ON = /^(1|true|yes)$/i.test(process.env.ACCESS_CONTROL_ENABLED || '
 const INTERNAL_ENTRIES = new Set([
   '/', '/index.html',
   '/v2', '/v2/', '/v2/index.html',
+  '/customer-first', '/customer-first/', '/customer-first/index.html',
   '/pro', '/pro/', '/pro/index.html',
 ]);
 
@@ -96,9 +97,11 @@ export default function middleware(req: Request) {
   // API + /pro pass through unchanged (resolve from filesystem normally).
   // /v2 is the Strategy Recommender design preview — it lives at its own path
   // and must not be rewritten under /pro. (2026-06-23)
+  // /customer-first is the progressive-step intake design artifact. (2026-07-04)
   if (path.startsWith('/api/') || path === '/api' ||
       path.startsWith('/pro/') || path === '/pro' ||
-      path.startsWith('/v2/') || path === '/v2') {
+      path.startsWith('/v2/') || path === '/v2' ||
+      path.startsWith('/customer-first/') || path === '/customer-first') {
     return next();
   }
 
