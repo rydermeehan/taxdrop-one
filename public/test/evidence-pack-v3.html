@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
 <meta charset="UTF-8">
-<title>Property Appraisal Report</title>
+<title>Opinion of Value</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- html-docx-js: converts the live HTML to a real .docx blob. -->
 <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.min.js"></script>
@@ -902,11 +905,17 @@
       }
 
       const data = await resp.json();
-      // Reject stale-year records. With the ZIP forced above, the canonical
-      // current-year row should always be returned — if we got an older
-      // row, it's the duplicate-dupe bug, not "no current data yet".
+      // Reject stale-year records — but ONLY on the CAD-database path. With the
+      // ZIP forced above, the canonical current-year DB row should always win;
+      // an older DB row is the duplicate-dupe bug, not "no current data yet".
+      // This guard is DB-ONLY on purpose: when the engine falls back to ATTOM
+      // (data_source === 'ATTOM'), the prior-year row is simply the freshest
+      // assessment ATTOM has for that parcel (Tarrant/800 Saxon Trail and every
+      // other ATTOM-served county) — gating it fabricates a "stale-record"
+      // error and dead-ends the lookup (the 2026-06-24 regression).
       const ty = Number(data && data.subject && data.subject.tax_year);
-      if (ty && ty < CURRENT_TAX_YEAR) {
+      const isAttom = data && data.data_source === 'ATTOM';
+      if (!isAttom && ty && ty < CURRENT_TAX_YEAR) {
         $('error-detail').innerHTML =
           '<p><b>Engine returned stale ' + ty + ' data for this property.</b></p>' +
           '<p>We have ' + CURRENT_TAX_YEAR + ' data on file. This is a known stale-record ' +
@@ -1123,6 +1132,31 @@
   }
 
   // ────────── Report renderer ──────────
+  // SECURITY (stored-XSS defense): renderReport() interpolates string fields
+  // from `data` (addresses, county/parcel names, etc.) into template literals
+  // that are assigned to innerHTML further down. On the ?review=1 path that
+  // object is a browser-computed draft that /api/intake persists VERBATIM, so a
+  // hostile customer could smuggle markup into a string field and have it fire
+  // in a reviewer's authenticated session. escapeDeep() HTML-escapes every
+  // string value before rendering; numbers/booleans/structure are preserved, so
+  // all downstream math and formatting are unaffected.
+  function escapeHtml(v) {
+    return String(v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function escapeDeep(obj) {
+    if (obj == null || typeof obj === 'number' || typeof obj === 'boolean') return obj;
+    if (typeof obj === 'string') return escapeHtml(obj);
+    if (Array.isArray(obj)) return obj.map(escapeDeep);
+    if (typeof obj === 'object') {
+      const out = {};
+      for (const k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) out[k] = escapeDeep(obj[k]);
+      return out;
+    }
+    return obj;
+  }
+
   function renderReport(data) {
     const s = data.subject;
     let comps = data.comps || [];
@@ -1191,6 +1225,15 @@
         });
       }
     }
+
+    // David (consultant) 2026-06-25: "I would recommend using an odd number of
+    // comparable properties, with no more than seven total." These briefs are
+    // often shown on TVs/projectors in hearing rooms and need to read fast.
+    // comps arrive sorted by living-area proximity (closest first); cap at 7,
+    // then drop the last (largest size-delta) survivor to land on an odd
+    // count. Most cases already return 5, so this only fires on even pools.
+    if (comps.length > 7) comps = comps.slice(0, 7);
+    if (comps.length % 2 === 0 && comps.length > 1) comps = comps.slice(0, comps.length - 1);
 
     // Reindex bestIdx after filtering — if the original best comp survived,
     // find its new index; otherwise fall back to 0.
@@ -1341,8 +1384,13 @@
     const headerHtml = `
       <div class="doc-header">
         <div class="doc-header-text">
-          <h1>Property Appraisal Report</h1>
-          <div class="meta">Tax Year ${s.tax_year || 2026}</div>
+          <!-- David (consultant) 2026-06-25: "This isn't an appraisal report,
+               it's an opinion of value." Renamed from "Property Appraisal
+               Report". Subtitle now carries the property address (pertinent
+               info up top) instead of just the tax year, which the title
+               already states. -->
+          <h1>${s.tax_year || 2026} Opinion of Value</h1>
+          <div class="meta">${formatStreetAddress(s)}</div>
         </div>
         <div class="export-bar">
           <button class="btn-export" onclick="exportPDF()" id="btn-export-pdf" type="button">
@@ -1445,14 +1493,17 @@
     // no imagery is available for the subject's coordinates.
     const subjPhotoAddr = (s.full_address || s.site_address || '') + (s.site_zip ? ', ' + s.site_zip : '') + ', TX';
     const subjPhotoUrl = `https://maps.googleapis.com/maps/api/streetview?size=640x320&location=${encodeAddr(subjPhotoAddr)}&return_error_code=true&key=${STREETVIEW_KEY}`;
+    // David (consultant) 2026-06-25: "If a property photo is available, I like
+    // including it, but I would place it below the property details." Photo now
+    // renders AFTER the subject-grid (it used to sit above it).
     const section1Html = `
       <h2><span class="section-num">1.</span> Subject Property</h2>
-      <div class="subject-photo" style="margin:0 auto 16px;text-align:center;">
+      <div class="subject-grid">${subjectGridCells}</div>
+      <div class="subject-photo" style="margin:14px auto 16px;text-align:center;">
         <img src="${subjPhotoUrl}" alt="Subject street view"
              style="width:100%;max-width:640px;height:auto;border-radius:6px;display:block;margin:0 auto;"
              onerror="this.parentElement.style.display='none'">
       </div>
-      <div class="subject-grid">${subjectGridCells}</div>
     `;
 
     // ── Section 2: Requested Market Value ──
@@ -1482,15 +1533,10 @@
             <div class="rv-label">Requested Market Value</div>
             <div class="rv-amount">${fmtMoney(requestedVal)}</div>
             <div class="rv-psf">${(() => {
-              // Mike's 2026-06-18 V3 markup (La Vista round 2): "Do not
-              // include the % if lower than 92%". Now hides when ratio is
-              // less than 0.92 (aggressive asks). Only shows the percentage
-              // when the request is between 92% and 100% of notice.
-              const ratio = subjVal ? requestedVal / subjVal : 0;
-              const psfPart = fmtPsfBare(requestedVal / subjSqft) + '/sqft';
-              return ratio >= 0.92 && ratio < 1.0
-                ? `${psfPart} &middot; ${(ratio * 100).toFixed(1)}% of CAD notice`
-                : psfPart;
+              // David (consultant) 2026-06-25: the "% of CAD Notice" statistic
+              // "doesn't add value to the printed evidence packet." Removed —
+              // the requested value and its $/sqft stand on their own.
+              return fmtPsfBare(requestedVal / subjSqft) + '/sqft';
             })()}</div>
           </div>
         </div>
@@ -1548,10 +1594,18 @@
     // outlier filter reasoning. Stripped now — internal filter logic stays
     // silent in the brief.
 
+    // David (consultant) 2026-06-25: "The Comparable Property Analysis should
+    // clearly identify whether it is an Equity Analysis or a Sales Analysis."
+    // This grid is built entirely from CAD-noticed values (not MLS/recorded
+    // sales), so it is an equity / unequal-appraisal analysis under
+    // §41.43(b)(3). Labeled explicitly with a badge under the section header.
     const section3Html = `
       <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
+      <div style="display:inline-block;background:var(--mint);color:var(--emerald-dark);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid var(--emerald-light);margin:0 0 10px;">
+        Equity Analysis &middot; Unequal Appraisal (§41.43(b)(3))
+      </div>
       <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
-        ${comparablesIntro}
+        This is an <b>equity analysis</b> &mdash; comparables are valued from the appraisal district's own noticed values, not from market sales. ${comparablesIntro}
         ${classText}${schoolText}.
       </p>
 
@@ -1576,7 +1630,7 @@
     // update both. The pool/garage row is marked county-gated because
     // POOL_GARAGE_ROLLOUT_COUNTIES is {"collin"} as of 2026-06-10; the
     // engine silently skips it for other counties.
-    const section5Html = renderMethodologySection(s);
+    const section5Html = renderMethodologySection(s, comps);
 
     // Sections 6 (Clear Capital MLS sales) + 7 (ATTOM closed-sales) were
     // removed from v2 on 2026-06-03. The render templates, fetch calls,
@@ -1588,14 +1642,93 @@
     // calls back into innerHTML. The full sales-comps version is
     // preserved at evidence-pack-v3.html.
 
-    // ── Footer ──
-    const footerHtml = `
-      <div class="footer">
-        ${cadName} &middot; Tax Year ${s.tax_year || 2026} &middot; Account ${fmtAccount(s.parcel_id, s.county)} &middot; Page 1 of 1
+    // ── Cover / Summary page (David, consultant, 2026-06-25) ──
+    // "The first page should serve as an executive summary of the property...
+    // clearly display all pertinent property information, the CAD's preliminary
+    // market value, the values indicated by each valuation approach (Equity,
+    // Market, Income, Cost, etc.), and the final opinion of value... Move the
+    // summary page to the very beginning of the packet." It leads the packet so
+    // the opinion of value is seen first and the supporting evidence (Sections
+    // 1–5) builds from there. Most of this data already lives downstream; the
+    // cover consolidates it onto one page.
+    const opinionValueDisplay = (methodology === 'no_case')
+      ? 'No reduction supported'
+      : fmtMoney(requestedVal);
+
+    // Values indicated by each valuation approach. Only the equity (unequal-
+    // appraisal) approach is developed in this analysis; the others are listed
+    // so the ARB sees they were considered, not silently omitted.
+    const approachRows = [
+      ['Equity &mdash; unequal appraisal (§41.43(b)(3))',
+        (methodology === 'no_case') ? '<span class="na">No reduction supported</span>' : '<b>' + fmtMoney(requestedVal) + '</b>'],
+      ['Sales comparison (market)', '<span class="na">Not developed</span>'],
+      ['Income', '<span class="na">Not developed</span>'],
+      ['Cost', '<span class="na">Not developed</span>'],
+    ].map(([k, v]) => `<tr><td class="label">${k}</td><td class="value" style="text-align:right;">${v}</td></tr>`).join('');
+
+    // Value history — David: "showing the previous three years of values can
+    // also be helpful." We surface every year on file (current notice + prior
+    // notice today; a full 3-year history needs additional CAD history data,
+    // see note in the implementation summary). Only render the prior year when
+    // it's present.
+    const historyRows = [
+      [`${s.tax_year || 2026} CAD noticed market value`, subjVal ? fmtMoney(subjVal) : null],
+      [`${(s.tax_year || 2026) - 1} CAD noticed market value`, subjPrior ? fmtMoney(subjPrior) : null],
+    ].filter(([_, v]) => hasVal(v))
+     .map(([k, v]) => `<tr><td class="label">${k}</td><td class="value" style="text-align:right;">${v}</td></tr>`).join('');
+
+    const coverHtml = `
+      <div class="cover-summary" style="page-break-after:always;">
+        <h2 style="margin-top:8px;"><span class="section-num">&mdash;</span> Summary &amp; Opinion of Value</h2>
+
+        <div class="requested-value" style="margin-top:8px;">
+          <div class="rv-block notice">
+            <div class="rv-label">${s.tax_year || 2026} CAD Notice Value</div>
+            <div class="rv-amount">${fmtMoney(subjVal)}</div>
+            <div class="rv-psf">${subjSqft ? fmtPsfBare(subjPsf) + '/sqft' : ''}</div>
+          </div>
+          <div class="rv-block requested">
+            <div class="rv-label">Final Opinion of Value</div>
+            <div class="rv-amount">${opinionValueDisplay}</div>
+            <div class="rv-psf">${(methodology !== 'no_case' && subjSqft) ? fmtPsfBare(requestedVal / subjSqft) + '/sqft' : ''}</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px;">
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Property</div>
+            <table class="property-table" style="margin:0;">
+              ${kvRow('Address', formatStreetAddress(s))}
+              ${kvRow('PID #', fmtAccount(s.parcel_id, s.county))}
+              ${kvRow('Appraisal district', cadName)}
+              ${kvRow('Living area', subjSqft ? fmtNum(subjSqft) + ' sqft' : null)}
+              ${kvRow('Year built', yearBuiltVal)}
+            </table>
+          </div>
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Indicated value by approach</div>
+            <table class="property-table" style="margin:0;">${approachRows}</table>
+            ${historyRows ? `
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin:16px 0 6px;">Value history</div>
+            <table class="property-table" style="margin:0;">${historyRows}</table>` : ''}
+          </div>
+        </div>
+
+        <div style="margin-top:20px;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Notes</div>
+          <div style="border:1px solid var(--gray-300);border-radius:6px;min-height:120px;background:repeating-linear-gradient(transparent,transparent 27px,var(--gray-200) 27px,var(--gray-200) 28px);"></div>
+        </div>
       </div>
     `;
 
-    $('state-report').innerHTML = headerHtml + section1Html + section2Html + section3Html + section4Html + section5Html + footerHtml;
+    // ── Footer ──
+    const footerHtml = `
+      <div class="footer">
+        ${cadName} &middot; Tax Year ${s.tax_year || 2026} &middot; Account ${fmtAccount(s.parcel_id, s.county)}
+      </div>
+    `;
+
+    $('state-report').innerHTML = headerHtml + coverHtml + section1Html + section2Html + section3Html + section4Html + section5Html + footerHtml;
 
     // Kick off async distance enrichment for the equity grid. DB only
     // stores subdivision-centroid lat/lng so we have to geocode each
@@ -2230,7 +2363,8 @@
             // filter above drops comps with eff-delta >25 yr; this row makes
             // the exclusion logic self-documenting for the ARB reviewer.
             attrRow('Effective year built', p => p.effective_year_built),
-            attrRow('Bedrooms', p => p.bedroom_count),
+            // David (consultant) 2026-06-25: "The number of bedrooms generally
+            // isn't an important comparison point." Bedrooms row removed.
           ])}
           ${section((s.tax_year || 2026) + ' Market Values', [
             attrRow('Land value', p => p.land_value, fmtMoney),
@@ -2620,15 +2754,63 @@
   // this section. Pool / garage fire per-comp based on data availability:
   // if a CAD didn't publish the flag for either subject or comp, the
   // engine silently skips the adjustment. No explicit county gate.
-  function renderMethodologySection(s) {
-    // Mike's 2026-06-18 directive: strip the per-adjustment formula table
-    // entirely. The brief should not expose how each individual adjustment
-    // is computed — that's internal mechanics. Keep a one-paragraph
-    // explainer + the non-appraisal disclaimer.
+  function renderMethodologySection(s, comps) {
+    // David (consultant) 2026-06-25: "I like ending the packet with a summary
+    // of the adjustments used in the analysis. If questions come up during a
+    // hearing, it's helpful to have that information readily available... it's
+    // critical that the agent understands exactly how those adjustments are
+    // calculated." This summary lists every adjustment category that was
+    // applied to the comparables, in plain language the agent can defend at
+    // ARB — without re-exposing the internal per-comp formula table Mike
+    // stripped on 2026-06-18. The per-comp dollar figures remain visible in
+    // the Section 3 grid; this is the explainer that backs them.
+    const subjSf = s.living_sqft || 0;
+
+    // Determine which adjustment categories actually fired across the comp
+    // set, and the net dollar effect of each, so the summary only lists what
+    // was used (an agent shouldn't have to defend an adjustment that wasn't
+    // applied).
+    const cats = [
+      { key: 'sizeAdjPsf',    name: 'Size (GLA)',          desc: "Normalizes each comparable's value to the subject's living area of " + (subjSf ? fmtNum(subjSf) + ' sqft' : 'record') + ". Larger comps are adjusted down, smaller comps up, at the CAD's own improvement $/SF rate." },
+      { key: 'ageAdjPsf',     name: 'Age / condition',     desc: "Accounts for year-built (and effective-year) differences between the subject and each comparable." },
+      { key: 'landAdjPsf',    name: 'Land',                desc: "Equalizes each comparable's land value to the subject's so the comparison reflects improvements, not lot pricing." },
+      { key: 'featureAdjPsf', name: 'Additional features', desc: "Flat-dollar add/remove for amenities the CAD records differently (pool, extra garage bays, etc.)." },
+    ];
+    const rows = cats.map(cat => {
+      let net = 0, applied = 0;
+      (comps || []).forEach(c => {
+        const sf = c.living_sqft || 0;
+        if (!sf) return;
+        const adj = Math.round(computeAdjBreakdown(s, c)[cat.key] * sf);
+        if (adj !== 0) { applied++; net += adj; }
+      });
+      if (applied === 0) return '';   // category never fired — omit it
+      const avg = Math.round(net / applied);
+      const avgStr = avg === 0 ? '$0' : (avg > 0 ? '+' + fmtMoney(avg) : '−' + fmtMoney(Math.abs(avg)));
+      return `<tr>
+        <td class="adj-name">${cat.name}</td>
+        <td class="adj-mag">${avgStr} avg <span style="color:var(--gray-500);font-weight:400;font-family:inherit;">(${applied} of ${(comps || []).length} comps)</span></td>
+        <td class="adj-desc">${cat.desc}</td>
+      </tr>`;
+    }).filter(Boolean).join('');
+
+    const tableHtml = rows ? `
+        <table class="methodology-table">
+          <thead><tr><th>Adjustment</th><th>Net effect</th><th>What it accounts for</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="methodology-note">
+          Each adjustment is applied to the appraisal district's own noticed value for the comparable, then the adjusted values are reconciled to the median (Section 3) as the indicated value for the subject. Per-comparable dollar figures appear in the Adjustments and Derivation rows of the Section 3 grid.
+        </p>
+    ` : `
+        <p class="methodology-note" style="margin-top:0;">No size, age, land, or feature adjustments were required &mdash; the comparables are sufficiently alike to the subject that the district's noticed values are compared directly.</p>
+    `;
+
     return `
-      <h2><span class="section-num">5.</span> Adjustment Methodology</h2>
+      <h2><span class="section-num">5.</span> Adjustments Summary</h2>
       <div class="analysis-summary">
-        <p class="methodology-note" style="margin-top:0;padding:12px 14px;background:#FFF8E1;border-left:3px solid #F5B400;border-radius:4px;font-size:12px;color:#5C4400;">
+        ${tableHtml}
+        <p class="methodology-note" style="margin-top:14px;padding:12px 14px;background:#FFF8E1;border-left:3px solid #F5B400;border-radius:4px;font-size:12px;color:#5C4400;">
           <b>Non-appraisal disclaimer:</b> This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice or any applicable State Laws or rules as they may apply to property market value appraisals that may be provided by a Licensed Real Estate Appraiser. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and the Property Owner's or Tax Agent's interpretation and analysis of market factors or information provided by the applicable CAD. The requested market value reflects the Property Owner's or Tax Agent's good-faith opinion of value for use in this protest, and it does not represent a market-value opinion for any purpose other than this property tax value protest.
         </p>
       </div>
@@ -2698,9 +2880,65 @@
     }
   }
 
+  // ────────── Reviewed-report path ──────────
+  // When opened with ?review=1, render from the STORED, approved draft instead
+  // of re-analyzing from the address. This is what makes the delivered PDF/DOCX
+  // reflect the exact evidence that was reviewed (frozen at submission) rather
+  // than a fresh — and possibly drifted — live lookup.
+  //   - Customer (td_link cookie):  GET /api/report        → { status, report }
+  //   - Agent (td_sup cookie + jti): GET /api/report?jti=… → { review }
+  // Both carry the stored engine data at draft.our, which renderReport consumes.
+  async function renderFromStored() {
+    showState('loading');
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const jti = (params.get('jti') || '').trim();
+      // With a jti we're the sup reviewer preview — ask for overrides applied so
+      // the pack reflects the reviewer's saved edits. The customer path (no jti)
+      // already returns the override-applied report.
+      const resp = await fetch('/api/report' + (jti ? '?jti=' + encodeURIComponent(jti) + '&applied=1' : ''),
+        { headers: { 'Accept': 'application/json' } });
+      if (!resp.ok) {
+        $('error-detail').innerHTML =
+          '<p><b>Couldn\'t load the reviewed report.</b></p>' +
+          '<p>You may need to sign in again, or the report link may have expired.</p>';
+        showState('error');
+        return;
+      }
+      const payload = await resp.json();
+      // Sup reviewer view nests the row as { review }; customer view as { report }.
+      const draft = payload.review ? payload.review.draft : payload.report;
+      const data = draft && draft.our;
+      if (!data || !data.subject) {
+        $('error-detail').innerHTML =
+          '<p><b>This report isn\'t ready yet.</b></p>' +
+          '<p>The reviewed evidence pack becomes available once a TaxDrop reviewer approves it.</p>';
+        showState('error');
+        return;
+      }
+      // Untrusted stored draft (client-computed, persisted verbatim by
+      // /api/intake) — escape every string field before it reaches the
+      // innerHTML sinks in renderReport.
+      renderReport(escapeDeep(data));
+      showState('report');
+    } catch (e) {
+      $('error-detail').innerHTML =
+        '<p><b>Error loading the reviewed report.</b></p><p>Message: <code>' + (e.message || String(e)) + '</code></p>';
+      showState('error');
+    }
+  }
+
   // ────────── Page boot ──────────
   (function init() {
     const params = new URLSearchParams(window.location.search);
+    $('addr-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); submitSearch(); }
+    });
+    // Reviewed-report mode takes precedence over the address search path.
+    if (params.get('review') === '1' || params.get('review') === 'true') {
+      renderFromStored();
+      return;
+    }
     const addr = params.get('address');
     if (addr) {
       $('addr-input').value = addr;
@@ -2708,9 +2946,6 @@
     } else {
       showState('empty');
     }
-    $('addr-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); submitSearch(); }
-    });
   })();
 </script>
 
