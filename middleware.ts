@@ -31,12 +31,11 @@ export const config = {
 // static shell but no data.
 const ACCESS_ON = /^(1|true|yes)$/i.test(process.env.ACCESS_CONTROL_ENABLED || '');
 
-// Human-navigable internal entry pages that require the sup password when
-// access control is on. Asset sub-paths (e.g. /v2/app.jsx) are intentionally
-// NOT listed so both the customer app and the internal app can load assets.
+// Internal-only entry pages that require the sup password when access control
+// is on. Customer-facing surfaces (/ and /v2) stay public so anonymous visitors
+// can use the marketing/instant tool; paid customers arrive via /r/<token>.
+// Asset sub-paths (e.g. /v2/app.jsx) are intentionally NOT listed.
 const INTERNAL_ENTRIES = new Set([
-  '/', '/index.html',
-  '/v2', '/v2/', '/v2/index.html',
   '/pro', '/pro/', '/pro/index.html',
 ]);
 
@@ -51,7 +50,7 @@ export default function middleware(req: Request) {
   // gated report paths also live on studio.taxdrop.com, so an agent has to be
   // able to reach /sup there too. Handle it before the host gate below.
   const earlyUrl = new URL(req.url);
-  if (earlyUrl.pathname === '/sup') {
+  if (earlyUrl.pathname === '/sup' || earlyUrl.pathname === '/agent') {
     earlyUrl.pathname = '/sup.html';
     return rewrite(earlyUrl);
   }
@@ -80,7 +79,7 @@ export default function middleware(req: Request) {
   }
 
   // --- Sup (agent) login ----------------------------------------------------
-  if (path === '/sup') {
+  if (path === '/sup' || path === '/agent') {
     url.pathname = '/sup.html';
     return rewrite(url);
   }
