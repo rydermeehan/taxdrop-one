@@ -58,17 +58,12 @@ interface GateResult { ok: boolean; status?: number; body?: object; }
 async function checkAccess(req: VercelRequest, path: string): Promise<GateResult> {
   if (!ACCESS_ON) return { ok: true }; // flag off → legacy pass-through
 
-  // What gets gated:
-  //   - EVERY path on one.taxdrop.com (the SaaS surface), and
-  //   - the paid deliverable paths (REPORT_PATHS) on ANY host.
-  // What stays open: internal-navigation paths on non-SaaS hosts — i.e. the
-  // studio.taxdrop.com database tools (/api/counties, /api/browse, /api/lookup)
-  // keep working without a login. This closes the studio bypass to the paid
-  // evidence/comp data while leaving the legacy internal tooling untouched.
-  const host = (req.headers.host || '').toLowerCase();
-  const onSaasHost = host === 'one.taxdrop.com';
-  const report = isReportPath(path);
-  if (!onSaasHost && !report) return { ok: true };
+  // What gets gated: the paid deliverable paths (REPORT_PATHS) on ANY host.
+  // This closes the studio.taxdrop.com bypass to evidence/comp data while
+  // leaving internal-navigation paths (/api/counties, /api/browse, /api/lookup)
+  // and the public marketing/instant tool on one.taxdrop.com open. Customer
+  // paid links still require a valid token for report generation.
+  if (!isReportPath(path)) return { ok: true };
 
   // 1. Agents/testing: a valid sup cookie grants unlimited access. The cookie
   //    is scoped to .taxdrop.com, so one /sup login works on both hosts.
