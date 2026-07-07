@@ -668,6 +668,25 @@ const isSupportedFile = (f) =>
   || /sheet|excel|spreadsheetml/i.test(f.type || "")
   || /csv$/i.test(f.type || "");
 
+// Wait for the ES-module @vercel/blob client (index.html) before uploading.
+function waitForBlobClient(maxMs = 10000) {
+  if (window.blobClientUpload) return Promise.resolve(window.blobClientUpload);
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    const done = () => {
+      if (window.blobClientUpload) resolve(window.blobClientUpload);
+      else reject(new Error("blob client not loaded"));
+    };
+    window.addEventListener("td-blob-ready", done, { once: true });
+    const poll = () => {
+      if (window.blobClientUpload) return resolve(window.blobClientUpload);
+      if (Date.now() - t0 > maxMs) return reject(new Error("blob client not loaded"));
+      setTimeout(poll, 50);
+    };
+    poll();
+  });
+}
+
 /* ───────────────────────── app ───────────────────────── */
 function App() {
   const [address, setAddress] = useState("");
@@ -953,14 +972,27 @@ function App() {
   }, [address, computeDraft]);
 
   // Upload evidence files straight to Blob (client-upload), namespaced to this
-  // purchase's jti. Failure is non-fatal — the reviewer can request a re-upload;
-  // the extracted CAD text still rides along in the draft.
+  // purchase's jti. Resolves jti on demand — the boot /api/report call may not
+  // have finished before the customer submits. Failure is non-fatal; the parsed
+  // CAD text still rides in draft.cad / draft.cadRaw.
   const uploadEvidence = useCallback(async () => {
-    if (!files.length || !window.blobClientUpload || !jti) return [];
+    if (!files.length) return [];
+    let uploadJti = jti;
+    if (!uploadJti) {
+      try {
+        const resp = await fetch("/api/report", { headers: { Accept: "application/json" } });
+        if (resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          if (data.jti) { uploadJti = data.jti; setJti(data.jti); }
+        }
+      } catch (e) { /* fall through — upload will no-op without jti */ }
+    }
+    if (!uploadJti) return [];
+    const upload = await waitForBlobClient();
     const out = [];
     for (const f of files) {
-      const pathname = "one/reviews/" + jti + "/" + (f.name || "evidence");
-      const blob = await window.blobClientUpload(pathname, f, {
+      const pathname = "one/reviews/" + uploadJti + "/" + (f.name || "evidence");
+      const blob = await upload(pathname, f, {
         access: "public",
         handleUploadUrl: "/api/blob-upload",
       });
@@ -985,6 +1017,7 @@ function App() {
       const draft = d.ok
         ? { result: d.r, cad: d.cad, our: d.our, cadRaw: d.cadRaw, cadMethod: d.cadMethod, lookupAddr: d.lookupAddr }
         : null;
+      const hasCountyEvidence = !!(d.ok && (d.cad || d.cadRaw)) || files.length > 0;
       const resp = await fetch("/api/intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -992,6 +1025,8 @@ function App() {
           address: (d.ok && d.lookupAddr) || address.trim(),
           contact,
           evidence,
+          hasCountyEvidence,
+          evidenceFilenames: files.map((f) => ({ filename: f.name, size: f.size })),
           draft,
           draftError: d.ok ? undefined : d.error,
         }),

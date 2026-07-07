@@ -41,6 +41,15 @@
   <script src="/evidence-analyzer/analyzer.js"></script>
   <script src="/evidence-analyzer/extract.js"></script>
 
+  <!-- Vercel Blob client upload — evidence files go straight to Blob via
+       /api/blob-upload. Without this, uploadEvidence() silently no-ops and
+       the agent queue shows "No county evidence uploaded". -->
+  <script type="module">
+    import { upload } from "https://esm.sh/@vercel/blob@0.27.3/client";
+    window.blobClientUpload = upload;
+    window.dispatchEvent(new Event("td-blob-ready"));
+  </script>
+
   <script type="text/babel" src="app.jsx"></script>
 </body>
 </html>
