@@ -668,6 +668,15 @@ const isSupportedFile = (f) =>
   || /sheet|excel|spreadsheetml/i.test(f.type || "")
   || /csv$/i.test(f.type || "");
 
+/* Agent portal: one.taxdrop.com/agent serves this same app (middleware rewrites
+   /agent → /v2/index.html, leaving the browser URL as /agent). In agent mode we
+   force the instant flow — an agent runs a protest report on any address with no
+   email and no review-approval gate. Detected from the pathname, so it holds even
+   when the agent's browser carries a sup/paid cookie that would otherwise flip
+   the page into the customer review product. (2026-07-08) */
+const AGENT_MODE =
+  typeof window !== "undefined" && /^\/agent\/?$/.test(window.location.pathname);
+
 /* ───────────────────────── app ───────────────────────── */
 function App() {
   const [address, setAddress] = useState("");
@@ -758,6 +767,11 @@ function App() {
   useEffect(() => {
     // ?demo bypasses the review flow (the sample-result effect handles it).
     if (/[?&]demo\b/.test(window.location.search)) { setBooting(false); return; }
+    // Agent portal (/agent): never the review product — skip the status probe
+    // entirely so a lingering sup/paid cookie can't flip it into review mode.
+    // Every search runs an instant report; /api/cad-proxy still requires the
+    // agent's sup login for the data itself.
+    if (AGENT_MODE) { setReviewMode(false); setBooting(false); return; }
     const q = new URLSearchParams(window.location.search);
     const arrivedViaLink = /^\/r(\/|$)/.test(window.location.pathname) || q.has("r") || !!q.get("address");
     let alive = true;
@@ -1062,8 +1076,12 @@ function App() {
   const jIn = JURISDICTIONS[stateFromAddress(address) || "TX"];
 
   // In review mode the primary CTA submits to the queue instead of rendering.
+  // Agent mode is never reviewMode (forced off above), so it takes the instant
+  // `analyze` path with an agent-facing label.
   const primaryAction = reviewMode ? submitForReview : analyze;
-  const primaryLabel = reviewMode ? "Submit for Tax Agent Review" : "Find my best method";
+  const primaryLabel = reviewMode
+    ? "Submit for Tax Agent Review"
+    : (AGENT_MODE ? "Run protest report" : "Find my best method");
   const primaryDisabled = reviewMode
     ? (!address.trim() || !contact.email.trim() || status === "analyzing")
     : ctaDisabled;

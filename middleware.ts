@@ -38,6 +38,10 @@ const INTERNAL_ENTRIES = new Set([
   '/', '/index.html',
   '/v2', '/v2/', '/v2/index.html',
   '/pro', '/pro/', '/pro/index.html',
+  // /agent is the internal agent portal — same v2 app, but forced into the
+  // instant (no email / no review-approval) flow. Gate it like the other
+  // internal entries so only a logged-in agent (sup password) can reach it.
+  '/agent', '/agent/',
 ]);
 
 function hasSupCookie(req: Request): boolean {
@@ -122,6 +126,16 @@ export default function middleware(req: Request) {
   // through directly — those files already live at the right paths.
   if (path.startsWith('/test/') || path.startsWith('/evidence-analyzer/')) {
     return next();
+  }
+
+  // /agent → the v2 app, but the app reads the /agent pathname and forces the
+  // instant flow: agents run a protest report on any address with no email and
+  // no review-approval gate (customers on /r/<token> keep that gate untouched).
+  // We rewrite (not redirect) so the browser URL stays /agent, which is how the
+  // client detects agent mode. (2026-07-08 — agent portal.)
+  if (path === '/agent' || path === '/agent/') {
+    url.pathname = '/v2/index.html';
+    return rewrite(url);
   }
 
   // Root → /v2/index.html. The v2 Strategy Recommender is now the live One
