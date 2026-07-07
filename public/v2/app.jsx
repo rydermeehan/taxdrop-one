@@ -957,14 +957,18 @@ function App() {
   // the extracted CAD text still rides along in the draft.
   const uploadEvidence = useCallback(async () => {
     if (!files.length || !window.blobClientUpload || !jti) return [];
+    // Upload each file independently: a single failure must not throw away the
+    // ones that did upload, or the reviewer loses evidence we already have.
     const out = [];
     for (const f of files) {
       const pathname = "one/reviews/" + jti + "/" + (f.name || "evidence");
-      const blob = await window.blobClientUpload(pathname, f, {
-        access: "public",
-        handleUploadUrl: "/api/blob-upload",
-      });
-      out.push({ url: blob.url, filename: f.name, size: f.size });
+      try {
+        const blob = await window.blobClientUpload(pathname, f, {
+          access: "public",
+          handleUploadUrl: "/api/blob-upload",
+        });
+        out.push({ url: blob.url, filename: f.name, size: f.size });
+      } catch (e) { /* skip this file — keep the rest */ }
     }
     return out;
   }, [files, jti]);

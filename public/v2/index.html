@@ -41,6 +41,11 @@
   <script src="/evidence-analyzer/analyzer.js"></script>
   <script src="/evidence-analyzer/extract.js"></script>
 
+  <!-- Defines window.blobClientUpload — used by the review flow to push the
+       customer's county-evidence files to Blob before /api/intake. Without it,
+       every submission ships with no evidence attached. -->
+  <script src="/v2/blob-upload-client.js"></script>
+
   <script type="text/babel" src="app.jsx"></script>
 </body>
 </html>
