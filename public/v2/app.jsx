@@ -688,12 +688,13 @@ function App() {
   // entitlement lock (cad-proxy, "first use wins") is the real guard; this just
   // removes the temptation/confusion of a free-text search bar. (2026-06-30)
   const [linked, setLinked] = useState(false);
-  // Review-before-delivery flow (paid customers): instead of rendering the
-  // report instantly, the submission goes into a review queue and the customer
-  // waits for a reviewer to release it. `reviewStatus` is the server's view of
+  // Paid-customer flow: on submit we record the case and render the report
+  // inline — no reviewer approval step. `reviewStatus` is the server's view of
   // this purchase: unknown (still loading) | none (not submitted yet) |
-  // submitted | in_review | approved. Sup/demo/direct visitors keep the instant
-  // flow. (2026-07-01 — review gate)
+  // submitted | in_review | approved. The submit path now sets `approved`
+  // directly; `submitted`/`in_review` only surface for legacy in-flight cases
+  // the server still reports as pending. Sup/demo/direct visitors use the same
+  // instant render. (2026-07-01 — review gate; 2026-07-07 — approval step removed)
   const [reviewStatus, setReviewStatus] = useState("none");
   const [jti, setJti] = useState("");
   const [contact, setContact] = useState({ name: "", email: "", phone: "" });
@@ -872,9 +873,9 @@ function App() {
   const canAnalyze = !!address.trim() && status !== "analyzing";
 
   // The full analysis pipeline (extract CAD → engine lookup → decide), shared by
-  // the instant flow (`analyze`) and the review flow (`submitForReview`).
-  // Returns the complete draft bundle; the caller decides whether to render it
-  // or ship it to the review queue. `onStep` drives the progress UI.
+  // the instant flow (`analyze`) and the paid-customer flow (`submitAndGenerate`).
+  // Returns the complete draft bundle; the caller renders it. `onStep` drives
+  // the progress UI.
   const computeDraft = useCallback(async (onStep) => {
     const step = onStep || (() => {});
     let cad = null, cadRawLocal = null, cadMethodLocal = "";
@@ -969,10 +970,11 @@ function App() {
     return out;
   }, [files, jti]);
 
-  // Review flow: compute the draft, stash the evidence, and hand the whole
-  // submission to the queue. The customer then sees the holding screen; a
-  // reviewer releases it later (report.ts flips to `approved`).
-  const submitForReview = useCallback(async () => {
+  // Paid-customer submit: run the same analysis pipeline, record the submission
+  // (contact + evidence) for the file, and render the report inline — no
+  // reviewer approval step. (2026-07-07 — review gate removed: generate the
+  // report on submit instead of holding it for /agent approval.)
+  const submitAndGenerate = useCallback(async () => {
     if (!address.trim()) return;
     if (!contact.email.trim()) { setSubmitError("Add your email so we can send your report."); return; }
     setStatus("analyzing"); setStep(0); setError(""); setSubmitError("");
@@ -980,33 +982,46 @@ function App() {
       const d = await computeDraft(setStep);
       let evidence = [];
       try { evidence = await uploadEvidence(); }
-      catch (e) { /* upload failed — submit anyway; reviewer can re-request files */ }
+      catch (e) { /* upload failed — generate anyway; the draft carries the CAD text */ }
 
       const draft = d.ok
         ? { result: d.r, cad: d.cad, our: d.our, cadRaw: d.cadRaw, cadMethod: d.cadMethod, lookupAddr: d.lookupAddr }
         : null;
-      const resp = await fetch("/api/intake", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address: (d.ok && d.lookupAddr) || address.trim(),
-          contact,
-          evidence,
-          draft,
-          draftError: d.ok ? undefined : d.error,
-        }),
-      });
-      if (!resp.ok) {
-        const e = await resp.json().catch(() => ({}));
-        setSubmitError(e.message || "We couldn't submit your report. Please try again.");
-        setStatus("idle");
+      // Record the submission best-effort (lead capture + evidence for the file).
+      // Never block report delivery on it — a failed/absent intake endpoint must
+      // not stop the customer from seeing their report.
+      try {
+        await fetch("/api/intake", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: (d.ok && d.lookupAddr) || address.trim(),
+            contact,
+            evidence,
+            draft,
+            draftError: d.ok ? undefined : d.error,
+          }),
+        });
+      } catch (e) { /* intake logging failed — still deliver the report */ }
+
+      if (!d.ok) {
+        // Couldn't build the report (unreadable evidence / property not found).
+        // Surface the reason so the customer can fix it and retry — same as the
+        // instant flow does.
+        setError(d.error);
+        setStatus("error");
         return;
       }
-      setReviewStatus("in_review");
-      setStatus("submitted");
+      await new Promise((res) => setTimeout(res, 350));
+      setResult(d.r);
+      setCadRaw(d.cadRaw);
+      setCadMethod(d.cadMethod);
+      setLockAddr(d.lookupAddr);
+      setReviewStatus("approved");
+      setStatus("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
-      setSubmitError("Something went wrong submitting your report. Please try again.");
+      setSubmitError("Something went wrong generating your report. Please try again.");
       setStatus("idle");
     }
   }, [address, contact, computeDraft, uploadEvidence]);
@@ -1061,9 +1076,11 @@ function App() {
   // state, matching resolveStateId). Drives the "File your protest" step copy.
   const jIn = JURISDICTIONS[stateFromAddress(address) || "TX"];
 
-  // In review mode the primary CTA submits to the queue instead of rendering.
-  const primaryAction = reviewMode ? submitForReview : analyze;
-  const primaryLabel = reviewMode ? "Submit for Tax Agent Review" : "Find my best method";
+  // Paid customers run submitAndGenerate (records the submission, then renders
+  // the report inline); everyone else uses the instant analyze path. Both
+  // render the report on this page — no approval wait.
+  const primaryAction = reviewMode ? submitAndGenerate : analyze;
+  const primaryLabel = reviewMode ? "Generate my report" : "Find my best method";
   const primaryDisabled = reviewMode
     ? (!address.trim() || !contact.email.trim() || status === "analyzing")
     : ctaDisabled;
