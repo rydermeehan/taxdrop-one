@@ -36,6 +36,12 @@ function ensureAddressZip(addr) {
   });
 }
 
+// Google Places / Geocoder append ", USA" to every formatted_address. It's dead
+// weight on a US-only product and it overflowed the filing card's copy row.
+// DISPLAY ONLY — never apply this to the value bound to the address <input> or
+// to anything POSTed upstream; the stored address stays exactly as geocoded.
+const cleanAddr = (a) => String(a || "").replace(/,\s*(USA|United States)\s*$/i, "").trim();
+
 const fmt = (n) => (n == null || isNaN(n) ? "—" : "$" + Math.round(n).toLocaleString("en-US"));
 const signed = (n) => (n < 0 ? "−" : "+") + "$" + Math.abs(Math.round(n)).toLocaleString("en-US");
 const titleCase = (s) =>
@@ -221,7 +227,7 @@ const JURISDICTIONS = {
     form: "Form 50-132", deadline: txDeadline(),
     boardShort: "ARB", boardLong: "Appraisal Review Board",
     statute: "Texas Tax Code §41.43", statuteShort: "Texas §41.43",
-    hasFormFill: true, // /api/generate-forms fills the 50-132
+    hasFormFill: true, // blank Form 50-132 available for download
   },
   CA: {
     id: "CA", stateName: "California",
@@ -668,7 +674,12 @@ const isSupportedFile = (f) =>
   || /sheet|excel|spreadsheetml/i.test(f.type || "")
   || /csv$/i.test(f.type || "");
 
-// Wait for the ES-module @vercel/blob client (index.html) before uploading.
+// Wait for the ES-module @vercel/blob client (loaded in index.html) before
+// uploading. index.html fires `td-blob-ready` once window.blobClientUpload is
+// set; without this, a customer who submits before that module finishes loading
+// silently uploaded nothing and the agent queue showed "No county evidence
+// uploaded" even though they attached a packet. (Ported from taxdrop-one
+// 4218e6a, 2026-07-21 — the fix had never reached the deploy source.)
 function waitForBlobClient(maxMs = 10000) {
   if (window.blobClientUpload) return Promise.resolve(window.blobClientUpload);
   return new Promise((resolve, reject) => {
@@ -973,8 +984,9 @@ function App() {
 
   // Upload evidence files straight to Blob (client-upload), namespaced to this
   // purchase's jti. Resolves jti on demand — the boot /api/report call may not
-  // have finished before the customer submits. Failure is non-fatal; the parsed
-  // CAD text still rides in draft.cad / draft.cadRaw.
+  // have finished before the customer submits — and waits for the blob client
+  // module rather than silently no-opping. Failure is non-fatal; the parsed CAD
+  // text still rides in draft.cad / draft.cadRaw.
   const uploadEvidence = useCallback(async () => {
     if (!files.length) return [];
     let uploadJti = jti;
@@ -992,8 +1004,11 @@ function App() {
     const out = [];
     for (const f of files) {
       const pathname = "one/reviews/" + uploadJti + "/" + (f.name || "evidence");
+      // Evidence packets are customer tax documents (PII) — upload PRIVATE so
+      // they're never reachable by URL. The reviewer views them through the
+      // sup-gated /api/evidence-download proxy, not a direct blob link.
       const blob = await upload(pathname, f, {
-        access: "public",
+        access: "private",
         handleUploadUrl: "/api/blob-upload",
       });
       out.push({ url: blob.url, filename: f.name, size: f.size });
@@ -1010,13 +1025,27 @@ function App() {
     setStatus("analyzing"); setStep(0); setError(""); setSubmitError("");
     try {
       const d = await computeDraft(setStep);
+      // If the customer attached files, they MUST land in Blob or the reviewer
+      // never sees them. A silent failure here previously submitted a
+      // packet-less report that looked intentional ("No county evidence
+      // uploaded"). Surface it and let them retry instead of losing the file.
       let evidence = [];
-      try { evidence = await uploadEvidence(); }
-      catch (e) { /* upload failed — submit anyway; reviewer can re-request files */ }
+      if (files.length) {
+        try { evidence = await uploadEvidence(); }
+        catch (e) { evidence = []; }
+        if (evidence.length < files.length) {
+          setStatus("idle");
+          setSubmitError("We couldn't attach your county evidence file. Please try again — if it keeps failing, contact support and we'll add it for you.");
+          return;
+        }
+      }
 
       const draft = d.ok
         ? { result: d.r, cad: d.cad, our: d.our, cadRaw: d.cadRaw, cadMethod: d.cadMethod, lookupAddr: d.lookupAddr }
         : null;
+      // Backup signal for the review queue: even if a Blob upload is later lost,
+      // these tell the reviewer the customer DID attach a packet, so a missing
+      // file reads as a problem to chase rather than "they sent nothing".
       const hasCountyEvidence = !!(d.ok && (d.cad || d.cadRaw)) || files.length > 0;
       const resp = await fetch("/api/intake", {
         method: "POST",
@@ -1128,7 +1157,7 @@ function App() {
             <h1 style={{ fontSize: narrow ? 26 : 32, lineHeight: 1.12, fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 14px", color: "#16241c" }}>Your report is being prepared</h1>
             <p style={{ maxWidth: 460, margin: "0 auto 8px", fontSize: 16, lineHeight: 1.6, color: "#5d6f64", fontWeight: 500 }}>
               Thanks{contact.name ? ", " + contact.name.split(" ")[0] : ""}. A TaxDrop tax expert is reviewing the evidence for{" "}
-              <strong style={{ color: "#16241c" }}>{address}</strong> and finalizing your strategy.
+              <strong style={{ color: "#16241c" }}>{cleanAddr(address)}</strong> and finalizing your strategy.
             </p>
             <p style={{ maxWidth: 460, margin: "0 auto 26px", fontSize: 16, lineHeight: 1.6, color: "#5d6f64", fontWeight: 500 }}>
               You'll get an email as soon as it's ready — typically within{" "}
@@ -1176,7 +1205,7 @@ function App() {
               ? <React.Fragment>Let's start building your<br />winning <span style={{ color: "#2c8350" }}>case.</span></React.Fragment>
               : <React.Fragment>Win the lowest assessment<br />you can actually <span style={{ color: "#2c8350" }}>defend.</span></React.Fragment>}</h1>
             <p style={{ maxWidth: 620, margin: "0 auto", fontSize: narrow ? 17 : 19.5, lineHeight: 1.55, color: "#41524a", fontWeight: 500 }}>{reviewMode
-              ? "You're in. Your report is locked to the property you enrolled — confirm your details, generate your pre-filled protest form, and submit. A TaxDrop expert finishes the rest and emails your finished report."
+              ? "You're in. Your report is locked to the property you enrolled — confirm your details, download your protest form, and submit. A TaxDrop expert finishes the rest and emails your finished report."
               : "Drop in your address and the county's evidence packet. We test every angle — their own numbers, the strongest backup comp, and our independent equity report — then hand you the biggest reduction that holds up at hearing, plus the step-by-step plan to win it."}</p>
           </section>
         ) : null}
@@ -1201,7 +1230,7 @@ function App() {
             {linked ? (
               <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, border: "1.5px solid #cfe3d6", background: "#f1f8f3", borderRadius: 12, padding: "15px 18px", marginBottom: 12, fontSize: 16, fontWeight: 700, color: "#16241c" }}>
                 <span style={{ flexShrink: 0, fontSize: 15 }}>🔒</span>
-                <span style={{ flex: 1, minWidth: 0 }}>{address}</span>
+                <span style={{ flex: 1, minWidth: 0 }}>{cleanAddr(address)}</span>
                 <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#2c8350", background: "#e3efe6", padding: "3px 9px", borderRadius: 20 }}>YOUR PROPERTY</span>
               </div>
             ) : (
@@ -1214,7 +1243,7 @@ function App() {
             {reviewMode ? <JurisChips jIn={jIn} /> : null}
 
             {/* STEP 2 — File your protest (paid flow only). The homeowner can't get
-                the county's evidence until AFTER they file, so filing + the pre-filled
+                the county's evidence until AFTER they file, so filing + the right
                 form + "how to get your evidence" lead; the upload moves to step 3. */}
             {reviewMode ? (
               <React.Fragment>
@@ -1420,10 +1449,10 @@ function confidenceLevel(kind, tier) {
 }
 
 /* ───────────────────────── result view ───────────────────────── */
-/* ───────── pre-filled Notice of Protest (Form 50-132) ─────────
-   Collects the owner fields the engine can't supply, then calls
-   /api/generate-forms — which fills the population-correct CraftMyPDF
-   template from the live county record and returns a print-and-sign PDF. */
+/* ───────── blank official form download card ─────────
+   Calls /api/form-schema to resolve the state+county template catalog for
+   the address, then renders a download link to the blank official form
+   plus filing instructions and account/property details to copy by hand. */
 
 /* ═══════ Post-purchase intake presentational helpers (reviewMode only) ═══════
    Pure presentational, driven by the flat `jIn` jurisdiction config so all copy
@@ -1462,86 +1491,129 @@ function EvidenceHowTo({ stateId, jIn, narrow }) {
 
 function ProtestFormCard({ address, embedded, fallback }) {
   const narrow = useNarrow(720);
-  // Backend is the source of truth: undefined = loading, null = no filled form
-  // for this jurisdiction yet, object = { form, outputFileName, fields }.
-  const [schema, setSchema] = React.useState(undefined);
-  const [values, setValues] = React.useState({});
-  const [busy, setBusy] = React.useState(false);
-  const [err, setErr] = React.useState("");
-  const [fileUrl, setFileUrl] = React.useState("");
+  // Backend is the source of truth: undefined = loading, null = lookup failed,
+  // object = { catalog, account }. The catalog is always present on success.
+  const [data, setData] = React.useState(undefined);
 
   React.useEffect(() => {
     let live = true;
     const addr = (address || "").trim();
-    if (!addr) { setSchema(null); return; }
-    setSchema(undefined);
+    if (!addr) { setData(null); return; }
+    setData(undefined);
     fetch("/api/form-schema", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address: addr }),
     })
       .then((r) => r.json().catch(() => ({})))
-      .then((d) => { if (live) setSchema(d && d.available ? d : null); })
-      .catch(() => { if (live) setSchema(null); });
+      .then((d) => { if (live) setData(d && d.catalog ? d : null); })
+      .catch(() => { if (live) setData(null); });
     return () => { live = false; };
   }, [address]);
 
-  const fields = (schema && schema.fields) || [];
-  const set = (k) => (e) => { const v = e.target.value; setValues((o) => ({ ...o, [k]: v })); };
-  const ready = fields.filter((f) => f.required).every((f) => String(values[f.key] || "").trim());
+  if (data === undefined) return null;            // loading — don't flash the fallback
+  if (data === null) return fallback || null;     // lookup failed — caller's instructions
 
-  const generate = async () => {
-    if (!ready || busy) return;
-    setBusy(true); setErr(""); setFileUrl("");
-    try {
-      const resp = await fetch("/api/generate-forms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: (address || "").trim(), inputs: values }),
-      });
-      const data = await resp.json().catch(() => ({}));
-      if (!resp.ok || !data.file) {
-        setErr(data.message || data.error || "We couldn't generate your form. Please try again.");
-      } else {
-        setFileUrl(data.file);
-        window.open(data.file, "_blank", "noopener");
-      }
-    } catch (e) {
-      setErr("Something went wrong generating your form. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const c = data.catalog;
+  // CA serves the county's own URL as primary: Alameda voids applications filed
+  // on a prior revision, so a stale mirror there loses the appeal outright.
+  const primaryHref = c.delivery === "official" ? (c.officialUrl || c.pdfPath) : (c.pdfPath || c.officialUrl);
+  const secondaryHref = c.delivery === "official" ? c.pdfPath : c.officialUrl;
+  const linkStyle = { color: "#1d6b41", fontWeight: 700, textDecoration: "underline" };
 
-  if (schema === undefined) return null;          // loading — don't flash the fallback
-  if (schema === null) return fallback || null;   // no pre-filled form for this jurisdiction yet
+  // Fallback authorities are noun phrases ("your appraisal district") that read as
+  // sentence subjects here, so capitalize for this position only — the data stays
+  // mid-sentence-safe for every other use.
+  const authoritySentence = c.authority ? c.authority.charAt(0).toUpperCase() + c.authority.slice(1) : c.authority;
 
-  const inputStyle = { width: "100%", boxSizing: "border-box", border: "1.5px solid #d8e0d8", borderRadius: 10, padding: "12px 14px", fontSize: 14.5, fontFamily: "inherit", color: "#16241c", background: "#fff", outline: "none" };
-  const field = (f) => (
-    <div key={f.key}>
-      <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: "#5d6f64", marginBottom: 6 }}>{f.label}{f.required ? null : <span style={{ color: "#a4b0a7", fontWeight: 600 }}> (optional)</span>}</label>
-      <input value={values[f.key] || ""} onChange={set(f.key)} placeholder={f.placeholder || ""} style={inputStyle} />
-    </div>
+  // `deadline` is year-free rule text and is a DATE in some states ("May 15") but a
+  // DURATION in others ("45 days after your assessment notice date"), so the sentence
+  // must not hardcode a "File by" preposition that only fits one of the two.
+  const deadlineLine = c.deadlineAlt
+    ? "Deadline: " + c.deadline + " — or " + c.deadlineAlt + "."
+    : "Deadline: " + c.deadline + ".";
+
+  const displayAddress = cleanAddr(address);
+
+  // Label + value stay glued together (the pair never breaks across lines), but
+  // the row itself wraps and a long value can break inside itself. The previous
+  // whiteSpace:"nowrap" spans overflowed the card on long values like
+  // "Dallas Central Appraisal District".
+  const copyRow = (label, value) => (
+    <span key={label} style={{ display: "inline-flex", gap: 5, minWidth: 0, maxWidth: "100%" }}>
+      <span style={{ color: "#8c9a90", flexShrink: 0 }}>{label}:</span>
+      <strong style={{ color: "#16241c", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", minWidth: 0, overflowWrap: "anywhere" }}>{value}</strong>
+    </span>
   );
 
   return (
     <section style={{ marginBottom: embedded ? 0 : 48, marginTop: embedded ? 16 : 0 }}>
-      {embedded ? null : <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".13em", color: "#2c8350", marginBottom: 18 }}>YOUR {(schema.form || "FORM").toUpperCase()}</div>}
-      <div style={{ background: "#fff", border: "1px solid #e6ebe6", borderRadius: embedded ? 10 : 18, padding: narrow ? "22px 20px" : (embedded ? "20px 22px" : "26px 28px"), maxWidth: embedded ? 720 : "none" }}>
-        <div style={{ fontSize: 17, fontWeight: 800, color: "#16241c", marginBottom: 7 }}>Pre-filled {schema.form}</div>
-        <p style={{ margin: "0 0 20px", fontSize: 13.5, lineHeight: 1.5, color: "#5d6f64" }}>We fill in your property address, account number, and appraisal district straight from the county record. Add your details below, then print, sign, and file it with your protest.</p>
-        <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "1fr 1fr", gap: 14, marginBottom: 18 }}>
-          {fields.map(field)}
-        </div>
-        {err ? <div style={{ fontSize: 13, color: "#b03f2c", marginBottom: 14 }}>{err}</div> : null}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <button onClick={generate} disabled={!ready || busy}
-            style={{ borderRadius: 11, padding: "13px 28px", fontSize: 14.5, fontWeight: 800, fontFamily: "inherit", border: "none", cursor: (!ready || busy) ? "default" : "pointer", color: "#fff", background: (!ready || busy) ? "#b9cabf" : "linear-gradient(135deg,#27764a,#15512e)" }}>
-            {busy ? "Generating…" : (schema.form === "Form 50-132" ? "Generate My Notice to Protest Form" : "Generate my " + schema.form)}
-          </button>
-          {fileUrl ? <a href={fileUrl} target="_blank" rel="noopener" style={{ fontSize: 14, fontWeight: 700, color: "#1d6b41" }}>Open PDF ↗</a> : null}
-        </div>
-        <p style={{ margin: "16px 0 0", fontSize: 12, color: "#9aa69d", lineHeight: 1.5 }}>You sign and file this yourself. The opinion-of-value and legal-description lines are left blank — write those in by hand before filing.</p>
+      {embedded ? null : <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".13em", color: "#2c8350", marginBottom: 18 }}>YOUR {(c.form || "FORM").toUpperCase()}</div>}
+      {/* No maxWidth when embedded: the host step card is ~1000px wide, so the
+          old 720px cap left ~280px of dead space to the right of this box.
+          minWidth:0 keeps long values from overflowing when the card sits in a
+          flex/grid parent. */}
+      <div style={{ background: "#fff", border: "1px solid #e6ebe6", borderRadius: embedded ? 10 : 18, padding: narrow ? "22px 20px" : (embedded ? "20px 22px" : "26px 28px"), minWidth: 0 }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: "#16241c", marginBottom: 7 }}>Your {c.formTitle}</div>
+        <p style={{ margin: "0 0 16px", fontSize: 13.5, lineHeight: 1.55, color: "#5d6f64" }}>
+          {authoritySentence} uses <strong style={{ color: "#16241c" }}>{c.form}</strong>. {primaryHref ? "Download it, fill it in, sign it, and file it." : "You'll need to get this form from your county, then fill it in, sign it, and file it."} {deadlineLine}
+        </p>
+
+        {c.fee ? (
+          <p style={{ margin: "0 0 16px", fontSize: 13.5, lineHeight: 1.55, color: "#7a5a20", background: "#fdf6e3", border: "1px solid #f0e2bb", borderRadius: 9, padding: "10px 13px" }}>
+            {/* "a filing fee of {fee}" — not "a {fee} filing fee" — because fee is a
+                bare amount in CA ("$46") but a qualified phrase in FL ("about $15
+                per parcel"), and only this word order reads correctly for both. */}
+            {c.authority} charges a filing fee of <strong>{c.fee}</strong>, paid directly to the county when you file. That fee isn't part of your TaxDrop plan.
+          </p>
+        ) : null}
+
+        {primaryHref ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+            <a href={primaryHref} target="_blank" rel="noopener"
+              style={{ display: "inline-block", borderRadius: 11, padding: "13px 28px", fontSize: 14.5, fontWeight: 800, textDecoration: "none", color: "#fff", background: "linear-gradient(135deg,#27764a,#15512e)" }}>
+              Download {c.form}
+            </a>
+            {secondaryHref ? <a href={secondaryHref} target="_blank" rel="noopener" style={{ fontSize: 13.5, fontWeight: 700, color: "#5d6f64" }}>{c.delivery === "official" ? "backup copy ↗" : "official source ↗"}</a> : null}
+          </div>
+        ) : (
+          <p style={{ margin: "0 0 14px", fontSize: 13.5, lineHeight: 1.55, color: "#5d6f64" }}>
+            Download the application from <a href={"https://www.google.com/search?q=" + encodeURIComponent((data.county || "") + " county california assessment appeals application")} target="_blank" rel="noopener" style={linkStyle}>your county assessment appeals board ↗</a>.
+          </p>
+        )}
+
+        {(c.filing.efileUrl || c.filing.website || c.filing.mailTo) ? (
+          <div style={{ fontSize: 13.5, lineHeight: 1.7, color: "#3A4148", marginBottom: 14 }}>
+            {c.paperOnly
+              ? <div><strong style={{ color: "#16241c" }}>By mail only:</strong> {c.filing.mailTo || "see the form for the filing address"}.</div>
+              : (
+                <React.Fragment>
+                  {c.filing.efileUrl ? <div><strong style={{ color: "#16241c" }}>File online:</strong> <a href={c.filing.efileUrl} target="_blank" rel="noopener" style={linkStyle}>{c.authority} portal ↗</a></div>
+                    : (c.filing.website ? <div><strong style={{ color: "#16241c" }}>Where to file:</strong> <a href={c.filing.website} target="_blank" rel="noopener" style={linkStyle}>{c.authority} ↗</a></div> : null)}
+                  {c.filing.mailTo ? <div><strong style={{ color: "#16241c" }}>Or by mail:</strong> {c.filing.mailTo}</div> : null}
+                </React.Fragment>
+              )}
+          </div>
+        ) : null}
+
+        {(data.account || address) ? (
+          <div style={{ borderTop: "1px solid #eef2ee", paddingTop: 13, marginTop: 4, fontSize: 13 }}>
+            <div style={{ fontWeight: 700, color: "#5d6f64", marginBottom: 6 }}>Your details, ready to copy</div>
+            <div style={{ display: "flex", flexWrap: "wrap", columnGap: 18, rowGap: 6, lineHeight: 1.7 }}>
+              {data.account ? copyRow("Account", data.account) : null}
+              {displayAddress ? copyRow("Property", displayAddress) : null}
+              {copyRow(c.state === "TX" ? "District" : "Authority", c.authority)}
+            </div>
+          </div>
+        ) : null}
+
+        {c.notes && c.notes.length ? (
+          <ul style={{ margin: "14px 0 0", paddingLeft: 18, fontSize: 12.5, color: "#8c9a90", lineHeight: 1.6 }}>
+            {c.notes.map((n, i) => <li key={i}>{n}</li>)}
+          </ul>
+        ) : null}
+
+        <p style={{ margin: "14px 0 0", fontSize: 12, color: "#9aa69d", lineHeight: 1.5 }}>You fill in, sign, and file this yourself. We identify the right form and where it goes — we don't file on your behalf.</p>
       </div>
     </section>
   );
@@ -1563,48 +1635,80 @@ function ReviewIntake(p) {
   } = p;
 
   const body = { fontSize: 14.5, lineHeight: 1.65, color: "#3A4148", fontWeight: 500 };
-  const fileWord = jIn.fileVerb ? jIn.fileVerb.toLowerCase() : "file";
   const fieldStyle = { width: "100%", boxSizing: "border-box", border: "1.5px solid #cdd9cd", background: "#f7faf7", borderRadius: 12, padding: "14px 16px", fontSize: 15.5, fontWeight: 600, color: "#16241c", fontFamily: "inherit", outline: "none" };
 
   const s1Summary = linked
     ? "Locked to the property you purchased — confirm it's the right one."
     : "The property we'll build your case around.";
-  const s2Summary = "File your " + (jIn.proceedingTitle || "protest") + " before " + (jIn.deadline || "the deadline") + " — filing is what unlocks the county's evidence.";
-  const s3Summary = "Optional — add the " + jIn.authorityType + "'s evidence packet once it arrives and we'll push for an even lower value.";
   const s4Summary = "Where to send your finished report. A TaxDrop tax agent reviews every case before it goes out.";
 
-  // County filing portal for step 2, item (a). /api/form-schema resolves the
-  // county from the locked address and returns its curated filing record
-  // (efileUrl/website, from _tx-cads.ts). undefined = still loading (plain text,
-  // no link yet); null = county not in the registry → fall back to an
-  // address-scoped web search, never a guessed URL. Own fetch (ProtestFormCard
+  // Drives BOTH step 2's filing item (a) and the step-2 jurisdiction copy.
+  // /api/form-schema resolves the county from the locked address and returns the
+  // whole schema — the multi-state `catalog` record (form, authority, deadline,
+  // catalog.filing) plus the legacy Texas-only top-level `filing`. undefined =
+  // still loading (plain text, no link yet); null = lookup failed → fall back to
+  // an address-scoped web search, never a guessed URL. Own fetch (ProtestFormCard
   // keeps its own) — a cheap extra call on a low-volume paid flow.
-  const [filing, setFiling] = React.useState(undefined);
+  const [schema, setSchema] = React.useState(undefined);
   React.useEffect(() => {
     const addr = (lockAddr || address || "").trim();
-    if (!addr) { setFiling(undefined); return; }
+    if (!addr) { setSchema(undefined); return; }
     let live = true;
-    setFiling(undefined);
+    setSchema(undefined);
     fetch("/api/form-schema", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ address: addr }) })
       .then((r) => r.json().catch(() => ({})))
-      .then((d) => { if (live) setFiling(d && typeof d === "object" ? (d.filing || null) : null); })
-      .catch(() => { if (live) setFiling(null); });
+      .then((d) => { if (live) setSchema(d && typeof d === "object" ? d : null); })
+      .catch(() => { if (live) setSchema(null); });
     return () => { live = false; };
   }, [lockAddr, address]);
 
+  const cat = (schema && schema.catalog) || null;
+
+  // The engine-resolved state beats the address regex: `jIn` is guessed from the
+  // typed string and silently defaults to TX, which would wrap Texas copy and a
+  // May 15 deadline around a correctly-California card. Fall back to jIn while loading.
+  const jEff = (cat && JURISDICTIONS[cat.state]) || jIn;
+
+  const fileWord = jEff.fileVerb ? jEff.fileVerb.toLowerCase() : "file";
+  // Prefer the catalog's real, county-accurate deadline over the state default.
+  const s2Deadline = (cat && cat.deadline) || jEff.deadline || "the deadline";
+  const s2Summary = "File your " + (jEff.proceedingTitle || "protest") + " before " + s2Deadline + " — filing is what unlocks the county's evidence.";
+  const s3Summary = "Optional — add the " + jEff.authorityType + "'s evidence packet once it arrives and we'll push for an even lower value.";
+
   const linkStyle = { color: "#1d6b41", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 2 };
-  const whose = (filing && filing.cadName) ? filing.cadName + "'s" : ("your " + jIn.authorityType + "'s");
-  const portalWord = jIn.proceeding + " portal";
+  const whose = (cat && cat.authority) ? cat.authority + "'s" : ("your " + jEff.authorityType + "'s");
+  const portalWord = jEff.proceeding + " portal";
   let filingItemA;
-  if (filing === undefined) {
-    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jIn.authorityType}'s {portalWord}.</React.Fragment>;
-  } else if (filing && filing.efileUrl) {
-    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online at {whose} <a href={filing.efileUrl} target="_blank" rel="noopener" style={linkStyle}>{portalWord} ↗</a>.</React.Fragment>;
-  } else if (filing && filing.website) {
-    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online at {whose} <a href={filing.website} target="_blank" rel="noopener" style={linkStyle}>website ↗</a> — look for “Online {titleCase(jIn.proceeding)}”.</React.Fragment>;
+  if (schema === undefined) {
+    // Still loading — plain text, no link yet.
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jEff.authorityType}'s {portalWord}.</React.Fragment>;
+  } else if (cat && cat.paperOnly) {
+    // Paper-only county — never imply an online option that doesn't exist.
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>By mail:</strong> {cat.authority} accepts paper filings only{cat.filing && cat.filing.mailTo ? <React.Fragment> — mail to {cat.filing.mailTo}</React.Fragment> : null}.</React.Fragment>;
+  } else if (cat && cat.filing && cat.filing.efileUrl) {
+    filingItemA = (
+      <React.Fragment>
+        <strong style={{ color: "#16241c" }}>Fastest:</strong> file online at {whose} <a href={cat.filing.efileUrl} target="_blank" rel="noopener" style={linkStyle}>{portalWord} ↗</a>.
+        {/* Districts whose portal isn't a direct filing page (Dallas opens on a
+            property search, and the uFile link only appears once you open your
+            account) carry a one-line note so the link can't dead-end anyone. */}
+        {cat.filing.efileNote ? (
+          <span style={{ display: "block", marginTop: 5, fontSize: 13.5, lineHeight: 1.55, color: "#5d6f64" }}>
+            {cat.filing.efileNote}
+            {cat.filing.efileGuideUrl ? (
+              <React.Fragment> <a href={cat.filing.efileGuideUrl} target="_blank" rel="noopener" style={linkStyle}>Step-by-step guide ↗</a></React.Fragment>
+            ) : null}
+          </span>
+        ) : null}
+      </React.Fragment>
+    );
+  } else if (cat && cat.filing && cat.filing.website) {
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online at {whose} <a href={cat.filing.website} target="_blank" rel="noopener" style={linkStyle}>website ↗</a> — look for “Online {titleCase(jEff.proceeding)}”.</React.Fragment>;
   } else {
-    const q = encodeURIComponent((String(lockAddr || address || "").replace(/,?\s*USA$/i, "").trim() || jIn.authorityType) + " appraisal district online " + jIn.proceeding);
-    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jIn.authorityType}'s {jIn.proceeding} portal — <a href={"https://www.google.com/search?q=" + q} target="_blank" rel="noopener" style={linkStyle}>find your district's portal ↗</a>.</React.Fragment>;
+    // No verified destination — an address-scoped search, never a guessed URL.
+    // Uses the state's own authority term, not the Texas-only "appraisal district".
+    const q = encodeURIComponent((String(lockAddr || address || "").replace(/,?\s*USA$/i, "").trim() || jEff.authorityType) + " " + jEff.authorityType + " online " + jEff.proceeding);
+    filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jEff.authorityType}'s {jEff.proceeding} portal — <a href={"https://www.google.com/search?q=" + q} target="_blank" rel="noopener" style={linkStyle}>find your {jEff.authorityType} ↗</a>.</React.Fragment>;
   }
 
   return (
@@ -1616,7 +1720,7 @@ function ReviewIntake(p) {
         {linked ? (
           <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, border: "1.5px solid #cfe3d6", background: "#f1f8f3", borderRadius: 12, padding: "15px 18px", marginBottom: 14, fontSize: 16, fontWeight: 700, color: "#16241c" }}>
             <span style={{ flexShrink: 0, fontSize: 15 }}>🔒</span>
-            <span style={{ flex: 1, minWidth: 0 }}>{address}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>{cleanAddr(address)}</span>
             <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#1d6b41", background: "#e3efe6", padding: "3px 9px", borderRadius: 20 }}>YOUR PROPERTY</span>
           </div>
         ) : (
@@ -1626,7 +1730,7 @@ function ReviewIntake(p) {
         {linked ? (
           <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "#5d6f64", fontWeight: 500 }}>This report is locked to the property you purchased. Follow the steps below to file and finish your report.</p>
         ) : null}
-        <JurisChips jIn={jIn} />
+        <JurisChips jIn={jEff} />
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <DarkBtn onClick={() => { if (address.trim()) onMarkDone(0); }}>{linked ? "Yes, this is my property →" : "Continue →"}</DarkBtn>
           <span style={{ fontSize: 13.5, color: "#8a988f", fontWeight: 500 }}>Not right? Contact us at <a href="mailto:admin@taxdrop.com" style={{ color: "#5d6f64", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>admin@taxdrop.com</a></span>
@@ -1635,32 +1739,32 @@ function ReviewIntake(p) {
 
       {/* STEP 2 — File your protest */}
       <StepCard num="2" done={done[1]} open={open === 1} onToggle={() => onToggle(1)}
-        title={"File your " + (jIn.proceedingTitle || "protest")} summary={s2Summary}>
+        title={"File your " + (jEff.proceedingTitle || "protest")} summary={s2Summary}>
         <div style={{ background: "#FFF8E1", border: "1px solid #C99700", borderRadius: 10, padding: "12px 16px", display: "flex", gap: 10, alignItems: "baseline", marginBottom: 16, fontSize: 14, color: "#6b4d00", lineHeight: 1.55 }}>
           <span style={{ fontWeight: 800, color: "#9a7400", flexShrink: 0, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase" }}>Deadline</span>
-          <span>{jIn.deadline || "see your notice"}. File first — the county only shares the evidence behind your value after you {fileWord}.</span>
+          <span>{s2Deadline}. File first — the county only shares the evidence behind your value after you {fileWord}.</span>
         </div>
         <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 11, ...body }}>
           <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>a.</span><span>{filingItemA}</span></div>
           <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>b.</span><span><strong style={{ color: "#16241c" }}>Or by mail:</strong> print, sign, and post the form to the address on it — postmark by your deadline.</span></div>
-          <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>c.</span><span>After you file, request the {jIn.authorityType}'s evidence — that's the packet you add in step 3.</span></div>
+          <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>c.</span><span>After you file, request the {jEff.authorityType}'s evidence — that's the packet you add in step 3.</span></div>
         </div>
         <ProtestFormCard address={lockAddr || address} embedded fallback={
           <div style={{ border: "1px solid #e6ebe6", borderRadius: 10, padding: "16px 18px" }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "#16241c" }}>{jIn.form} — {jIn.proceedingTitle} ({jIn.stateName})</div>
-            <div style={{ fontSize: 14, color: "#3A4148", lineHeight: 1.6, marginTop: 3 }}>Get {jIn.form} from your {jIn.authorityType}, fill in your details, then sign and submit it.</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: "#16241c" }}>{jEff.form} — {jEff.proceedingTitle} ({jEff.stateName})</div>
+            <div style={{ fontSize: 14, color: "#3A4148", lineHeight: 1.6, marginTop: 3 }}>Get {jEff.form} from your {jEff.authorityType}, fill in your details, then sign and submit it.</div>
           </div>
         } />
-        <DarkBtn onClick={() => onMarkDone(1)}>I've filed my {jIn.proceeding} →</DarkBtn>
+        <DarkBtn onClick={() => onMarkDone(1)}>I've filed my {jEff.proceeding} →</DarkBtn>
       </StepCard>
 
       {/* STEP 3 — County evidence packet (optional) */}
       <StepCard num="3" done={done[2]} open={open === 2} onToggle={() => onToggle(2)}
         title="County evidence packet" summary={s3Summary}>
         <div style={{ ...body, marginBottom: 14 }}>
-          Add this once your {jIn.authorityType} sends its evidence back — you don't need it to submit now. We'll build your case from our own comparables, then re-check it the moment you add the packet.
+          Add this once your {jEff.authorityType} sends its evidence back — you don't need it to submit now. We'll build your case from our own comparables, then re-check it the moment you add the packet.
         </div>
-        <EvidenceHowTo stateId={stateFromAddress(address)} jIn={jIn} narrow={narrow} />
+        <EvidenceHowTo stateId={(cat && cat.state) || stateFromAddress(address)} jIn={jEff} narrow={narrow} />
         <div onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }} onDragLeave={(e) => { e.preventDefault(); setDragging(false); }} onDrop={onDrop} onClick={() => fileRef.current && fileRef.current.click()} style={dropStyle}>
           <input type="file" multiple
             accept=".pdf,.xlsx,.xlsm,.xls,.xlsb,.csv,.tsv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
@@ -1938,7 +2042,7 @@ function PropertyStrip({ b, address, doneCount, narrow, onReset, showReset }) {
   return (
     <div style={{ background: "#fff", borderBottom: "1px solid #E5E7EB", padding: narrow ? "12px 16px" : "13px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", minWidth: 0 }}>
-        <span style={{ fontWeight: 800, fontSize: narrow ? 15.5 : 18, letterSpacing: "-0.01em", color: "#111" }}>{address}</span>
+        <span style={{ fontWeight: 800, fontSize: narrow ? 15.5 : 18, letterSpacing: "-0.01em", color: "#111" }}>{cleanAddr(address)}</span>
         {b.meta ? <span style={{ fontSize: 13.5, color: "#3A4148" }}>{b.meta}</span> : null}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -2739,11 +2843,11 @@ function Result({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }) {
       </section>
       ) : null}
 
-      {/* PRE-FILLED FORM — the official filing, generated from the live county
-          record. Print-and-sign; hidden when fairly assessed. The card asks the
-          backend (/api/form-schema) whether a filled form exists for this
-          jurisdiction; pending states render nothing here (no fallback), keeping
-          today's "render nothing when no form" behavior in the report view. */}
+      {/* BLANK OFFICIAL FORM — the correct form for this jurisdiction, which the
+          homeowner fills in, signs, and files themselves. Hidden when fairly
+          assessed. The card asks the backend (/api/form-schema) for the catalog
+          record; with no fallback prop it renders nothing if the lookup fails,
+          keeping today's "render nothing when no form" behavior in the report view. */}
       {!isFair ? <ProtestFormCard address={lockAddr || address} /> : null}
 
       {/* REFER A FRIEND — paused 2026-06-24. Component kept (ReferBlock) so the
