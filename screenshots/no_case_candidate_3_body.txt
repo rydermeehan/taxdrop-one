@@ -1,0 +1,91 @@
+Generate Report
+Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics). Try example: 20022 Atasca Villas Dr
+Property Appraisal Report
+Tax Year 2026 · CAD-Style v3 (Draft for Mike's Review)
+Export PDF
+Export Docx
+Presentation Notes
+1. Subject Property
+Street address
+4501 Balcones Dr, Austin, TX 78731
+PID #
+124629
+CAD 2026 noticed land value
+$1,239,787
+CAD 2026 noticed improvement value
+$740,690
+CAD 2026 noticed market value
+$1,980,477 ($602/sqft)
+2. Owner's Requested 2026 Market Value
+2026 CAD NOTICE VALUE
+$1,980,477
+$602/sqft
+REQUESTED MARKET VALUE
+$1,514,736
+$460/sqft · 76.5% of CAD notice
+3. Comparable Property Analysis
+
+1 comparable properties from the same county and property classification (no in-subdivision peers were available), sorted by living-area proximity. All share property classification A1 and the same school district.
+
+4 comparables excluded from the panel below:
+2803 W Fresco Dr — CAD's effective year built (2020) is 64 years newer than the subject's (1956). The CAD has flagged this property as renovated; treating it as a 1930-build peer would be misleading. (renovation filter)
+5612 N Scout Island Cir — CAD's effective year built (1995) is 39 years newer than the subject's (1956). The CAD has flagged this property as renovated; treating it as a 1930-build peer would be misleading. (renovation filter)
+5918 Lookout Mountain Dr — CAD's effective year built (1993) is 37 years newer than the subject's (1956). The CAD has flagged this property as renovated; treating it as a 1930-build peer would be misleading. (renovation filter)
+4709 Eby Ln — CAD's effective year built (1984) is 28 years newer than the subject's (1956). The CAD has flagged this property as renovated; treating it as a 1930-build peer would be misleading. (renovation filter)
+SSubject (4501 Balcones Dr)
+14304 Lostridge Dr
+Pin numbers correspond to comparable column numbers in the table below. Map data © Google.
+ 	SUBJECT
+4501 BALCONES DR	COMP #1
+4304 LOSTRIDGE DR
+Street view	
+	
+
+PID #	124629	142796
+Property address	4501 Balcones Dr	4304 Lostridge Dr
+Subdivision	Lot 1 Blk M Balcones Park Addn	Lot 1 Blk R Northwest Hills Mesa Oaks Phs 3
+State class	A1	A1
+Location from subject (miles)	—	2.9 mi
+BUILDING CHARACTERISTICS
+Living area (SF)	3,291	3,290
+Year built	1956	1968
+2026 MARKET VALUES
+Land value	$1,239,787	$685,058
+Land value ($/SF — living area)	$376.72	$208.22
+Market improvement value	$740,690	$738,464
+Market improvement value ($/SF)	$225.07	$224.46
+CAD market value	$1,980,477	$1,423,522
+CAD market value ($/SF)	$601.79	$432.68
+ADJUSTMENTS
+Land value adj.		+$142,352
+Improvement adj. — size		+$112
+Age/condition adj.		−$51,251
+Additional (pools, garages, misc.)		$0
+TOTALS
+Total net adjustment		+$91,214
+Total net adjustment ($/SF)		+$27.72
+DERIVATION
+CAD market value		$1,423,522
+Total net adjustments		+$91,214
+Adjusted property value		$1,514,736
+% difference from comp CAD market value		+6.4%
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF — based on Subject SF		$460.27
+Median adjusted value of comps	$1,514,736
+Median adjusted value ($/SF — based on Subject SF)	$460.27
+4. Analysis
+
+For each of the 1 comparables in Section 3, the CAD's noticed market value is adjusted for size, age/condition, land value, and additional features (pools, garages, misc.) to produce an indicated value for the subject. The median of those 1 indicated values is the requested ask.
+
+Median adjusted property value (1 comparables): $1,514,736
+Implied $/SF on subject footprint: $460/sqft
+Subject's living area: 3,291 sqft
+Subject's current notice: $1,980,477
+Difference: $465,741 (23.52% above the comparable median)
+5. Adjustment Methodology
+
+Adjustments shown in Section 3 are based on analysis and interpretation of market factors as to how they impact the individual property values. Each comparable's CAD-noticed value is reviewed against the subject for size, age and condition, land, and other property-specific features, and a net adjustment is applied to bring the comparable onto equal footing with the subject before the requested value is derived.
+
+Non-appraisal disclaimer: This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and the property owner's interpretation of market factors. The requested market value reflects the property owner's good-faith opinion of value; it does not represent a market-value opinion for any purpose other than this protest. (Placeholder text — pending Mike's final wording.)
+
+Travis Central Appraisal District · Tax Year 2026 · Account 124629 · Page 1 of 1

@@ -1,0 +1,104 @@
+Generate Report
+Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics). Try example: 20022 Atasca Villas Dr
+Property Appraisal Report
+Tax Year 2026 · CAD-Style v3 (Draft for Mike's Review)
+Export PDF
+Export Docx
+Presentation Notes
+1. Subject Property
+Street address
+2915 Bay Hollow Ct, Katy, TX 77450
+PID #
+2271-01-002-0100-914
+CAD 2026 noticed land value
+$161,590
+CAD 2026 noticed improvement value
+$1,008,654
+CAD 2026 noticed market value
+$1,170,244 ($219/sqft)
+2. Owner's Requested 2026 Market Value
+2026 CAD NOTICE VALUE
+$1,170,244
+$219/sqft
+REQUESTED MARKET VALUE
+$1,097,002
+$206/sqft · 93.7% of CAD notice
+3. Comparable Property Analysis
+
+5 comparable properties from the same subdivision as the subject, sorted by living-area proximity. All share property classification A1 and the same school district.
+
+SSubject (2915 Bay Hollow Ct)
+12910 Bay Hollow Ct
+22903 Autumn Lake Dr
+32614 Autumn Lake Dr
+43103 Winding Shore Ln
+522706 Moonlit Lake Ct
+Pin numbers correspond to comparable column numbers in the table below. Map data © Google.
+ 	SUBJECT
+2915 BAY HOLLOW CT	COMP #1
+2910 BAY HOLLOW CT	COMP #2
+2903 AUTUMN LAKE DR	COMP #3
+2614 AUTUMN LAKE DR	COMP #4
+3103 WINDING SHORE LN	COMP #5
+22706 MOONLIT LAKE CT
+Street view	
+No imagery
+	
+No imagery
+	
+No imagery
+	
+No imagery
+	
+No imagery
+	
+
+PID #	2271-01-002-0100-914	2271-01-002-0120-914	2271-01-002-0020-914	2271-01-001-0120-914	2271-02-003-0140-914	2271-01-001-0080-914
+Property address	2915 Bay Hollow Ct	2910 Bay Hollow Ct	2903 Autumn Lake Dr	2614 Autumn Lake Dr	3103 Winding Shore Ln	22706 Moonlit Lake Ct
+Subdivision	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village
+State class	A1	A1	A1	A1	A1	A1
+Location from subject (miles)	—	0.04 mi	0.07 mi	0.06 mi	0.18 mi	0.10 mi
+BUILDING CHARACTERISTICS
+Living area (SF)	5,338	5,184	5,272	5,266	5,480	5,194
+Year built	1992	1992	1996	1992	1992	1992
+Bedrooms	5	5	6	5	5	5
+2026 MARKET VALUES
+Land value	$161,590	$177,749	$143,000	$143,000	$257,400	$146,900
+Land value ($/SF — living area)	$30.27	$34.29	$27.12	$27.16	$46.97	$28.28
+Market improvement value	$1,008,654	$905,751	$1,058,223	$1,158,230	$947,900	$913,525
+Market improvement value ($/SF)	$188.96	$174.72	$200.73	$219.94	$172.97	$175.88
+CAD market value	$1,170,244	$1,083,500	$1,201,223	$1,301,230	$1,205,300	$1,060,425
+CAD market value ($/SF)	$219.23	$209.01	$227.85	$247.10	$219.95	$204.16
+ADJUSTMENTS
+Land value adj.		−$16,159	+$18,590	+$18,590	−$95,810	+$14,690
+Improvement adj. — size		+$13,543	+$5,804	+$6,332	−$12,488	+$12,663
+Age/condition adj.		$0	−$14,484	$0	$0	$0
+Additional (pools, garages, misc.)		$0	$0	$0	$0	$0
+TOTALS
+Total net adjustment		−$2,616	+$9,910	+$24,922	−$108,298	+$27,353
+Total net adjustment ($/SF)		−$0.50	+$1.88	+$4.73	−$19.76	+$5.27
+DERIVATION
+CAD market value		$1,083,500	$1,201,223	$1,301,230	$1,205,300	$1,060,425
+Total net adjustments		−$2,616	+$9,910	+$24,922	−$108,298	+$27,353
+Adjusted property value		$1,080,884	$1,211,133	$1,326,152	$1,097,002	$1,087,778
+% difference from comp CAD market value		-0.2%	+0.8%	+1.9%	-9.0%	+2.6%
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF — based on Subject SF		$202.49	$226.89	$248.44	$205.51	$203.78
+Median adjusted value of comps	$1,097,002
+Median adjusted value ($/SF — based on Subject SF)	$205.51
+4. Analysis
+
+For each of the 5 comparables in Section 3, the CAD's noticed market value is adjusted for size, age/condition, land value, and additional features (pools, garages, misc.) to produce an indicated value for the subject. The median of those 5 indicated values is the requested ask.
+
+Median adjusted property value (5 comparables): $1,097,002
+Implied $/SF on subject footprint: $206/sqft
+Subject's living area: 5,338 sqft
+Subject's current notice: $1,170,244
+Difference: $73,242 (6.26% above the comparable median)
+5. Adjustment Methodology
+
+Adjustments shown in Section 3 are based on analysis and interpretation of market factors as to how they impact the individual property values. Each comparable's CAD-noticed value is reviewed against the subject for size, age and condition, land, and other property-specific features, and a net adjustment is applied to bring the comparable onto equal footing with the subject before the requested value is derived.
+
+Non-appraisal disclaimer: This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and the property owner's interpretation of market factors. The requested market value reflects the property owner's good-faith opinion of value; it does not represent a market-value opinion for any purpose other than this protest. (Placeholder text — pending Mike's final wording.)
+
+Fort Bend Central Appraisal District · Tax Year 2026 · Account 2271-01-002-0100-914 · Page 1 of 1

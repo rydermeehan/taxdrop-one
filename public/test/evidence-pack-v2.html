@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+<meta charset="UTF-8">
+<title>Property Appraisal Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- html-docx-js: converts the live HTML to a real .docx blob. -->
+<script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.min.js"></script>
+<!-- Google Maps Places API for the address autocomplete on the search bar.
+     callback=initAutocomplete fires once the API is loaded, then wires the
+     <input> below into a TX-restricted Place Autocomplete widget. -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE&libraries=places&loading=async&callback=initAutocomplete" async defer></script>
+<style>
+  :root {
+    --emerald-dark: #0C593E;
+    --emerald-light: #0B8F52;
+    --mint: #DFFFEA;
+    --charcoal: #1A1A1A;
+    --gray-500: #5C666F;
+    --gray-400: #8A929B;
+    --gray-300: #C9D0D6;
+    --gray-200: #E5E7EB;
+    --gray-100: #F4F6F8;
+    --good-bg: #E8F8EE;
+    --warn-bg: #FFF4D6;
+    --warn-border: #E5B644;
+    --warn-text: #8a6500;
+    --danger-bg: #FFE5E5;
+    --danger-border: #C73E3E;
+    --danger-text: #8a2828;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    color: var(--charcoal);
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 32px 60px;
+    line-height: 1.6;
+    background: white;
+    font-size: 14px;
+  }
+
+  /* ────────── Search bar (always visible) ────────── */
+  .search-shell {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 0 0 24px;
+  }
+  .search-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .search-row input {
+    flex: 1;
+    min-width: 240px;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    background: white;
+  }
+  .search-row input:focus {
+    outline: none;
+    border-color: var(--emerald-light);
+    box-shadow: 0 0 0 3px rgba(11, 143, 82, 0.15);
+  }
+  .search-row button {
+    padding: 10px 20px;
+    border: none;
+    background: var(--emerald-dark);
+    color: white;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .search-row button:hover { background: var(--emerald-light); }
+  .search-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .search-help {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 8px;
+  }
+  .search-help a { color: var(--emerald-light); text-decoration: none; font-weight: 500; }
+  .search-help a:hover { text-decoration: underline; }
+
+  /* ────────── States ────────── */
+  .state-card {
+    padding: 56px 24px;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    border: 1px dashed var(--gray-300);
+    color: var(--gray-500);
+  }
+  .state-card h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--emerald-dark);
+    font-size: 22px;
+    margin: 0 0 10px;
+  }
+  .state-card .lede { font-size: 14px; max-width: 540px; margin: 0 auto 16px; line-height: 1.55; }
+  .state-card .examples { font-size: 13px; margin-top: 18px; }
+  .state-card.error {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    text-align: left;
+    padding: 24px 28px;
+  }
+  .state-card.error h2 { color: var(--danger-text); }
+  .state-card.error code {
+    background: white;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    border: 4px solid var(--mint);
+    border-top-color: var(--emerald-light);
+    border-radius: 50%;
+    animation: rspin 0.9s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes rspin { to { transform: rotate(360deg); } }
+
+  /* ────────── Report sections ────────── */
+  .doc-header {
+    border-bottom: 3px solid var(--emerald-dark);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .doc-header-text { flex: 1; min-width: 280px; }
+  .export-bar { display: flex; gap: 8px; flex-shrink: 0; padding-top: 4px; }
+  .btn-export {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--emerald-light);
+    background: white;
+    color: var(--emerald-light);
+    border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.1s ease;
+  }
+  .btn-export:hover { background: var(--mint); }
+  .btn-export:active { background: var(--good-bg); }
+  .btn-export.generating { background: var(--mint); }
+  .btn-export svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .btn-export.btn-export-internal {
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+  .btn-export.btn-export-internal:hover { background: var(--warn-bg); }
+
+  .doc-header .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--emerald-dark);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .doc-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--charcoal);
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+  .doc-header .meta { color: var(--gray-500); font-size: 13px; }
+
+  .filing-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 24px;
+    margin-bottom: 32px;
+    font-size: 13px;
+  }
+  .filing-info .label { color: var(--gray-500); font-weight: 500; }
+  .filing-info .value { font-weight: 600; color: var(--charcoal); }
+  .na { color: var(--gray-400); font-weight: 400; font-style: italic; }
+
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--emerald-dark);
+    margin: 36px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  h2 .section-num { color: var(--gray-400); font-weight: 400; margin-right: 8px; }
+
+  /* Section 1 — Subject Property — compact 2-column label/value grid */
+  .subject-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin: 0 0 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--gray-200);
+    font-size: 13px;
+  }
+  .subject-grid .sp-cell {
+    background: white;
+    padding: 9px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .subject-grid .sp-label {
+    color: var(--gray-500);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .subject-grid .sp-value {
+    color: var(--charcoal);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  @media print { .subject-grid { grid-template-columns: 1fr 1fr; } }
+
+  .property-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 12px;
+    font-size: 13px;
+  }
+  .property-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+  .property-table td.label {
+    background: var(--gray-100);
+    color: var(--gray-500);
+    font-weight: 500;
+    width: 240px;
+  }
+  .property-table td.value { font-weight: 600; color: var(--charcoal); }
+
+  .requested-value {
+    background: var(--good-bg);
+    border: 2px solid var(--emerald-light);
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin: 12px 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+  }
+  .requested-value .rv-block { padding: 4px 0; }
+  .requested-value .rv-block.requested { text-align: left; }
+  .requested-value .rv-block.notice { text-align: left; }
+  .requested-value .rv-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .requested-value .rv-block.requested .rv-label { color: var(--emerald-dark); }
+  .requested-value .rv-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gray-500);
+    line-height: 1.1;
+  }
+  .requested-value .rv-block.requested .rv-amount { color: var(--charcoal); font-size: 32px; }
+  .requested-value .rv-psf { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+  .requested-value .rv-arrow {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--emerald-light);
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+  }
+
+  /* ────────── Equity grid ────────── */
+  .equity-grid-wrapper { overflow-x: auto; margin: 12px 0 14px; border: 1px solid var(--gray-300); border-radius: 6px; }
+  table.equity-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin: 0;
+    min-width: 1000px;
+  }
+  table.equity-grid th, table.equity-grid td {
+    border: 1px solid var(--gray-300);
+    padding: 5px 8px;
+    vertical-align: top;
+  }
+  table.equity-grid thead th {
+    background: var(--charcoal);
+    color: white;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 8px 6px;
+    border: 1px solid var(--charcoal);
+  }
+  table.equity-grid thead th.subject-col { background: var(--emerald-dark); border-color: var(--emerald-dark); }
+  table.equity-grid thead th.match-col { background: var(--emerald-light); border-color: var(--emerald-light); }
+  table.equity-grid tbody tr.section-header td {
+    background: var(--gray-200);
+    color: var(--charcoal);
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 8px;
+  }
+  table.equity-grid tbody td.attr-label {
+    background: var(--gray-100);
+    font-weight: 600;
+    color: var(--gray-500);
+    width: 220px;
+    font-size: 11px;
+  }
+  table.equity-grid tbody td.subject-cell {
+    background: #F0FAF4;
+    font-weight: 600;
+    color: var(--emerald-dark);
+  }
+  table.equity-grid tbody td.match-cell {
+    background: var(--good-bg);
+    font-weight: 600;
+    color: var(--emerald-dark);
+  }
+  table.equity-grid tbody td.photo-cell {
+    text-align: center;
+    padding: 6px;
+    background: white;
+  }
+  table.equity-grid tbody td.photo-cell.subject-cell { background: #F0FAF4; }
+  table.equity-grid tbody td.photo-cell.match-cell { background: var(--good-bg); }
+  table.equity-grid tbody td.photo-cell img {
+    width: 130px;
+    height: 78px;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
+    border: 1px solid var(--gray-300);
+  }
+  table.equity-grid tbody td.photo-cell .no-photo {
+    width: 130px;
+    height: 78px;
+    background: var(--gray-100);
+    color: var(--gray-400);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid var(--gray-200);
+    margin: 0 auto;
+  }
+  .em-na { color: var(--gray-400); font-style: italic; }
+
+  /* ────────── Location map ────────── */
+  .location-map { text-align: center; margin: 14px 0 22px; }
+  .location-map img {
+    max-width: 720px;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid var(--gray-300);
+    display: block;
+    margin: 0 auto;
+  }
+  .location-map .map-caption {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .location-map .map-legend {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--gray-500);
+  }
+  .location-map .map-legend .legend-pin {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    color: white;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .location-map .map-legend .pin-subject { background: #2E7D32; }
+  .location-map .map-legend .pin-comp { background: #6A1B9A; }
+  table.equity-grid tfoot td {
+    background: var(--mint);
+    color: var(--emerald-dark);
+    font-weight: 700;
+    padding: 9px 10px;
+    border: 1px solid var(--emerald-light);
+    font-size: 11px;
+  }
+
+  /* ────────── Analysis section ────────── */
+  .analysis-summary {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 12px 0;
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+  .analysis-summary p { margin: 0 0 10px; }
+  .analysis-summary p:last-child { margin-bottom: 0; }
+  .analysis-summary .calc-line {
+    font-family: 'Space Grotesk', sans-serif;
+    background: white;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 10px 0;
+    border: 1px solid var(--gray-200);
+    font-size: 13px;
+  }
+  .analysis-summary .calc-line b { color: var(--emerald-dark); }
+  .analysis-summary .statute-cite {
+    background: var(--gray-100);
+    border-left: 4px solid var(--emerald-dark);
+    padding: 10px 14px;
+    margin: 10px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--gray-500);
+  }
+  /* Section 5 — Adjustment Methodology */
+  .methodology-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 6px;
+    font-size: 12.5px;
+  }
+  .methodology-table th, .methodology-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+  .methodology-table th {
+    background: var(--gray-100);
+    font-weight: 600;
+    color: var(--emerald-dark);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  .methodology-table .adj-name { font-weight: 600; white-space: nowrap; width: 130px; }
+  .methodology-table .adj-mag { white-space: nowrap; width: 110px; color: var(--emerald-dark); font-family: 'Space Grotesk', sans-serif; }
+  .methodology-table .adj-inactive .adj-name,
+  .methodology-table .adj-inactive .adj-mag { color: var(--gray-500); }
+  .methodology-table .adj-inactive .adj-mag::after { content: ' — not active'; font-style: italic; color: var(--gray-500); }
+  .methodology-note {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--gray-500);
+    line-height: 1.55;
+  }
+
+  /* Section 6 — Sales comparables (Clear Capital MLS) */
+  .sales-comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 16px;
+    font-size: 12px;
+  }
+  .sales-comp-table th {
+    background: var(--mint);
+    color: var(--emerald-dark);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid var(--mint);
+  }
+  .sales-comp-table th.right, .sales-comp-table td.right { text-align: right; }
+  .sales-comp-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+  .sales-comp-table td.right { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sales-comp-table tfoot td {
+    background: var(--gray-100);
+    padding: 9px 10px;
+    font-size: 12px;
+    color: var(--gray-500);
+    border-top: 1px solid var(--gray-300);
+  }
+  .sales-comp-table tfoot b { color: var(--charcoal); }
+
+  .footer {
+    color: var(--gray-500);
+    font-size: 10px;
+    margin-top: 32px;
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-200);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .footer .data-source { margin-top: 4px; color: var(--gray-400); font-size: 9.5px; }
+
+  @media print {
+    body { padding: 24px; max-width: none; font-size: 12px; }
+    .search-shell { display: none !important; }
+    .export-bar { display: none !important; }
+    h2 { page-break-after: avoid; }
+    .equity-grid-wrapper { overflow-x: visible; page-break-inside: avoid; }
+    table.equity-grid { font-size: 9px; min-width: 0; }
+    table.equity-grid th, table.equity-grid td { padding: 3px 4px; }
+    table.equity-grid tbody td.photo-cell { padding: 2px; }
+    table.equity-grid tbody td.photo-cell img,
+    table.equity-grid tbody td.photo-cell .no-photo { width: 90px; height: 54px; }
+    .location-map img { max-width: 580px; }
+    .location-map .map-legend { font-size: 9px; gap: 8px; }
+    .requested-value, .analysis-summary { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Search bar — always visible (hidden during print) -->
+<div class="search-shell" id="search-shell">
+  <div class="search-row">
+    <input type="text" id="addr-input" placeholder="Enter a Texas address (e.g. 20022 Atasca Villas Dr, Humble, TX 77346)"
+           autocomplete="off" />
+    <button onclick="submitSearch()" id="btn-search">Generate Report</button>
+  </div>
+  <div class="search-help">
+    Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics).
+    <a href="#" onclick="loadExample(event)">Try example: 20022 Atasca Villas Dr</a>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div class="state-card" id="state-empty">
+  <h2>§41.43(b)(3) Equity Analysis Generator</h2>
+  <div class="lede">Enter a Texas property address above to generate a property-owner evidence submission for an unequal-appraisal protest.</div>
+  <div class="examples">
+    Examples: <a href="#" onclick="loadAddress('20022 Atasca Villas Dr, Humble, TX 77346')">Harris</a>
+    &middot; <a href="#" onclick="loadAddress('14451 Andrea Way Ln, Houston, TX 77083')">Fort Bend</a>
+    &middot; <a href="#" onclick="loadAddress('9843 Promontory Dr, Frisco, TX 75034')">Collin</a>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div class="state-card" id="state-loading" hidden>
+  <div class="spinner"></div>
+  <div>Loading subject and comparable properties&hellip;</div>
+</div>
+
+<!-- Error state -->
+<div class="state-card error" id="state-error" hidden>
+  <h2>Lookup failed</h2>
+  <div id="error-detail"></div>
+</div>
+
+<!-- Report state — populated by renderReport() -->
+<div id="state-report" hidden></div>
+
+<script>
+  // ────────── Constants ──────────
+  const ENGINE = 'https://savings-engine-database.vercel.app';
+  const MAPS_KEY = 'AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE';
+  const STREETVIEW_KEY = 'AIzaSyBtd8bzCW_lY6pd4NMYLIFDeU6vpuNYUFA';
+
+  // ────────── Helpers ──────────
+  function $(id) { return document.getElementById(id); }
+  function fmtMoney(n) {
+    if (n == null) return '—';
+    return '$' + Math.round(Number(n)).toLocaleString();
+  }
+  function fmtPct(n) {
+    if (n == null) return '—';
+    return (n * 100).toFixed(2) + '%';
+  }
+  function fmtNum(n, dec = 0) {
+    if (n == null) return '—';
+    return Number(n).toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  // Single canonical PSF formatter — "$219/sqft" (rounded to nearest dollar,
+  // includes the $ sign, slash-format). Anywhere PSF is displayed should go
+  // through this so the format stays consistent across all sections.
+  function fmtPsf(n) {
+    if (n == null) return '';
+    return '$' + Math.round(Number(n)).toLocaleString() + '/sqft';
+  }
+  function fmtAccount(parcelId, county) {
+    // Harris uses XXX-XXX-XXX-XXXX dashed format. Others vary; emit raw.
+    if (!parcelId) return '—';
+    if (county === 'harris' && parcelId.length === 13) {
+      return parcelId.slice(0, 3) + '-' + parcelId.slice(3, 6) + '-' + parcelId.slice(6, 9) + '-' + parcelId.slice(9);
+    }
+    return parcelId;
+  }
+  function titleCase(s) {
+    if (!s) return '';
+    return s.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase());
+  }
+  function or(v, fallback) {
+    if (v === null || v === undefined || v === '') return fallback;
+    return v;
+  }
+  // hasVal: true if v carries usable data. Treat NaN like null so computed
+  // values like NaN/sqft don't slip into "—" displays.
+  function hasVal(v) {
+    if (v === null || v === undefined || v === '') return false;
+    if (typeof v === 'number' && Number.isNaN(v)) return false;
+    return true;
+  }
+  // Conditional row helpers — render the row/div only if the value is known.
+  // The user explicitly asked us NOT to render placeholders for unknown
+  // fields, so callers should rely on these instead of inline fallbacks.
+  function kvRow(label, v, fmt) {
+    if (!hasVal(v)) return '';
+    const display = fmt ? fmt(v) : v;
+    return `<tr><td class="label">${label}</td><td class="value">${display}</td></tr>`;
+  }
+  function kvDiv(label, v, fmt) {
+    if (!hasVal(v)) return '';
+    const display = fmt ? fmt(v) : v;
+    return `<div><span class="label">${label}</span> <span class="value">${display}</span></div>`;
+  }
+  function isoToLongDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  function encodeAddr(a) { return encodeURIComponent(a); }
+
+  // Reverse-comp ordering: API best_match_comp_index is the index into the
+  // returned comps[] array. The grid renders comps in their natural order
+  // (closest sqft first), so we just decorate that index.
+  function buildSubjectAddrForMaps(subject) {
+    const parts = [subject.full_address, subject.site_zip].filter(Boolean);
+    return parts.join(', ') + ', TX';
+  }
+  function buildCompAddrForMaps(comp, subject) {
+    // Comp's full_address has "STREET, CITY ZIP"; append ", TX" for unambiguous geocode.
+    return (comp.full_address || comp.site_address) + ', TX';
+  }
+
+  // ────────── Google Places autocomplete ──────────
+  let autocomplete = null;
+  // Global callback referenced in the Maps loader script tag.
+  window.initAutocomplete = function() {
+    const input = $('addr-input');
+    if (!input || !window.google || !google.maps || !google.maps.places) return;
+    autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' },
+      fields: ['formatted_address', 'address_components'],
+    });
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place && place.formatted_address) {
+        // Strip the country suffix ", USA" so it doesn't confuse the engine's
+        // address parser.
+        const addr = place.formatted_address.replace(/,\s*USA$/, '');
+        $('addr-input').value = addr;
+        submitSearch();
+      }
+    });
+  };
+
+  // ────────── State management ──────────
+  const STATES = ['empty', 'loading', 'error', 'report'];
+  function showState(s) {
+    STATES.forEach(name => {
+      const el = $('state-' + name);
+      if (el) el.hidden = (name !== s);
+    });
+  }
+
+  function loadExample(e) {
+    if (e) e.preventDefault();
+    loadAddress('20022 Atasca Villas Dr, Humble, TX 77346');
+  }
+  function loadAddress(addr) {
+    $('addr-input').value = addr;
+    submitSearch();
+  }
+
+  // ────────── fetch with explicit timeout + retry ──────────
+  // Default browser fetch has no timeout, but in practice Safari can drop
+  // a slow request as "Failed to fetch" if the page handler holds it open
+  // too long. Combined with Vercel cold-start latency (5-10s on first hit),
+  // this surfaces to users as random "Failed to fetch" errors that go away
+  // on reload. Wrap the call in an AbortController-driven timeout and retry
+  // once on transient network failures (TypeError = network-level, not HTTP).
+  async function fetchWithRetry(url, opts, { attempts = 2, timeoutMs = 30000 } = {}) {
+    let lastErr = null;
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const resp = await fetch(url, { ...opts, signal: ctrl.signal });
+        clearTimeout(timer);
+        return resp;
+      } catch (err) {
+        clearTimeout(timer);
+        lastErr = err;
+        // Only retry on network-level failures (TypeError, AbortError). A
+        // non-network exception means something else is wrong; surface it.
+        const retryable = err.name === 'AbortError' || err.name === 'TypeError'
+          || (err.message || '').toLowerCase().includes('failed to fetch')
+          || (err.message || '').toLowerCase().includes('network');
+        if (!retryable || attempt === attempts) throw err;
+        // Brief backoff before retry to let the cold-start finish
+        await new Promise(r => setTimeout(r, 1200));
+      }
+    }
+    throw lastErr;
+  }
+
+  // ────────── Search + fetch ──────────
+  async function submitSearch() {
+    const addr = ($('addr-input').value || '').trim();
+    if (!addr) {
+      $('addr-input').focus();
+      return;
+    }
+    // Update URL for shareable links (no reload)
+    const url = new URL(window.location.href);
+    url.searchParams.set('address', addr);
+    window.history.replaceState({}, '', url.toString());
+    document.title = 'Property Appraisal Report — ' + addr;
+
+    showState('loading');
+    try {
+      // Route through the same-origin CAD proxy: it injects the API key
+      // server-side, so the page works with zero setup and sidesteps browser
+      // cross-origin blocking (extensions, privacy shields, network filters).
+      const resp = await fetchWithRetry('/api/cad-proxy?path=/api/evidence-pack/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: addr }),
+      }, { attempts: 2, timeoutMs: 30000 });
+
+      if (!resp.ok) {
+        let err;
+        try { err = await resp.json(); } catch (_) { err = { message: resp.statusText }; }
+        if (resp.status === 404) {
+          $('error-detail').innerHTML =
+            '<p><b>Address not found in property records.</b></p>' +
+            '<p>Tried: <code>' + (err.detail?.address_tried || addr) + '</code></p>' +
+            '<p style="margin-top:14px;">Possible reasons:</p>' +
+            '<ul style="margin:8px 0 0 20px;font-size:13px;">' +
+            '<li>The address is outside the 44 TX counties TaxDrop currently ingests</li>' +
+            '<li>The CAD database doesn\'t have this parcel yet (most CADs publish 2026 rolls in April-May)</li>' +
+            '<li>Address spelling differs from the CAD\'s record (try without unit number, or use the autocomplete suggestion)</li>' +
+            '</ul>';
+        } else {
+          $('error-detail').innerHTML =
+            '<p><b>Engine returned HTTP ' + resp.status + '.</b></p>' +
+            '<p>Message: <code>' + (err.detail?.message || err.detail || err.message || resp.statusText) + '</code></p>';
+        }
+        showState('error');
+        return;
+      }
+
+      const data = await resp.json();
+      renderReport(data);
+      showState('report');
+    } catch (e) {
+      const msg = (e.message || String(e)).toLowerCase();
+      const isNetwork = msg.includes('failed to fetch') || msg.includes('network') || msg.includes('abort');
+      if (isNetwork) {
+        $('error-detail').innerHTML =
+          '<p><b>Network error reaching the TaxDrop engine.</b></p>' +
+          '<p>Message: <code>' + (e.message || String(e)) + '</code></p>' +
+          '<p style="margin-top:14px;">Common causes:</p>' +
+          '<ul style="margin:8px 0 0 20px;font-size:13px;">' +
+          '<li>Vercel cold start &mdash; the engine function was asleep and didn\'t wake up in time. <a href="#" onclick="submitSearch();return false;" style="color:var(--emerald-light);font-weight:600;">Click here to retry</a> (it will be warm now).</li>' +
+          '<li>Browser extension or VPN blocking the request to <code>savings-engine-database.vercel.app</code>.</li>' +
+          '<li>Transient Vercel platform issue &mdash; check the engine directly: <code>curl https://savings-engine-database.vercel.app/api/health</code></li>' +
+          '</ul>';
+      } else {
+        $('error-detail').innerHTML = '<p><b>Rendering error.</b></p><p>Message: <code>' + (e.message || String(e)) + '</code></p>';
+      }
+      showState('error');
+    }
+  }
+
+  // ────────── Comp-match classifier (used by methodology gate + Section 4) ──────────
+  // Scores a comp against the subject across 4 strong dimensions:
+  //   1. living area — strict match → +1, within 5% → +1 (no list entry)
+  //   2. subdivision — strict match → +1
+  //   3. year built — strict match → +1, within 3 yr → +1 (no list entry)
+  //   4. state class — strict match → +1
+  // strongScore = sum (0–4). best_match methodology requires strongScore >= 4.
+  // History: 116 Rose Ln Hackberry (2026-06-03) surfaced a comp 15 mi away in
+  // Argyle with different subdivision + sqft delta of 12.5% as "directly
+  // comparable on every attribute" — broke CAD-credibility. (2026-06-03 audit.)
+  function classifyComp(s, c) {
+    const identical = [];
+    const differing = [];
+    let strongScore = 0;
+
+    if (s.living_sqft && c.living_sqft) {
+      const delta = Math.abs(s.living_sqft - c.living_sqft) / s.living_sqft;
+      if (s.living_sqft === c.living_sqft) {
+        identical.push({ label: 'living area', val: fmtNum(s.living_sqft) + ' sqft' });
+        strongScore += 1;
+      } else if (delta <= 0.05) {
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'living area', sVal: fmtNum(s.living_sqft) + ' sqft', cVal: fmtNum(c.living_sqft) + ' sqft' });
+      }
+    }
+    if (s.subdivision && c.subdivision) {
+      if (s.subdivision === c.subdivision) {
+        identical.push({ label: 'subdivision', val: titleCase(s.subdivision) });
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'subdivision', sVal: titleCase(s.subdivision), cVal: titleCase(c.subdivision) });
+      }
+    }
+    if (s.year_built && c.year_built) {
+      const delta = Math.abs(s.year_built - c.year_built);
+      if (s.year_built === c.year_built) {
+        identical.push({ label: 'year built', val: s.year_built });
+        strongScore += 1;
+      } else if (delta <= 3) {
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'year built', sVal: s.year_built, cVal: c.year_built });
+      }
+    }
+    if (s.state_class && c.state_class) {
+      if (s.state_class === c.state_class) {
+        identical.push({ label: 'property classification', val: s.state_class });
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'classification', sVal: s.state_class, cVal: c.state_class });
+      }
+    }
+    return { identical, differing, strongScore };
+  }
+
+  // Build "Street address" display for Section 1. The DB full_address column
+  // packs "STREET, CITY ZIP" (no comma between city and zip, no state). Some
+  // ingests pack ZIP+4 too: "DALLAS 752463010" (5-digit zip + 4-digit ext).
+  // Strip whichever variant is trailing before appending the canonical
+  // ", TX <zip>". (2026-06-03: surfaced by 4624 Junius St → "Dallas 752463010".)
+  function formatStreetAddress(s) {
+    let addr = titleCase(s.full_address || '').trim();
+    const zip = String(s.site_zip || '').trim().replace(/[^\d]/g, '');
+    if (zip && addr) {
+      // Match: optional space/comma + zip + optional zip+4 ext (with or
+      // without hyphen) at end of string.
+      const trailingZipRe = new RegExp('[\\s,]+' + zip + '(-?\\d{4})?$');
+      addr = addr.replace(trailingZipRe, '');
+    }
+    if (zip) addr += ', TX ' + zip;
+    return addr;
+  }
+
+  // ────────── Per-comp adjustment breakdown ──────────
+  // Mirrors calculator_shared.adjust_comp_psf so each line in the Section 3
+  // table reconciles back to the engine's recommendation. The engine applies
+  // GLA → Age (both multiplicative), then Land (subtractive), then Features
+  // (additive flat-$), then caps the total swing at ±30% of raw PSF.
+  //
+  // Mike's consultant feedback (Bay Hollow audit, 2026-06-02): the prior
+  // brief only showed the flat-$ feature adjustment — Size/Age/Land happened
+  // invisibly inside the engine, so the displayed Adjusted PSF didn't
+  // reconcile to the engine's recommended_value. CAD reviewers can't trust
+  // a number they can't verify. This helper exposes every adjustment line
+  // so the table reconciles.
+  function computeAdjBreakdown(s, c) {
+    const compSqft = c.living_sqft || 0;
+    const compVal = c.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const rawPsf = (compSqft > 0 && compVal > 0) ? (compVal / compSqft) : 0;
+    if (!rawPsf || !compSqft || !subjSqft) {
+      return { rawPsf, sizeAdjPsf: 0, ageAdjPsf: 0, landAdjPsf: 0,
+               featureAdjPsf: 0, totalAdjPsf: 0, finalPsf: rawPsf,
+               diffPct: 0, capApplied: false };
+    }
+
+    let running = rawPsf;
+
+    // 1. GLA size adjustment — multiplicative. Direction: larger comp →
+    //    adjust UP toward subject's smaller footprint (economies of scale).
+    const sizeDiffPct = (compSqft - subjSqft) / subjSqft;
+    const glaAdj = sizeDiffPct * 0.10;
+    const sizeAdjPsf = running * glaAdj;
+    running *= (1 + glaAdj);
+
+    // 2. Age adjustment — multiplicative. Use effective_year_built when
+    //    available (handles renovated comps correctly). Mike's 2026-06-16
+    //    Bay Hollow note: clamp YEAR DIFF at ±15 first (max 4.5% swing),
+    //    not the resulting percentage. Mirrors calculator_shared
+    //    COMP_AGE_MAX_YEAR_DIFF=15 + COMP_AGE_ADJUSTMENT_PER_YEAR=0.003.
+    const sYear = s.effective_year_built || s.year_built || 0;
+    const cYear = c.effective_year_built || c.year_built || 0;
+    let ageAdjPsf = 0;
+    if (sYear > 0 && cYear > 0) {
+      let yearDiff = cYear - sYear;
+      yearDiff = Math.max(-15, Math.min(15, yearDiff));
+      const ageAdj = -yearDiff * 0.003;
+      ageAdjPsf = running * ageAdj;
+      running *= (1 + ageAdj);
+    }
+
+    // 3. Land value adjustment — subtractive, capped at ±10% of raw comp PSF.
+    let landAdjPsf = 0;
+    if (c.land_value && s.land_value && compSqft > 0) {
+      const landDiffPerSqft = (c.land_value - s.land_value) / compSqft;
+      const maxLandAdj = rawPsf * 0.10;
+      const capped = Math.max(-maxLandAdj, Math.min(maxLandAdj, landDiffPerSqft));
+      landAdjPsf = -capped;
+      running -= capped;
+    }
+
+    // 4. Feature adjustments — flat-$ pool/garage/fireplace already
+    //    computed by api/index.py and attached to c.adjustment_total.
+    const featureAdjPsf = compSqft > 0 ? (c.adjustment_total || 0) / compSqft : 0;
+    running += featureAdjPsf;
+
+    // 5. Single-comp 30% cap — enforced last so total swing stays defensible.
+    const maxSwing = rawPsf * 0.30;
+    const preCapPsf = running;
+    const cappedPsf = Math.max(rawPsf - maxSwing, Math.min(rawPsf + maxSwing, running));
+    const capApplied = Math.abs(cappedPsf - preCapPsf) > 0.5;
+
+    const totalAdjPsf = cappedPsf - rawPsf;
+    const diffPct = rawPsf > 0 ? (totalAdjPsf / rawPsf) * 100 : 0;
+
+    return {
+      rawPsf, sizeAdjPsf, ageAdjPsf, landAdjPsf, featureAdjPsf,
+      totalAdjPsf, finalPsf: cappedPsf, diffPct, capApplied,
+    };
+  }
+
+  // ────────── Report renderer ──────────
+  function renderReport(data) {
+    const s = data.subject;
+    const comps = data.comps || [];
+    const bestIdx = data.best_match_comp_index || 0;
+    const best = comps[bestIdx] || null;
+    const psf = data.psf_analysis || {};
+
+    const subjAddrMaps = buildSubjectAddrForMaps(s);
+    const subjAddrDisplay = titleCase(s.full_address || '') + (s.site_zip ? '' : '');
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const subjPsf = subjSqft ? (subjVal / subjSqft) : 0;
+    const subjPrior = s.prior_total_market || 0;
+    const yoyChange = subjPrior ? (subjVal - subjPrior) / subjPrior : null;
+
+    // ── Methodology selection ──
+    // Primary path: use the engine's recommended_value when /api/evidence-
+    // pack/lookup ran calculate_savings() server-side. This guarantees the
+    // brief matches the customer-facing recommendation produced by
+    // /api/lookup (same defensibility guards: recent-sale FLOOR, close-3
+    // unsupportive, renovated-subject NO_CASE, PSF-range filter, etc.).
+    //
+    // Fallback path: when the engine field is missing (older API, calculator
+    // exception, vacant land subject), fall back to the client-side
+    // strongScore + PSF floor methodology added 2026-06-03.
+    const engine = data.engine || null;
+    const bestMatch = best ? classifyComp(s, best) : { strongScore: 0, identical: [], differing: [] };
+    const bestMatchVal = psf.best_match_value || (best ? best.total_market : 0);
+    const medianVal = psf.median_value;
+    const lowestComp = psf.lowest_comp_value;
+    let requestedVal = null;
+    let methodology = null;
+
+    // ── Full-breakdown PSF stats (per-comp Size + Age + Land + Features) ──
+    // Mike's Bay Hollow request: the displayed median must reconcile to the
+    // engine's recommendation. The API returns a feature-only median
+    // (psf.median_adjusted_value); compute the full breakdown locally so the
+    // table's median row and the request below derive from the same number.
+    const _fullAdjVals = (comps || [])
+      .map(c => {
+        const b = computeAdjBreakdown(s, c);
+        return c.living_sqft && b.finalPsf ? Math.round(b.finalPsf * c.living_sqft) : 0;
+      })
+      .filter(v => v > 0);
+    const _fullAdjPsfs = (comps || [])
+      .map(c => computeAdjBreakdown(s, c).finalPsf)
+      .filter(v => v > 0)
+      .sort((a, b) => a - b);
+    let fullAdjMedianValue = null;
+    let fullAdjLowestValue = null;
+    if (_fullAdjPsfs.length && subjSqft) {
+      const n = _fullAdjPsfs.length;
+      const fullMedianPsf = n % 2 === 1
+        ? _fullAdjPsfs[Math.floor(n / 2)]
+        : (_fullAdjPsfs[n / 2 - 1] + _fullAdjPsfs[n / 2]) / 2;
+      fullAdjMedianValue = Math.round(fullMedianPsf * subjSqft);
+      fullAdjLowestValue = Math.round(_fullAdjPsfs[0] * subjSqft);
+    }
+
+    // ── Methodology selection (2026-06-12 policy change) ──
+    // §41.43(b)(3) threshold relaxed: an unequal-appraisal claim now fires
+    // whenever the subject is appraised above AT LEAST ONE comparable
+    // property — not only when subject is above the median. Rationale:
+    // the statute requires the subject value to be at-or-below the median
+    // of comparable properties, but in practice ARB hearings consider any
+    // single qualifying peer as evidence of unequal treatment. Lowering
+    // the threshold from "median below subject" to "lowest comp below
+    // subject" produces a defensible ask on every property where the
+    // district's own comp set contains at least one peer at a lower
+    // appraised value.
+    //
+    // Engine NO_CASE is now ADVISORY — overridden when the at-least-one
+    // condition is met. The hierarchy below picks the strongest available
+    // methodology:
+    //   1. best_match — single-comp argument when strongScore >= 4
+    //   2. median (adjusted when feature adjustments apply, raw otherwise)
+    //      when median is below subject
+    //   3. lowest_psf — single-comp argument from the lowest displayed
+    //      comparable when median is at-or-above subject
+    //   4. no_case — only when no comparable is below subject
+    // Lowest comp anchor for the at-least-one-below check + PSF floor —
+    // prefer the full-breakdown lowest when available so the floor reflects
+    // the same adjustments the median uses.
+    const effectiveLowest = fullAdjLowestValue || lowestComp;
+    const atLeastOneCompBelow = effectiveLowest && effectiveLowest < subjVal;
+
+    if (!atLeastOneCompBelow) {
+      // True NO_CASE: every comparable is at or above the subject's value.
+      // No §41.43(b)(3) argument exists from this comp set.
+      requestedVal = null;
+      methodology = 'no_case';
+    } else {
+      // At least one comparable is below subject — file. Pick the strongest
+      // methodology available. Prefer the full-breakdown median (size + age
+      // + land + features) over the API's feature-only median, so the
+      // request reconciles to the Section 3 table the ARB panel sees.
+      const medianAnchor = fullAdjMedianValue || medianVal;
+
+      const bestMatchEligible = best && bestMatchVal && bestMatchVal < subjVal && bestMatch.strongScore >= 4;
+      if (bestMatchEligible) {
+        // Strong single-comp argument — most defensible at ARB
+        requestedVal = bestMatchVal;
+        methodology = 'best_match';
+      } else if (medianAnchor && medianAnchor < subjVal) {
+        // Median is below subject — statutory anchor under (b)(3)
+        requestedVal = medianAnchor;
+        methodology = 'median';
+      } else {
+        // Median at-or-above subject, but at least one comp below — use the
+        // lowest displayed comparable as the single-comp argument
+        requestedVal = effectiveLowest;
+        methodology = 'lowest_psf';
+      }
+
+      // Defensibility floor: the ask cannot go below the lowest displayed
+      // comparable value. Below that we would be asking for a value lower
+      // than every comp the report cites — most-rejectable shape at ARB.
+      if (requestedVal < effectiveLowest) {
+        requestedVal = effectiveLowest;
+        methodology = 'lowest_psf';
+      }
+      // Round-trip safety: if the chosen ask is at or above subject value
+      // (can happen when the floor raises it past subject), fall back to no_case.
+      if (requestedVal >= subjVal) {
+        requestedVal = null;
+        methodology = 'no_case';
+      }
+    }
+    const reduction = requestedVal ? (subjVal - requestedVal) : 0;
+    const reductionPct = requestedVal && subjVal ? (reduction / subjVal) : 0;
+
+    // ── Section A: doc header (with export buttons) ──
+    const headerHtml = `
+      <div class="doc-header">
+        <div class="doc-header-text">
+          <h1>Property Appraisal Report</h1>
+          <div class="meta">Tax Year ${s.tax_year || 2026}</div>
+        </div>
+        <div class="export-bar">
+          <button class="btn-export" onclick="exportPDF()" id="btn-export-pdf" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Export PDF</span>
+          </button>
+          <button class="btn-export" onclick="exportDocx()" id="btn-export-docx" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span id="btn-docx-text">Export Docx</span>
+          </button>
+          <button class="btn-export btn-export-internal" onclick="openPresentationNotes()" type="button" title="Internal hearing-prep notes (only available for the 20022 Atasca Villas example today)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/><polyline points="9 7 12 4 15 7"/><line x1="12" y1="4" x2="12" y2="16"/></svg>
+            <span>Presentation Notes</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // ── Filing info block ──
+    const cadName = ({
+      harris: 'Harris Central Appraisal District',
+      bexar: 'Bexar Appraisal District',
+      travis: 'Travis Central Appraisal District',
+      dallas: 'Dallas Central Appraisal District',
+      tarrant: 'Tarrant Appraisal District',
+      collin: 'Collin Central Appraisal District',
+      denton: 'Denton Central Appraisal District',
+      fortbend: 'Fort Bend Central Appraisal District',
+      galveston: 'Galveston Central Appraisal District',
+      montgomery: 'Montgomery Central Appraisal District',
+    })[s.county] || (titleCase(s.county || '') + ' Central Appraisal District');
+
+    // Top-of-page filing-info block removed 2026-06-03 — it duplicated
+    // Section 1 (Subject Property). Notice date was the only unique field;
+    // add it back to section1Pairs below if it's needed in the report.
+
+    // ── Section 1: Subject Property ──
+    // Build composite values up front so we can hide rows whose components
+    // are all unknown rather than emitting a placeholder string.
+    const yearBuiltVal = s.year_built
+      ? (s.year_built + (s.effective_year_built && s.effective_year_built !== s.year_built ? ' / ' + s.effective_year_built + ' effective' : ''))
+      : null;
+    const landSizeVal = s.lot_sqft
+      ? (fmtNum(s.lot_sqft) + ' sqft' + (s.land_use_code ? ' (land use code ' + s.land_use_code + ')' : ''))
+      : null;
+    const storyVal = (s.story_height || s.building_count)
+      ? [s.story_height && (s.story_height + ' story'),
+         s.building_count && (s.building_count + ' building' + (s.building_count > 1 ? 's' : '') + ' on parcel')]
+         .filter(Boolean).join(' · ')
+      : null;
+    const bedBathVal = (s.bedroom_count || s.bathroom_count)
+      ? [s.bedroom_count && (s.bedroom_count + ' bedrooms'),
+         s.bathroom_count && (s.bathroom_count + ' full baths' + (s.half_bath_count ? ' + ' + s.half_bath_count + ' half' : '')),
+         s.total_rooms && ('(' + s.total_rooms + ' total rooms)'),
+         s.fireplace_count && (s.fireplace_count + ' fireplace' + (s.fireplace_count > 1 ? 's' : ''))]
+         .filter(Boolean).join(' / ').replace('/ (', '(').replace(') / ', ', ')
+      : null;
+    const gradeVal = (s.grade || s.physical_condition)
+      ? [s.grade && ('Grade ' + s.grade),
+         s.physical_condition && ('Physical Condition ' + s.physical_condition)]
+         .filter(Boolean).join(' · ')
+      : null;
+    const constructionVal = (s.exterior_wall || s.heating_cooling || s.foundation_type)
+      ? [s.exterior_wall && (s.exterior_wall + ' exterior'),
+         s.heating_cooling,
+         s.foundation_type && (s.foundation_type + ' foundation')]
+         .filter(Boolean).join(' · ')
+      : null;
+
+    // Section 1 renders as a 2-column grid of label/value pairs to stay
+    // compact. Building characteristics (subdivision, year built, living
+    // area, story height, beds/baths, grade, construction) live in the
+    // Section 3 comparable-property table — repeating them up top added
+    // noise without informing the §41.43(b)(3) argument. (2026-06-03.)
+    const section1Pairs = [
+      ['Street address', formatStreetAddress(s)],
+      ['CAD account number', fmtAccount(s.parcel_id, s.county)],
+      ['Land size', landSizeVal],
+      ['CAD ' + (s.tax_year || 2026) + ' noticed land value', s.land_value ? fmtMoney(s.land_value) : null],
+      ['CAD ' + (s.tax_year || 2026) + ' noticed improvement value', s.improvement_value ? fmtMoney(s.improvement_value) : null],
+      ['CAD ' + (s.tax_year || 2026) + ' noticed market value', subjVal ? ('<b>' + fmtMoney(subjVal) + '</b>' + (subjSqft ? ' (' + fmtPsf(subjPsf) + ')' : '')) : null],
+      // Only surface YoY rows when the assessment INCREASED — a decrease is
+      // already a CAD-side reduction, and displaying it on a protest brief
+      // invites the obvious "you already got a reduction, why are you
+      // protesting?" rebuttal. Suppress both the prior-year value AND the
+      // change row in that case to keep the framing forward-looking.
+      // (2026-06-10 5921 CRANBROOK audit.)
+      ['Prior-year noticed market value', (subjPrior && subjVal - subjPrior > 0) ? fmtMoney(subjPrior) : null],
+      ['Year-over-year change', (yoyChange != null && subjVal - subjPrior > 0) ? ('+' + fmtMoney(subjVal - subjPrior) + ' (' + (yoyChange * 100).toFixed(2) + '%)') : null],
+    ].filter(([_, v]) => hasVal(v));
+    const subjectGridCells = section1Pairs
+      .map(([k, v]) => `<div class="sp-cell"><div class="sp-label">${k}</div><div class="sp-value">${v}</div></div>`)
+      .join('');
+    const section1Html = `
+      <h2><span class="section-num">1.</span> Subject Property</h2>
+      <div class="subject-grid">${subjectGridCells}</div>
+    `;
+
+    // ── Section 2: Requested Market Value ──
+    // Layout: 2026 Notice Value (left, neutral) → Requested Market Value
+    // (right, emphasized in emerald). Reduction $ + percent moved out of
+    // this section per design — they appear in Section 5 Summary instead.
+    let section2Html;
+    if (methodology === 'no_case') {
+      section2Html = `
+        <h2><span class="section-num">2.</span> Owner's Requested ${s.tax_year || 2026} Market Value</h2>
+        <div class="state-card" style="text-align:left;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);padding:18px 22px;margin:12px 0;">
+          <b>No reduction defensible from the comparable set.</b>
+          The ${comps.length} comparables identified are all appraised at or above the subject's noticed value of ${fmtMoney(subjVal)}.
+          A &sect;41.43(b)(3) unequal-appraisal claim requires the subject to be appraised above the median of comparable properties &mdash; that is not the case here.
+        </div>
+      `;
+    } else {
+      section2Html = `
+        <h2><span class="section-num">2.</span> Owner's Requested ${s.tax_year || 2026} Market Value</h2>
+        <div class="requested-value">
+          <div class="rv-block notice">
+            <div class="rv-label">${s.tax_year || 2026} CAD Notice Value</div>
+            <div class="rv-amount">${fmtMoney(subjVal)}</div>
+            <div class="rv-psf">${fmtPsf(subjPsf)}</div>
+          </div>
+          <div class="rv-block requested">
+            <div class="rv-label">Requested Market Value</div>
+            <div class="rv-amount">${fmtMoney(requestedVal)}</div>
+            <div class="rv-psf">${fmtPsf(requestedVal / subjSqft)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ── Section 3: Comparable Property Analysis (location map + equity grid) ──
+    const mapMarkers = [
+      `markers=color:green%7Clabel:S%7C${encodeAddr(subjAddrMaps)}`,
+      ...comps.map((c, i) => `markers=color:purple%7Clabel:${i + 1}%7C${encodeAddr(buildCompAddrForMaps(c, s))}`),
+    ].join('&');
+    // Omit center+zoom so Google Static Maps auto-fits the viewport to include
+    // every marker (subject + all comparables). The previous hardcoded
+    // zoom=16 centered on the subject was clipping comps when they were more
+    // than ~0.3 mi away. (2026-06-03.)
+    // Hybrid maptype = satellite imagery + roads/labels. Mike's Bay Hollow
+    // request: aerial shows pools, lake views, large-lot issues that
+    // street-view + roadmap don't surface. Hybrid keeps the road labels
+    // so the consultant can still orient quickly. (2026-06-02 audit.)
+    const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=720x340&scale=2&maptype=hybrid` +
+      `&${mapMarkers}&key=${MAPS_KEY}`;
+    const mapLegend = [
+      `<span><span class="legend-pin pin-subject">S</span>Subject (${titleCase(s.site_address || '')})</span>`,
+      ...comps.map((c, i) => `<span><span class="legend-pin pin-comp">${i + 1}</span>${titleCase(c.site_address || '')}</span>`),
+    ].join('\n');
+
+    const ingestionDate = s.notice_date ? isoToLongDate(s.notice_date) : '';
+
+    // Section 3 intro must reflect the ACTUAL comp set. The old text
+    // hardcoded "from the same subdivision" even when 0 of 5 comps matched
+    // (e.g. 116 Rose Ln Hackberry — all 5 comps in different subdivisions).
+    const inSubdivision = s.subdivision
+      ? comps.filter(c => c.subdivision && c.subdivision === s.subdivision).length
+      : 0;
+    let comparablesIntro;
+    if (comps.length > 0 && inSubdivision === comps.length) {
+      comparablesIntro = `${comps.length} comparable properties from the same subdivision as the subject, sorted by living-area proximity.`;
+    } else if (inSubdivision >= Math.max(3, Math.ceil(comps.length / 2))) {
+      comparablesIntro = `${comps.length} comparable properties &mdash; ${inSubdivision} from the same subdivision as the subject, the remainder from the closest available peers in the same county &mdash; sorted by living-area proximity.`;
+    } else if (inSubdivision > 0) {
+      comparablesIntro = `${comps.length} comparable properties from the surrounding submarket (${inSubdivision} from the subject's subdivision, ${comps.length - inSubdivision} from the closest available peers in the same county), sorted by living-area proximity.`;
+    } else {
+      comparablesIntro = `${comps.length} comparable properties from the same county and property classification (no in-subdivision peers were available), sorted by living-area proximity.`;
+    }
+    const classText = s.state_class
+      ? `All share property classification ${s.state_class}`
+      : 'All share the subject\'s property classification';
+    const schoolText = s.school_district
+      ? ' and school district code ' + s.school_district
+      : ' and the same school district';
+
+    const section3Html = `
+      <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
+      <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
+        ${comparablesIntro}
+        ${classText}${schoolText}.
+      </p>
+
+      <div class="location-map">
+        <img src="${mapUrl}" alt="Property location map" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='none';">
+        <div class="map-caption">
+          <div class="map-legend">${mapLegend}</div>
+          <div style="margin-top:6px;">Pin numbers correspond to comparable column numbers in the table below. Map data &copy; Google.</div>
+        </div>
+      </div>
+
+      ${renderEquityGrid(s, comps, bestIdx, psf)}
+    `;
+
+    // ── Section 4: Analysis (two-methodology framing) ──
+    const section4Html = renderAnalysisSection(s, best, methodology, psf, reduction, reductionPct, requestedVal, comps, engine);
+
+    // ── Section 5: Adjustment Methodology ──
+    // Documents how the engine normalizes each comp's $/sqft to the subject
+    // before taking the equity median. Kept identical to the Python engine
+    // (calculator_shared.adjust_comp_psf) — when those constants change,
+    // update both. The pool/garage row is marked county-gated because
+    // POOL_GARAGE_ROLLOUT_COUNTIES is {"collin"} as of 2026-06-10; the
+    // engine silently skips it for other counties.
+    const section5Html = renderMethodologySection(s);
+
+    // Sections 6 (Clear Capital MLS sales) + 7 (ATTOM closed-sales) were
+    // removed from v2 on 2026-06-03. The render templates, fetch calls,
+    // and footer attribution are stripped from this file; the helper
+    // functions further down (fetchSalesComps, renderSalesCompTable,
+    // fetchAttomSales, renderAttomSalesCompTable, and the shared
+    // engine-style comp filter at line ~1093) are kept inert so v3 can
+    // restore the sections by re-adding the render templates + fetch
+    // calls back into innerHTML. The full sales-comps version is
+    // preserved at evidence-pack-v3.html.
+
+    // ── Footer ──
+    const footerHtml = `
+      <div class="footer">
+        ${cadName} &middot; Tax Year ${s.tax_year || 2026} &middot; Account ${fmtAccount(s.parcel_id, s.county)} &middot; Page 1 of 1
+      </div>
+    `;
+
+    $('state-report').innerHTML = headerHtml + section1Html + section2Html + section3Html + section4Html + section5Html + footerHtml;
+
+    // Kick off async distance enrichment for the equity grid. DB only
+    // stores subdivision-centroid lat/lng so we have to geocode each
+    // comp's actual address through Google Maps to get per-property
+    // distances. Runs after the main render so the page isn't blocked
+    // on a multi-comp geocode round-trip.
+    enrichCompDistances(s, comps).catch(err => console.warn('[distance] enrichment failed:', err));
+
+    // Auto-export hook: when TaxDrop One embeds this page in a hidden
+    // iframe with ?export=pdf|docx, fire the matching export once the
+    // render settles. Wait a tick so static-map + streetview images have
+    // a chance to start loading; export functions don't wait on images,
+    // but Chrome's print path picks up most by the time we trigger.
+    // (2026-06-11 — inline exports from /pro.)
+    try {
+      const exportMode = (new URLSearchParams(window.location.search).get('export') || '').toLowerCase();
+      if (exportMode === 'pdf' || exportMode === 'docx') {
+        setTimeout(() => {
+          if (exportMode === 'pdf') exportPDF();
+          else exportDocx();
+        }, 1200);
+      }
+    } catch (_) { /* no-op */ }
+  }
+
+  // ────────── Distance enrichment (Google Maps geocoder, client-side) ──────────
+  // DB lat/lng is subdivision-centroid only (every parcel in the same nbhd
+  // shares 33.1186, -96.6773 etc.). Geocode the actual street addresses via
+  // the already-loaded Google Maps JS API, compute Haversine distance from
+  // subject to each comp, and populate the Distance row in the equity grid.
+  // Cached per (address) for the session so the same lookups aren't repeated.
+  const _geocodeCache = new Map();
+
+  function _haversineMiles(a, b) {
+    const toRad = d => d * Math.PI / 180;
+    const R = 3959;  // Earth radius in miles
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const x = Math.sin(dLat / 2) ** 2
+            + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+
+  function _geocodeOnce(geocoder, address) {
+    if (_geocodeCache.has(address)) return Promise.resolve(_geocodeCache.get(address));
+    return new Promise(resolve => {
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const loc = results[0].geometry.location;
+          const coords = { lat: loc.lat(), lng: loc.lng() };
+          _geocodeCache.set(address, coords);
+          resolve(coords);
+        } else {
+          _geocodeCache.set(address, null);
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  // Maps JS API is loaded `loading=async` for the autocomplete + static map,
+  // so google.maps.Geocoder may not be ready yet when renderReport() finishes.
+  // Wait up to 6s for it to attach.
+  function _waitForGoogleMaps(timeoutMs = 6000) {
+    return new Promise(resolve => {
+      const start = Date.now();
+      const tick = () => {
+        if (window.google && google.maps && google.maps.Geocoder) return resolve(true);
+        if (Date.now() - start >= timeoutMs) return resolve(false);
+        setTimeout(tick, 100);
+      };
+      tick();
+    });
+  }
+
+  // Append a state qualifier ("Allen, TX") so single-street comp addresses
+  // ("716 Birdie Dr") geocode against the right city instead of the global
+  // first match for that street name.
+  function _qualifyAddress(addr, subjectAddr) {
+    const clean = String(addr || '').replace(/,\s*$/, '').trim();
+    if (!clean) return clean;
+    if (clean.indexOf(',') !== -1) return clean;
+    const firstComma = (subjectAddr || '').indexOf(',');
+    if (firstComma === -1) return clean;
+    const locality = subjectAddr.slice(firstComma + 1).trim();
+    return locality ? clean + ', ' + locality : clean;
+  }
+
+  async function enrichCompDistances(subject, comps) {
+    const ready = await _waitForGoogleMaps();
+    if (!ready) {
+      console.warn('[distance] Google Maps Geocoder never loaded');
+      return;
+    }
+    const subjectAddr = (subject.full_address || subject.site_address || '');
+    const subjectQual = subjectAddr.includes(',')
+      ? subjectAddr
+      : (subjectAddr + (subject.site_city ? ', ' + subject.site_city : '') + ', TX' + (subject.site_zip ? ' ' + subject.site_zip : ''));
+
+    const geocoder = new google.maps.Geocoder();
+    const subjCoords = await _geocodeOnce(geocoder, subjectQual);
+    if (!subjCoords) {
+      console.warn('[distance] subject geocode failed for', subjectQual);
+      return;
+    }
+
+    // Row is always visible now (sync lat/lng path runs in the template).
+    // Only OVERRIDE cells whose Google geocode succeeds — never blank a cell
+    // that the sync path already filled, since Google failures on edge-case
+    // addresses shouldn't erase the lat/lng-derived value.
+    await Promise.all(comps.map(async (c, i) => {
+      const compAddr = _qualifyAddress(c.site_address || c.full_address || '', subjectQual);
+      const coords = await _geocodeOnce(geocoder, compAddr);
+      if (!coords) return;
+      const cell = $('dist-comp-' + i);
+      if (!cell) return;
+      const miles = _haversineMiles(subjCoords, coords);
+      const formatted = miles < 1 ? miles.toFixed(2) + ' mi' : miles.toFixed(1) + ' mi';
+      cell.textContent = formatted;
+    }));
+  }
+
+  // ────────── Engine-style comp filtering (shared by Section 6 + 7) ──────────
+  // Matches the TX savings calculator's defensibility windows:
+  //   - SIZE: 60-150% of subject sqft (COMP_SIZE_MIN/MAX_RATIO in
+  //     calculator_shared.py)
+  //   - YEAR: ±35 years of subject year_built (vintage gap beyond that
+  //     makes CAD-class peer comparison indefensible — surfaced by 903 S
+  //     Young Rockport audit, see calculator_shared.py comment)
+  //   - Sort by PSF ASC → pick the 7 LOWEST (matches the "7 lowest" comp
+  //     strategy referenced in calculator_tx.py:7).
+  //
+  // We deliberately keep individual comp distance-from-subject as a
+  // tiebreaker only — distance is a freshness/relevance signal, not a
+  // defensibility one. A 0.3 mi comp inside the size+year window at a
+  // lower PSF wins over a 0.05 mi same-block comp at a higher PSF for the
+  // owner's §41.43(b)(1) argument.
+  const COMP_SIZE_MIN_RATIO = 0.60;
+  const COMP_SIZE_MAX_RATIO = 1.50;
+  const COMP_YEAR_WINDOW = 35;
+  const COMP_KEEP_LOWEST = 7;
+
+  // Progressive widening tiers — mirrors the engine's COMP_YEAR_TIERS
+  // fallback pattern. Start with the engine-strict window; if we can't find
+  // enough defensible comps, relax year (the §41.43(b)(1) market-value
+  // argument is about recent neighborhood sales, not same-vintage
+  // construction — urban infill makes a 1930 subject sit next to 2010
+  // rebuilds, and excluding those misses the actual market). Drop size last
+  // since size is the more important defensibility signal.
+  const COMP_MIN_KEEP = 3;
+  const COMP_TIERS = [
+    { name: 'tight',    size: true,  year: true  },  // engine-strict
+    { name: 'no-year',  size: true,  year: false },  // drop year filter
+    { name: 'any',      size: false, year: false },  // drop both
+  ];
+
+  function applyEngineFilters(comps, subject, options = {}) {
+    const subjSqft = subject.living_sqft || 0;
+    const subjYear = subject.year_built || null;
+    const minSqft = subjSqft ? subjSqft * COMP_SIZE_MIN_RATIO : 0;
+    const maxSqft = subjSqft ? subjSqft * COMP_SIZE_MAX_RATIO : Infinity;
+    const minYear = subjYear ? subjYear - COMP_YEAR_WINDOW : null;
+    const maxYear = subjYear ? subjYear + COMP_YEAR_WINDOW : null;
+    const psfFn = options.psfFn || (c => c.psf);
+    const sqftFn = options.sqftFn || (c => c.living_sqft);
+    const yearFn = options.yearFn || (c => c.year_built);
+
+    // Strip rows missing PSF up front — they can never be ranked.
+    const withPsf = [];
+    let dropped_no_psf = 0;
+    for (const c of comps) {
+      const p = psfFn(c);
+      if (p == null || p <= 0) { dropped_no_psf++; continue; }
+      withPsf.push(c);
+    }
+
+    // Walk the tier list. Stop at the first tier that yields >= MIN_KEEP
+    // acceptable comps. Always report which tier was used + how many comps
+    // failed each filter so the consultant can see the relaxation.
+    let chosenTier = COMP_TIERS[COMP_TIERS.length - 1];
+    let accepted = [];
+    const counts = {
+      input: comps.length,
+      dropped_no_psf,
+      dropped_sqft: 0,
+      dropped_year: 0,
+    };
+    for (const tier of COMP_TIERS) {
+      const localDropSqft = [];
+      const localDropYear = [];
+      const ok = [];
+      for (const c of withPsf) {
+        const sqft = sqftFn(c);
+        const yr = yearFn(c);
+        if (tier.size && subjSqft && sqft && (sqft < minSqft || sqft > maxSqft)) {
+          localDropSqft.push(c); continue;
+        }
+        if (tier.year && minYear != null && maxYear != null && yr && (yr < minYear || yr > maxYear)) {
+          localDropYear.push(c); continue;
+        }
+        ok.push(c);
+      }
+      if (ok.length >= COMP_MIN_KEEP || tier === COMP_TIERS[COMP_TIERS.length - 1]) {
+        chosenTier = tier;
+        accepted = ok;
+        counts.dropped_sqft = localDropSqft.length;
+        counts.dropped_year = localDropYear.length;
+        break;
+      }
+    }
+
+    accepted.sort((a, b) => {
+      const dp = psfFn(a) - psfFn(b);
+      if (dp !== 0) return dp;
+      return (a.distance_mi || 99) - (b.distance_mi || 99);
+    });
+    const kept = accepted.slice(0, COMP_KEEP_LOWEST);
+    return { kept, counts, accepted_count: accepted.length, tier: chosenTier.name };
+  }
+
+  // Build a small explainer caption summarizing what was filtered out so the
+  // consultant can see why a comp the user expected isn't shown — and which
+  // tier of progressive widening had to be used.
+  function filterCaption(filterResult, subject) {
+    const c = filterResult.counts;
+    const tier = filterResult.tier;
+    const parts = [`${filterResult.kept.length} of ${c.input} returned (lowest PSF first)`];
+    const tierLabel = tier === 'tight'   ? 'engine-strict (size 60-150%, year &plusmn;35)'
+                    : tier === 'no-year' ? 'size 60-150% only &mdash; year window relaxed (insufficient same-vintage comps in this neighborhood)'
+                    : 'all comps &mdash; size + year windows both relaxed (no defensible peers in either window)';
+    parts.push(`filter tier: ${tierLabel}`);
+    const dropped = [];
+    if (c.dropped_sqft) dropped.push(`${c.dropped_sqft} for size`);
+    if (c.dropped_year) dropped.push(`${c.dropped_year} for year built`);
+    if (c.dropped_no_psf) dropped.push(`${c.dropped_no_psf} missing PSF`);
+    if (dropped.length) parts.push(`dropped ${dropped.join(', ')}`);
+    return parts.join(' &middot; ');
+  }
+
+  // ────────── Section 6: Sales Comparables (async) ──────────
+  // Calls /api/clear-capital/lookup with the subject's address, renders a
+  // compact table of returned MLS sales. Best-effort: silently hides the
+  // section if the upstream is unavailable or returns no sales.
+  async function fetchSalesComps(s) {
+    const placeholder = $('cc-sales-state');
+    const wrap = $('sec6-wrap');
+    if (!placeholder) return;
+    const hide = () => { if (wrap) wrap.remove(); };
+    // Clear Capital's address parser wants "STREET, CITY, ST ZIP" exactly.
+    // Our full_address column packs "STREET, CITY ZIP" (no state, ZIP smashed
+    // with city for HCAD-format CADs), which fails the upstream regex and
+    // returns 400. Reconstruct cleanly from the individual columns.
+    const street = (s.site_address || '').replace(/\s+/g, ' ').trim();
+    const city = (s.site_city || '').trim();
+    const zip = ((s.site_zip || '').match(/^\d{5}/) || [''])[0]; // strip 9-digit ZIP+4 down to 5
+    const fullAddr = [street, city, 'TX ' + zip].filter(Boolean).join(', ').trim();
+    if (!street || !city || !zip) {
+      hide();
+      return;
+    }
+    try {
+      const resp = await fetchWithRetry('/api/cad-proxy?path=/api/clear-capital/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: fullAddr }),
+      }, { attempts: 2, timeoutMs: 30000 });
+      if (!resp.ok) {
+        hide();
+        return;
+      }
+      const data = await resp.json();
+      // Step 1: keep only CLOSED sales (event_type === 'Sale'). Active /
+      // cancelled / expired listings are aspirational asking prices, not
+      // transactions — they don't support a §41.43(b)(1) market-value
+      // argument. We used to show them tagged; with engine-style filtering
+      // they're omitted entirely since they distort the lowest-PSF pick.
+      const all = (data.comps || []).filter(
+        c => c.sale_price && c.sale_date && (c.event_type === 'Sale' || !c.event_type)
+      );
+      // Step 2: apply engine filters (size + year windows, sort by PSF
+      // ASC, take 7 lowest acceptable).
+      const filtered = applyEngineFilters(all, s, {
+        psfFn: c => c.psf || (c.sale_price && c.living_sqft ? c.sale_price / c.living_sqft : null),
+      });
+      if (!filtered.kept.length) {
+        hide();
+        return;
+      }
+      placeholder.outerHTML = renderSalesCompTable(s, filtered.kept, data, filtered);
+    } catch (err) {
+      hide();
+    }
+  }
+
+  // ────────── Section 7: ATTOM closed-sales (async) ──────────
+  // Same flow as Section 6 but hits /api/attom-sales/lookup. ATTOM coverage
+  // is county-recorder data, so all entries are closed sales (no listing
+  // statuses). We don't apply the SOLD/ACTIVE badge here — every row is
+  // by definition a recorded sale.
+  async function fetchAttomSales(s) {
+    const placeholder = $('attom-sales-state');
+    const wrap = $('sec7-wrap');
+    if (!placeholder) return;
+    const hide = () => { if (wrap) wrap.remove(); };
+    const street = (s.site_address || '').replace(/\s+/g, ' ').trim();
+    const city = (s.site_city || '').trim();
+    const zip = ((s.site_zip || '').match(/^\d{5}/) || [''])[0];
+    const fullAddr = [street, city, 'TX ' + zip].filter(Boolean).join(', ').trim();
+    if (!street || !city || !zip) {
+      hide();
+      return;
+    }
+    try {
+      const resp = await fetchWithRetry('/api/cad-proxy?path=/api/attom-sales/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: fullAddr }),
+      }, { attempts: 2, timeoutMs: 30000 });
+      if (!resp.ok) {
+        let detail = '';
+        try { const e = await resp.json(); detail = e.detail?.message || e.detail || e.message || ''; } catch (_) {}
+        hide();
+        return;
+      }
+      const data = await resp.json();
+      const filtered = applyEngineFilters(data.sales || [], s, {
+        psfFn: c => c.psf,
+      });
+      if (!filtered.kept.length) {
+        hide();
+        return;
+      }
+      placeholder.outerHTML = renderAttomSalesTable(s, filtered.kept, data, filtered);
+    } catch (err) {
+      hide();
+    }
+  }
+
+  function renderAttomSalesTable(s, sales, attomData, filterResult) {
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const subjPsf = subjSqft ? (subjVal / subjSqft) : 0;
+    const psfs = sales.map(c => c.psf).filter(v => v);
+    let medianPsf = null, meanPsf = null;
+    if (psfs.length) {
+      const sorted = psfs.slice().sort((a, b) => a - b);
+      medianPsf = sorted.length % 2 === 1 ? sorted[(sorted.length - 1) / 2]
+        : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+      meanPsf = psfs.reduce((a, b) => a + b, 0) / psfs.length;
+    }
+    const psfDeltaCell = (compPsf) => {
+      if (!compPsf || !subjPsf) return '';
+      const delta = compPsf - subjPsf;
+      const pct = (delta / subjPsf) * 100;
+      const color = delta < 0 ? 'var(--emerald-dark)' : (delta > 0 ? 'var(--warn-text)' : 'var(--gray-500)');
+      const sign = delta < 0 ? '−' : (delta > 0 ? '+' : '');
+      return `<span style="color:${color};font-weight:600;">${sign}${fmtNum(Math.abs(pct), 1)}%</span>`;
+    };
+    const rows = sales.map((c, i) => {
+      const distance = c.distance_mi != null ? c.distance_mi.toFixed(2) + ' mi' : '';
+      const sold = c.sale_date ? new Date(c.sale_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${titleCase(c.address || '')}</td>
+          <td>${distance}</td>
+          <td>${sold}</td>
+          <td>${c.sale_trans_type || ''}</td>
+          <td class="right">${c.sale_price ? fmtMoney(c.sale_price) : ''}</td>
+          <td class="right">${c.living_sqft ? fmtNum(c.living_sqft) : ''}</td>
+          <td class="right">${fmtPsf(c.psf)}</td>
+          <td class="right">${psfDeltaCell(c.psf)}</td>
+          <td class="right">${c.year_built || ''}</td>
+          <td class="right">${c.beds != null ? c.beds : ''}</td>
+          <td class="right">${c.baths != null ? c.baths : ''}</td>
+        </tr>
+      `;
+    }).join('');
+    const captionText = filterResult ? filterCaption(filterResult, s) : `${sales.length} returned`;
+    return `
+      <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
+        Closed sales from ATTOM (county recorder / assessor data), filtered to engine-defensible peers. ATTOM and Clear Capital pull from different sources &mdash; comparing both helps confirm which sales are genuinely comparable. ${captionText}.
+      </p>
+      <table class="sales-comp-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Address</th><th>Distance</th><th>Sold</th><th>Type</th>
+            <th class="right">Sale price</th><th class="right">Living sqft</th>
+            <th class="right">$/sqft</th><th class="right">vs subj PSF</th>
+            <th class="right">Year built</th>
+            <th class="right">Beds</th><th class="right">Baths</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        ${medianPsf != null ? `
+        <tfoot>
+          <tr>
+            <td colspan="8" style="text-align:right;">Subject PSF: <b>${subjSqft ? fmtPsf(subjPsf) : '—'}</b> &middot; Filtered-pool median PSF: <b>${fmtPsf(medianPsf)}</b> &middot; Mean PSF: <b>${fmtPsf(meanPsf)}</b></td>
+            <td colspan="4" style="text-align:right;">${sales.length} of ${attomData.sales_count} returned</td>
+          </tr>
+          ${subjSqft && medianPsf ? `
+          <tr>
+            <td colspan="12" style="text-align:right;color:var(--emerald-dark);">
+              Median-PSF value indication: <b>${fmtMoney(medianPsf * subjSqft)}</b>
+              ${medianPsf * subjSqft < subjVal ? ` &mdash; ${fmtMoney(subjVal - medianPsf * subjSqft)} below current notice` : ''}
+            </td>
+          </tr>` : ''}
+        </tfoot>` : ''}
+      </table>
+    `;
+  }
+
+  function renderSalesCompTable(s, comps, ccData, filterResult) {
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const subjPsf = subjSqft ? (subjVal / subjSqft) : 0;
+    const psfs = comps.map(c => c.psf || (c.sale_price && c.living_sqft ? c.sale_price / c.living_sqft : null)).filter(v => v);
+    let medianPsf = null, meanPsf = null;
+    if (psfs.length) {
+      const sorted = psfs.slice().sort((a, b) => a - b);
+      medianPsf = sorted.length % 2 === 1 ? sorted[(sorted.length - 1) / 2]
+        : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+      meanPsf = psfs.reduce((a, b) => a + b, 0) / psfs.length;
+    }
+    // Each row shows the PSF delta vs subject. Lower (negative) = better
+    // owner argument under §41.43(b)(1). Coloring is emerald for below,
+    // amber for above — same convention as Section 4 best-match cells.
+    const psfDeltaCell = (compPsf) => {
+      if (!compPsf || !subjPsf) return '';
+      const delta = compPsf - subjPsf;
+      const pct = (delta / subjPsf) * 100;
+      const color = delta < 0 ? 'var(--emerald-dark)' : (delta > 0 ? 'var(--warn-text)' : 'var(--gray-500)');
+      const sign = delta < 0 ? '−' : (delta > 0 ? '+' : '');
+      return `<span style="color:${color};font-weight:600;">${sign}${fmtNum(Math.abs(pct), 1)}%</span>`;
+    };
+    const rows = comps.map((c, i) => {
+      const distance = c.distance_mi != null ? c.distance_mi.toFixed(2) + ' mi' : '';
+      const sold = c.sale_date ? new Date(c.sale_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+      const psf = c.psf || (c.sale_price && c.living_sqft ? c.sale_price / c.living_sqft : null);
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${titleCase(c.address || '')}</td>
+          <td>${distance}</td>
+          <td>${sold}</td>
+          <td class="right">${c.sale_price ? fmtMoney(c.sale_price) : ''}</td>
+          <td class="right">${c.living_sqft ? fmtNum(c.living_sqft) : ''}</td>
+          <td class="right">${fmtPsf(psf)}</td>
+          <td class="right">${psfDeltaCell(psf)}</td>
+          <td class="right">${c.year_built || ''}</td>
+          <td class="right">${c.beds != null ? c.beds : ''}</td>
+          <td class="right">${c.baths != null ? c.baths : ''}</td>
+        </tr>
+      `;
+    }).join('');
+    const ccAvm = (ccData.clear_capital_avm || {}).value;
+    const captionText = filterResult ? filterCaption(filterResult, s) : `${comps.length} closest closed sales`;
+    return `
+      <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
+        Closed MLS sales from Clear Capital RealTimeCMA, filtered to engine-defensible peers (same size+vintage window the TaxDrop §41.43 calculator uses). ${captionText}.
+      </p>
+      <table class="sales-comp-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Address</th><th>Distance</th><th>Sold</th>
+            <th class="right">Sale price</th><th class="right">Living sqft</th>
+            <th class="right">$/sqft</th><th class="right">vs subj PSF</th>
+            <th class="right">Year built</th>
+            <th class="right">Beds</th><th class="right">Baths</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        ${medianPsf != null ? `
+        <tfoot>
+          <tr>
+            <td colspan="7" style="text-align:right;">Subject PSF: <b>${subjSqft ? fmtPsf(subjPsf) : '—'}</b> &middot; Filtered-pool median PSF: <b>${fmtPsf(medianPsf)}</b> &middot; Mean PSF: <b>${fmtPsf(meanPsf)}</b></td>
+            <td colspan="4" style="text-align:right;">${ccAvm ? 'Clear Capital AVM: <b>' + fmtMoney(ccAvm) + '</b>' : ''}</td>
+          </tr>
+          ${subjSqft && medianPsf ? `
+          <tr>
+            <td colspan="11" style="text-align:right;color:var(--emerald-dark);">
+              Median-PSF value indication: <b>${fmtMoney(medianPsf * subjSqft)}</b>
+              ${medianPsf * subjSqft < subjVal ? ` &mdash; ${fmtMoney(subjVal - medianPsf * subjSqft)} below current notice` : ''}
+            </td>
+          </tr>` : ''}
+        </tfoot>` : ''}
+      </table>
+    `;
+  }
+
+  // ────────── Equity grid renderer ──────────
+  function renderEquityGrid(s, comps, bestIdx, psf) {
+    function attrRow(label, getter, formatter) {
+      const sVal = getter(s);
+      const compVals = comps.map(c => getter(c));
+      // Hide row entirely when no property (subject + comps) has data for it.
+      if (!hasVal(sVal) && !compVals.some(hasVal)) return '';
+      const cellHtml = (v, cls) => {
+        const display = hasVal(v) ? (formatter ? formatter(v) : v) : '';
+        return `<td class="${cls}">${display}</td>`;
+      };
+      const subjDisplay = hasVal(sVal) ? (formatter ? formatter(sVal) : sVal) : '';
+      const cells = compVals.map((v, i) => cellHtml(v, (i === bestIdx) ? 'match-cell' : '')).join('');
+      return `<tr><td class="attr-label">${label}</td><td class="subject-cell">${subjDisplay}</td>${cells}</tr>`;
+    }
+    // section() emits a section header followed by only the non-empty attr
+    // rows. If all rows are empty (every property in the set has nulls for
+    // every attr in the group), the entire group — header included — is
+    // omitted so the grid doesn't show an empty subsection.
+    function section(headerLabel, attrRowResults) {
+      const nonEmpty = attrRowResults.filter(r => r);
+      if (nonEmpty.length === 0) return '';
+      return `<tr class="section-header"><td colspan="${comps.length + 2}">${headerLabel}</td></tr>` + nonEmpty.join('');
+    }
+
+    const headers = ['Subject', ...comps.map((_, i) => `Comp #${i + 1}`)];
+    const headerNames = [s, ...comps].map(p => titleCase((p.site_address || p.full_address || '').split(',')[0] || ''));
+    const headerCells = headers.map((h, i) => {
+      let cls = '';
+      if (i === 0) cls = 'subject-col';
+      else if (i - 1 === bestIdx) cls = 'match-col';
+      return `<th class="${cls}">${h}<br><span style="font-weight:400;font-size:10px;">${headerNames[i]}</span></th>`;
+    }).join('');
+
+    // Photo row (streetview thumbnails)
+    const photoCells = [s, ...comps].map((p, i) => {
+      const cls = (i === 0) ? 'subject-cell' : (i - 1 === bestIdx ? 'match-cell' : '');
+      const addr = (p.full_address || p.site_address || '') + ', TX';
+      const svUrl = `https://maps.googleapis.com/maps/api/streetview?size=400x240&location=${encodeAddr(addr)}&return_error_code=true&key=${STREETVIEW_KEY}`;
+      return `<td class="photo-cell ${cls}"><img src="${svUrl}" alt="Street view" loading="lazy" onerror="this.outerHTML='&lt;div class=\\&quot;no-photo\\&quot;&gt;No imagery&lt;/div&gt;'"></td>`;
+    }).join('');
+
+    // PSF row + analysis
+    const psfMedian = psf.median_psf;
+    const psfMean = psf.mean_psf;
+    const psfLow = psf.lowest_comp_psf;
+    const hasAnyAdjustments = (comps || []).some(c => c.adjustment_total);
+
+    // Median / mean / lowest of the FULL per-comp breakdown (size+age+land+
+    // features, not just the engine-returned feature-only median). These are
+    // the numbers a CAD reviewer can reconcile from the table — and they're
+    // what the engine's recommended_value is anchored to internally.
+    const fullAdjPsfs = (comps || [])
+      .map(c => computeAdjBreakdown(s, c).finalPsf)
+      .filter(v => v > 0)
+      .sort((a, b) => a - b);
+    let psfMedianAdj = null, psfMeanAdj = null, psfLowAdj = null;
+    let medianAdjValue = null;
+    if (fullAdjPsfs.length) {
+      const n = fullAdjPsfs.length;
+      psfMedianAdj = n % 2 === 1
+        ? fullAdjPsfs[Math.floor(n / 2)]
+        : (fullAdjPsfs[n / 2 - 1] + fullAdjPsfs[n / 2]) / 2;
+      psfMeanAdj = fullAdjPsfs.reduce((a, b) => a + b, 0) / n;
+      psfLowAdj = fullAdjPsfs[0];
+      if (s.living_sqft) {
+        medianAdjValue = Math.round(psfMedianAdj * s.living_sqft);
+      }
+    }
+
+    return `
+      <div class="equity-grid-wrapper">
+      <table class="equity-grid">
+        <thead><tr><th style="width:220px;text-align:left;">&nbsp;</th>${headerCells}</tr></thead>
+        <tbody>
+          <tr><td class="attr-label">Street view</td>${photoCells}</tr>
+          ${attrRow('CAD account', p => fmtAccount(p.parcel_id, p.county))}
+          ${attrRow('Property address', p => titleCase(p.site_address || ''))}
+          <!-- Distance row: prefer synchronous compute from stored lat/lng
+               (per Mike's 2026-06-16 ask for a sortable proximity column).
+               Falls back to async Google geocoding via enrichCompDistances()
+               for counties where DB lat/lng is missing or centroid-only.
+               Always visible — shows "—" when no signal is available. -->
+          <tr id="distance-row">
+            <td class="attr-label">Location from subject (miles)</td>
+            <td class="subject-cell">&mdash;</td>
+            ${comps.map((c, i) => {
+              const sLat = parseFloat(s.latitude);
+              const sLon = parseFloat(s.longitude);
+              const cLat = parseFloat(c.latitude);
+              const cLon = parseFloat(c.longitude);
+              let initial = '';
+              if (isFinite(sLat) && isFinite(sLon) && isFinite(cLat) && isFinite(cLon)) {
+                const mi = _haversineMiles({lat: sLat, lng: sLon}, {lat: cLat, lng: cLon});
+                initial = mi < 1 ? mi.toFixed(2) + ' mi' : mi.toFixed(1) + ' mi';
+              }
+              return `<td class="${i === bestIdx ? 'match-cell' : ''}" id="dist-comp-${i}">${initial}</td>`;
+            }).join('')}
+          </tr>
+          ${attrRow('Subdivision', p => p.subdivision, titleCase)}
+          ${attrRow('State class', p => p.state_class)}
+          ${section('Building characteristics', [
+            attrRow('Living area (sqft)', p => p.living_sqft, v => fmtNum(v)),
+            attrRow('Year built', p => p.year_built),
+            attrRow('Effective year built', p => p.effective_year_built),
+            attrRow('Bedrooms', p => p.bedroom_count),
+            attrRow('Full / half baths', p => p.bathroom_count != null ? `${p.bathroom_count} / ${p.half_bath_count != null ? p.half_bath_count : 0}` : null),
+            attrRow('Story height', p => p.story_height),
+            attrRow('Grade', p => p.grade),
+            attrRow('Physical condition', p => p.physical_condition),
+            attrRow('Exterior wall', p => p.exterior_wall),
+            attrRow('Heating / cooling', p => p.heating_cooling),
+            attrRow('Foundation type', p => p.foundation_type),
+            attrRow('Land use code', p => p.land_use_code),
+          ])}
+          ${section('Features', [
+            attrRow('Garage',
+              p => p.garage_spaces != null ? p.garage_spaces : p.has_garage,
+              v => typeof v === 'number' ? (v > 0 ? `${fmtNum(v)}-car garage` : 'None') : (v ? 'Yes' : 'No')),
+            attrRow('Carport',
+              p => p.carport_spaces != null ? p.carport_spaces : p.has_carport,
+              v => typeof v === 'number' ? (v > 0 ? `${fmtNum(v)}-car carport` : 'None') : (v ? 'Yes' : 'No')),
+            attrRow('Pool', p => p.has_pool, v => v ? 'Yes' : 'No'),
+            // Extras: pool/garage/shed/deck/outdoor-kitchen detail from
+            // HCAD extra_features.txt or Dallas RES_ADDL.csv (or ATTOM
+            // building.parking + lot.poolType for the fallback path). This
+            // is the row the consultant uses to spot value-inflating
+            // amenities the subject doesn't share with a comp.
+            attrRow('Extras', p => p.extra_features),
+            attrRow('Additional structures on parcel', p => p.building_count, v => v > 1 ? `${fmtNum(v)} buildings (${fmtNum(v - 1)} beyond the home)` : `${fmtNum(v)} (home only)`),
+          ])}
+          ${section('Land', [
+            attrRow('Land size (sqft)', p => p.lot_sqft, v => fmtNum(v)),
+            attrRow('Noticed land value', p => p.land_value, fmtMoney),
+          ])}
+          ${section((s.tax_year || 2026) + ' Appraisal values', [
+            attrRow('Noticed improvement value', p => p.improvement_value, fmtMoney),
+            attrRow('CAD noticed market value', p => p.total_market, fmtMoney),
+            attrRow('Noticed value per sqft', p => p.living_sqft ? p.total_market / p.living_sqft : null, fmtPsf),
+            // ── Per-comp adjustment breakdown (Mike's Bay Hollow request) ──
+            // Every adjustment line that goes into the engine's recommended
+            // value is now visible per comp, so a CAD reviewer can reconcile
+            // raw → adjusted $/sqft from the table alone.
+            attrRow('Size (GLA) adj $/sqft',
+              p => p === s ? null : computeAdjBreakdown(s, p).sizeAdjPsf,
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtPsf(v)}` : `−${fmtPsf(Math.abs(v))}`)),
+            attrRow('Age adj $/sqft',
+              p => p === s ? null : computeAdjBreakdown(s, p).ageAdjPsf,
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtPsf(v)}` : `−${fmtPsf(Math.abs(v))}`)),
+            attrRow('Land value adj $/sqft',
+              p => p === s ? null : computeAdjBreakdown(s, p).landAdjPsf,
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtPsf(v)}` : `−${fmtPsf(Math.abs(v))}`)),
+            attrRow('Feature adj $/sqft (pool/garage/fp)',
+              p => p === s ? null : computeAdjBreakdown(s, p).featureAdjPsf,
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtPsf(v)}` : `−${fmtPsf(Math.abs(v))}`)),
+            attrRow('Total adjustment $/sqft',
+              p => p === s ? null : computeAdjBreakdown(s, p).totalAdjPsf,
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtPsf(v)}` : `−${fmtPsf(Math.abs(v))}`)),
+            // ── Mike's dollar-amount rows (Bay Hollow audit, 2026-06-16) ──
+            // The consultant's grid leads with dollar totals (Land Value Adj $,
+            // Improvement Size Adj $, Age/Condition Adj $, Total Net Adj $)
+            // alongside our $/sqft primitives. Compute by multiplying each
+            // adjustment $/sqft by the COMP's sqft — same basis the comp's
+            // market value is denominated in, so the math reconciles.
+            attrRow('Land value adj $',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).landAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Improvement size adj $',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).sizeAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Age/condition adj $',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).ageAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Feature adj $ (pool/garage/fp)',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).featureAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Total net adjustment $',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).totalAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Adjusted $/sqft',
+              p => p === s ? null : computeAdjBreakdown(s, p).finalPsf,
+              fmtPsf),
+            attrRow('Adjusted property value (comp basis)',
+              p => p === s ? null : (p.living_sqft ? Math.round(computeAdjBreakdown(s, p).finalPsf * p.living_sqft) : null),
+              fmtMoney),
+            // Mike's killer row: Adjusted PSF × SUBJECT sqft = the indicated
+            // value FOR THE SUBJECT derived from this comp. This is the row
+            // the median/lowest methodology anchors to — exposing it per comp
+            // lets a reviewer see the full distribution and judge the spread.
+            attrRow('Adjusted value (based on subject SF)',
+              p => {
+                if (p === s) return null;
+                const ss = s.living_sqft || 0;
+                if (!ss) return null;
+                return Math.round(computeAdjBreakdown(s, p).finalPsf * ss);
+              },
+              fmtMoney),
+            attrRow('% diff from raw market value',
+              p => p === s ? null : computeAdjBreakdown(s, p).diffPct,
+              v => v === 0 ? '0.0%' : (v > 0 ? `+${v.toFixed(1)}%` : `${v.toFixed(1)}%`)),
+            // Second % diff line per Mike's grid — measures how far the
+            // subject's CAD-noticed value sits from each comp's indicated
+            // value. Negative means subject is OVER-valued vs this comp; that's
+            // the unequal-appraisal signal a CAD reviewer cares about most.
+            attrRow('% diff vs subject CAD value',
+              p => {
+                if (p === s) return null;
+                const ss = s.living_sqft || 0;
+                const sv = s.total_market || 0;
+                if (!ss || !sv) return null;
+                const adj = computeAdjBreakdown(s, p).finalPsf * ss;
+                if (!adj) return null;
+                return ((adj - sv) / sv) * 100;
+              },
+              v => v === 0 ? '0.0%' : (v > 0 ? `+${v.toFixed(1)}%` : `${v.toFixed(1)}%`)),
+            // Mirror the section-1 rule: hide the prior-year row when
+            // SUBJECT's value decreased YoY (filing on a YoY decrease invites
+            // the obvious "you already got a reduction" rebuttal). The
+            // enclosing function only gets `s` and `comps` — not the cached
+            // subjVal/subjPrior from renderReport, so compute locally.
+            ...((((s.total_market || 0) - (s.prior_total_market || 0)) > 0)
+                ? [attrRow('Prior-year noticed market', p => p.prior_total_market, fmtMoney)]
+                : []),
+          ])}
+        </tbody>
+        ${psfMedian != null || psfMean != null || psfLow != null ? `
+        <tfoot>
+          <tr>
+            <td colspan="2">Median noticed PSF (${comps.length} comps)</td>
+            <td colspan="${comps.length}" style="text-align:right;">
+              ${[psfMedian != null && fmtPsf(psfMedian),
+                 psfMean   != null && 'Mean PSF: ' + fmtPsf(psfMean),
+                 psfLow    != null && 'Lowest comp PSF: ' + fmtPsf(psfLow)].filter(Boolean).join(' &middot; ')}
+            </td>
+          </tr>
+          ${psfMedianAdj != null ? `
+          <tr>
+            <td colspan="2"><b>Median adjusted PSF</b> (size + age + land + features)</td>
+            <td colspan="${comps.length}" style="text-align:right;">
+              <b>${fmtPsf(psfMedianAdj)}</b>
+              ${psfMeanAdj != null ? ' &middot; Mean adjusted PSF: ' + fmtPsf(psfMeanAdj) : ''}
+              ${psfLowAdj != null ? ' &middot; Lowest adjusted PSF: ' + fmtPsf(psfLowAdj) : ''}
+            </td>
+          </tr>
+          ${medianAdjValue != null ? `
+          <tr>
+            <td colspan="2"><b>Median adjusted indicated value</b> (median PSF &times; subject sqft)</td>
+            <td colspan="${comps.length}" style="text-align:right;">
+              <b>${fmtMoney(medianAdjValue)}</b>
+            </td>
+          </tr>` : ''}` : ''}
+        </tfoot>` : ''}
+      </table>
+      </div>
+    `;
+  }
+
+  // ────────── Analysis section renderer ──────────
+  // Methodologies in priority order:
+  //   - 'engine'     : recommended_value from server-side calculate_savings()
+  //   - 'best_match' : single-comp anchor (strongScore >= 4 required)
+  //   - 'median'     : median-PSF baseline
+  //   - 'lowest_psf' : floored ask at lowest comp PSF
+  //   - 'no_case'    : no defensible reduction
+  function renderAnalysisSection(s, best, methodology, psf, reduction, reductionPct, requestedVal, comps, engine) {
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const compsCount = (comps && comps.length) || 5;
+
+    if (methodology === 'no_case') {
+      // Section 4 is omitted entirely on no_case. Section 2 already shows
+      // the warning banner ("No reduction defensible from the comparable
+      // set"), so a §41.43(b)(3) analysis block would be redundant — and
+      // putting an "analysis" header in front of an ARB on a property we
+      // are not asking to reduce just invites the panel to engage with
+      // numbers we are not defending.
+      return '';
+    }
+
+    // Engine methodology — defensibility audit (2026-06-10) found the prior
+    // version cited a baseline_psf from calculate_savings()'s broader 7-comp
+    // pool that didn't match the 5 comps the ARB actually sees in Section 3.
+    // Asks could fall BELOW the visible median × sqft, leaving the ARB with
+    // no way to verify the math from the table in front of them.
+    //
+    // Per §41.43(b)(3): "the appraised value... is equal to or less than the
+    // median appraised value of a reasonable number of comparable properties
+    // appropriately adjusted." The statutory floor is the median of the comp
+    // set the ARB sees — not a different pool. So derive everything from
+    // psf_analysis (the displayed 5-comp stats) using whichever PSF math the
+    // owner / consultant adopts:
+    //   - median:        statute-defined safe floor (default)
+    //   - median_adjusted: same, after feature adjustments applied
+    //   - lowest_comp:   aggressive but still tied to a single visible row
+    //
+    // The engine's own recommended_value is ignored here — its broader pool
+    // would either need to be displayed (defensible but bigger table) or set
+    // aside (which is what we now do).
+    if ((methodology === 'engine' || methodology === 'engine_floored') && engine) {
+      const hasAdjustments = (comps || []).some(c => c.adjustment_total);
+      // Prefer adjusted median when any comp had a feature adjustment;
+      // otherwise fall back to raw median.
+      const useAdjusted = hasAdjustments && psf.median_adjusted_psf != null;
+      const baselinePsf = useAdjusted ? psf.median_adjusted_psf : psf.median_psf;
+      const baselineValue = useAdjusted ? psf.median_adjusted_value : psf.median_value;
+      const askValue = baselineValue;  // statute-aligned: median of visible comps × subject sqft
+      const recPsf = subjSqft && askValue ? (askValue / subjSqft) : null;
+      const source = useAdjusted
+        ? 'median of comparable properties in Section 3 after §41.43(b)(3) feature adjustments'
+        : 'median of comparable properties in Section 3';
+      const lowCompPsfFmt = psf.lowest_comp_psf ? fmtPsf(psf.lowest_comp_psf) : '—';
+      // Recompute reduction / pct since we replaced askValue.
+      const reductionLocal = subjVal - (askValue || 0);
+      const reductionPctLocal = subjVal && askValue ? (reductionLocal / subjVal) : 0;
+
+      // Feature adjustments — surface what was applied across the comp set,
+      // and (when adjustments shift the baseline) report the post-adjustment
+      // indicated value. The §41.43(b)(3) statute requires comps to be
+      // 'appropriately adjusted' — showing the math addresses that directly.
+      const adjusted = comps.filter(c => c.adjustment_total);
+      let adjustmentsHtml = '';
+      if (adjusted.length) {
+        // Collapse adjustments to the distinct features applied + dollar
+        // totals. e.g. "5 of 5 comparables adjusted +$25,000 each for Pool".
+        const byFeature = {};
+        adjusted.forEach(c => (c.adjustments || []).forEach(b => {
+          const key = b.feature.replace(/\s*\([^)]+\)/, '');  // strip "(+1 car)" qualifier for grouping
+          (byFeature[key] = byFeature[key] || []).push({ comp: c, bit: b });
+        }));
+        const summary = Object.entries(byFeature).map(([feat, list]) => {
+          const amts = list.map(x => x.bit.amount);
+          const allSame = amts.every(a => a === amts[0]);
+          const sign = amts[0] >= 0 ? '+' : '−';
+          const amtStr = allSame ? sign + fmtMoney(Math.abs(amts[0])) : 'mixed $ amounts';
+          const subjHas = list[0].bit.subject_has;
+          const compsHave = list[0].bit.comp_has;
+          const direction = (typeof subjHas === 'boolean')
+            ? (subjHas && !compsHave
+                ? `subject has ${feat.toLowerCase()}, comps don't &mdash; comp values adjusted up to match subject parity`
+                : `comps have ${feat.toLowerCase()}, subject doesn't &mdash; comp values adjusted down to remove ${feat.toLowerCase()} premium`)
+            : `subject and comps differ on ${feat.toLowerCase()} count`;
+          return `<li><b>${feat}</b>: ${list.length} of ${comps.length} comparables adjusted ${amtStr} (${direction})</li>`;
+        }).join('');
+        const adjPsf = psf.median_adjusted_psf;
+        const adjValue = psf.median_adjusted_value;
+        adjustmentsHtml = `
+          <p style="margin-top:14px;"><b>§41.43(b)(3) "appropriately adjusted" — feature adjustments applied:</b></p>
+          <ul style="margin:6px 0 14px;padding-left:20px;font-size:13px;">${summary}</ul>
+          ${adjPsf ? `
+          <p>After adjustments, the median comparable PSF moves from <b>${fmtPsf(baselinePsf)}</b> to <b>${fmtPsf(adjPsf)}</b>${adjValue ? `, indicating an adjusted market value of <b>${fmtMoney(adjValue)}</b>` : ''}. Adjustment values are TX-default flat-$ figures (pool $25K, garage $10K/space) consistent with published HCAD and DCAD methodology.</p>
+          ` : ''}`;
+      }
+
+      return `
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          <p>Tex. Property Tax Code &sect;41.43(b)(3) provides that the appraised value of the property must be equal to or less than the median appraised value of a reasonable number of comparable properties${useAdjusted ? ' <i>appropriately adjusted</i>' : ''}. The ${compsCount} comparables in Section 3 are the same-subdivision peers used for this analysis; their <b>${useAdjusted ? 'adjusted ' : ''}median noticed value per square foot</b> is the statutory baseline.</p>
+
+          <div class="calc-line">
+            ${useAdjusted ? 'Adjusted median PSF' : 'Median PSF'} of comparables in Section 3: <b>${baselinePsf ? fmtPsf(baselinePsf) : '—'}</b><br>
+            Subject's living area: ${fmtNum(subjSqft)} sqft<br>
+            Indicated market value (${useAdjusted ? 'adjusted ' : ''}median PSF &times; subject sqft): <b>${fmtMoney(askValue)}</b>${recPsf ? ' (' + fmtPsf(recPsf) + ')' : ''}<br>
+            Subject's current notice: ${fmtMoney(subjVal)}<br>
+            Reduction: <b>${fmtMoney(reductionLocal)}</b> (${(reductionPctLocal * 100).toFixed(2)}% of current notice)
+          </div>
+
+          <p style="font-size:13px;color:var(--gray-500);margin-top:14px;">
+            <b>Defensibility note:</b> the requested value is derived directly from the ${useAdjusted ? 'adjusted ' : ''}median PSF of the ${compsCount} comparables shown in Section 3 above &mdash; not from a separate or broader comp pool. The ARB can verify the baseline by computing the median of the "${useAdjusted ? 'Adjusted PSF' : 'Noticed value per sqft'}" row in the Section 3 table.
+          </p>
+          ${adjustmentsHtml}
+        </div>
+      `;
+    }
+
+    // best_match methodology — single-comp argument. Only reached when
+    // classifyComp(s, best).strongScore >= 4 (gated upstream). The text now
+    // says "matches" not "identical on every attribute" so a CAD reviewer
+    // can't refute us with attrs we silently omitted. (2026-06-03.)
+    if (methodology === 'best_match') {
+      const m = classifyComp(s, best);
+      const strongMatches = m.identical.map(a =>
+        `<li><b>Identical ${a.label}</b> &mdash; ${a.val}</li>`
+      );
+      // Append non-strong identical attrs (grade, condition, etc.) for
+      // transparency. These weren't part of the strongScore gate.
+      const extraAttrs = [];
+      const tryAttr = (label, sVal, cVal, fmt) => {
+        if (sVal != null && cVal != null && sVal === cVal) {
+          extraAttrs.push(`<li><b>Identical ${label}</b> &mdash; ${fmt ? fmt(sVal) : sVal}</li>`);
+        }
+      };
+      tryAttr('effective year built', s.effective_year_built, best.effective_year_built);
+      tryAttr('grade', s.grade, best.grade);
+      tryAttr('physical condition', s.physical_condition, best.physical_condition);
+      tryAttr('exterior wall', s.exterior_wall, best.exterior_wall);
+      tryAttr('heating / cooling', s.heating_cooling, best.heating_cooling);
+      tryAttr('foundation type', s.foundation_type, best.foundation_type);
+      tryAttr('bedroom count', s.bedroom_count, best.bedroom_count);
+      tryAttr('story height', s.story_height, best.story_height);
+      tryAttr('land use code', s.land_use_code, best.land_use_code);
+
+      const allMatches = strongMatches.concat(extraAttrs);
+
+      return `
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          <p>The most directly comparable property is <b>${titleCase(best.site_address || '')}</b> (CAD account ${fmtAccount(best.parcel_id, best.county)}). The subject and the comparable match across the major physical dimensions ${cadShortName(s.county)} publishes:</p>
+          <ul style="margin:8px 0 14px;padding-left:24px;">
+            ${allMatches.join('\n')}
+          </ul>
+          <p>${cadShortName(s.county)}'s ${s.tax_year || 2026} notice for the comparable establishes its market value at <b>${fmtMoney(best.total_market)}</b>. Two properties matching across these physical dimensions should be appraised at equal market values.</p>
+
+          <div class="calc-line">
+            Comparable noticed market value: <b>${fmtMoney(best.total_market)}</b><br>
+            Subject's current notice: ${fmtMoney(subjVal)}<br>
+            Difference: <b>${fmtMoney(reduction)}</b> (${(reductionPct * 100).toFixed(2)}% above the most directly comparable property)
+          </div>
+        </div>
+      `;
+    }
+
+    // Helper: derive the implied $/sqft from the requested dollar amount.
+    // For median and lowest_psf branches we always cite requestedVal as the
+    // source of truth and derive PSF from it, so the narrative reconciles
+    // to Section 3's "Adjusted $/sqft" row exactly.
+    const impliedPsf = (requestedVal && subjSqft) ? (requestedVal / subjSqft) : 0;
+
+    // median methodology — use full-breakdown median (size + age + land +
+    // features) so the narrative matches the Section 3 footer row.
+    if (methodology === 'median') {
+      return `
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          <p>The ${compsCount} comparables in Section 3, after size, age, land-value, and feature adjustments, produce a median adjusted PSF of <b>${fmtPsf(impliedPsf)}</b>.</p>
+
+          <div class="calc-line">
+            Median adjusted PSF: <b>${fmtPsf(impliedPsf)}</b><br>
+            Subject's living area: ${fmtNum(subjSqft)} sqft<br>
+            Median-indicated value: <b>${fmtMoney(requestedVal)}</b><br>
+            Subject's current notice: ${fmtMoney(subjVal)}<br>
+            Difference: <b>${fmtMoney(reduction)}</b> (${(reductionPct * 100).toFixed(2)}% above the comparable median)
+          </div>
+        </div>
+      `;
+    }
+
+    // lowest_psf fallback — cite the full-breakdown lowest, not the raw
+    // lowest. The displayed Section 3 "Adjusted $/sqft" row IS the lowest
+    // PSF the request is anchored to.
+    return `
+      <h2><span class="section-num">4.</span> Analysis</h2>
+      <div class="analysis-summary">
+        <p>The lowest adjusted PSF among the ${compsCount} comparables — after size, age, land-value, and feature adjustments — is <b>${fmtPsf(impliedPsf)}</b>, applied to the subject's ${fmtNum(subjSqft)} sqft, yielding a value indication of <b>${fmtMoney(requestedVal)}</b>.</p>
+      </div>
+    `;
+  }
+
+  // ────────── Section 5: Adjustment Methodology ──────────
+  // Documents how the engine normalizes each comparable's $/sqft to the
+  // subject before taking the equity median. Mirrors the math in
+  // calculator_shared.adjust_comp_psf — when those constants change, update
+  // this section. Pool / garage fire per-comp based on data availability:
+  // if a CAD didn't publish the flag for either subject or comp, the
+  // engine silently skips the adjustment. No explicit county gate.
+  function renderMethodologySection(s) {
+    const rows = [
+      {
+        name: 'Size (GLA)',
+        mag: '±10% per size delta',
+        desc: 'Economies of scale: bigger homes have lower $/sqft (fixed costs — kitchen, roof, mechanicals — amortize over more square footage). Larger comp adjusts up toward the subject\'s smaller footprint; smaller comp adjusts down.',
+      },
+      {
+        name: 'Age',
+        mag: '0.3%/yr · year delta capped at ±15 yr (max ±4.5%)',
+        desc: 'Newer comp adjusts down; older comp adjusts up. Uses effective year built when the CAD publishes it — a renovated 1967 home with an effective year of 2007 compares as a 2007 build, not a 1967 build.',
+      },
+      {
+        name: 'Land value',
+        mag: 'max ±10% of $/sqft',
+        desc: 'Adjusts for CAD-published land valuation differences between the subject and comp. The cap prevents a single high-land-value comp from collapsing the baseline on a low-land subject (or vice versa).',
+      },
+      {
+        name: 'Pool',
+        mag: '±$25,000',
+        desc: 'Subject has a pool and comp doesn\'t → comp value adjusts up toward an amenity-bearing comparison set. Reverse when comp has the pool and subject doesn\'t. Flat-$ value matches HCAD/DCAD published methodology. Skipped on individual comps when the CAD didn\'t publish the pool flag.',
+      },
+      {
+        name: 'Garage',
+        mag: '±$10,000 per space',
+        desc: 'Per-space dollar adjustment toward the subject\'s garage configuration. Falls back to a single-space adjustment when only a boolean has_garage flag is available. Skipped when the CAD didn\'t publish garage data.',
+      },
+      {
+        name: 'Single-comp cap',
+        mag: '±30% from raw',
+        desc: 'No single comp can adjust more than 30% from its unadjusted $/sqft. Keeps the brief defensible against a CAD reviewer who would challenge a 50% swing on any one comparable.',
+      },
+    ];
+
+    const tableRows = rows.map(r => `
+      <tr>
+        <td class="adj-name">${r.name}</td>
+        <td class="adj-mag">${r.mag}</td>
+        <td>${r.desc}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <h2><span class="section-num">5.</span> Adjustment Methodology</h2>
+      <div class="analysis-summary">
+        <p>Each comparable\'s raw $/sqft is normalized to the subject before the equity median is taken, so the baseline reflects what the comparable would cost on equal footing with the subject — not its raw market price. The adjustments below mirror the engine that produced Section 4\'s recommendation.</p>
+        <table class="methodology-table">
+          <thead>
+            <tr><th>Adjustment</th><th>Magnitude</th><th>What it corrects for</th></tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+        <p class="methodology-note">Adjustments are applied multiplicatively in the order shown; the single-comp cap is enforced last so the displayed Adj $/sqft never deviates more than 30% from its raw value. Pool and garage adjustments fire per-comp based on whether the CAD published reliable flags for that property.</p>
+      </div>
+    `;
+  }
+
+  function cadShortName(county) {
+    return ({
+      harris: 'HCAD', bexar: 'Bexar Appraisal District',
+      travis: 'TCAD', dallas: 'DCAD', tarrant: 'TAD',
+      collin: 'CCAD', denton: 'DCAD', fortbend: 'FBCAD',
+      galveston: 'GalCAD', montgomery: 'MCAD',
+    })[county] || 'the CAD';
+  }
+
+  // ────────── Export buttons ──────────
+  function exportPDF() { window.print(); }
+
+  function exportDocx() {
+    const btn = $('btn-export-docx');
+    const txt = $('btn-docx-text');
+    const orig = txt.textContent;
+    try {
+      const docClone = document.documentElement.cloneNode(true);
+      ['#search-shell', '#state-empty', '#state-loading', '#state-error', '.export-bar']
+        .forEach(sel => docClone.querySelectorAll(sel).forEach(el => el.remove()));
+      const html = '<!DOCTYPE html><html>' + docClone.innerHTML + '</html>';
+      let blob, ext;
+      if (window.htmlDocx && typeof window.htmlDocx.asBlob === 'function') {
+        blob = window.htmlDocx.asBlob(html); ext = 'docx';
+      } else {
+        const wordHtml = html.replace('<html>',
+          '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">');
+        blob = new Blob(['﻿' + wordHtml], { type: 'application/msword' });
+        ext = 'doc';
+      }
+      const addr = (new URLSearchParams(window.location.search).get('address') || 'subject').replace(/[^A-Za-z0-9]+/g, '-').slice(0, 60);
+      const filename = `Property-Appraisal-Report-${addr}.${ext}`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      btn.classList.add('generating'); txt.textContent = 'Downloaded ✓';
+      setTimeout(() => { txt.textContent = orig; btn.classList.remove('generating'); }, 2500);
+    } catch (err) {
+      console.error('Docx export failed:', err);
+      txt.textContent = 'Failed';
+      setTimeout(() => { txt.textContent = orig; }, 3000);
+      alert('Docx export failed: ' + err.message);
+    }
+  }
+
+  function openPresentationNotes() {
+    const addr = (new URLSearchParams(window.location.search).get('address') || '').trim();
+    // For now Notes only exists for the 20022 Atasca Villas example.
+    if (!addr || addr.toLowerCase().includes('atasca villas')) {
+      window.open('/test/evidence-pack-v2-notes', '_blank', 'noopener');
+    } else {
+      alert('Presentation Notes are only available for the 20022 Atasca Villas example today. Other addresses generate the customer-facing exhibit only.');
+    }
+  }
+
+  // ────────── Page boot ──────────
+  (function init() {
+    const params = new URLSearchParams(window.location.search);
+    const addr = params.get('address');
+    if (addr) {
+      $('addr-input').value = addr;
+      submitSearch();
+    } else {
+      showState('empty');
+    }
+    $('addr-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); submitSearch(); }
+    });
+  })();
+</script>
+
+</body>
+</html>

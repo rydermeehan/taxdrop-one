@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+<meta charset="UTF-8">
+<title>Presentation Notes — 20022 Atasca Villas Dr — Internal Hearing Prep</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --emerald-dark: #0C593E;
+    --emerald-light: #0B8F52;
+    --mint: #DFFFEA;
+    --yellow-green: #C4FF64;
+    --charcoal: #1A1A1A;
+    --gray-500: #5C666F;
+    --gray-400: #8A929B;
+    --gray-300: #C9D0D6;
+    --gray-200: #E5E7EB;
+    --gray-100: #F4F6F8;
+    --warn-bg: #FFF4D6;
+    --warn-border: #E5B644;
+    --warn-text: #8a6500;
+    --danger-bg: #FFE5E5;
+    --danger-border: #C73E3E;
+    --good-bg: #E8F8EE;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    color: var(--charcoal);
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 32px 60px;
+    line-height: 1.6;
+    background: white;
+    font-size: 14px;
+  }
+  .doc-header {
+    border-bottom: 3px solid var(--warn-border);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .doc-header-text { flex: 1; min-width: 280px; }
+  .doc-header .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--warn-text);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .doc-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--charcoal);
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+  .doc-header .meta { color: var(--gray-500); font-size: 13px; }
+  .export-bar { display: flex; gap: 8px; flex-shrink: 0; padding-top: 4px; }
+  .btn-export {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--warn-border);
+    background: white;
+    color: var(--warn-text);
+    border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+  .btn-export:hover { background: var(--warn-bg); }
+  .btn-export:active { background: var(--warn-bg); }
+  .btn-export svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  .internal-banner {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn-border);
+    padding: 12px 16px;
+    margin: 0 0 24px;
+    font-size: 13px;
+    border-radius: 0 4px 4px 0;
+  }
+  .internal-banner b { color: var(--warn-text); }
+
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--emerald-dark);
+    margin: 32px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--mint);
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--emerald-dark);
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  p { margin: 0 0 12px; }
+
+  .case-snapshot {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 0 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+    font-size: 13px;
+  }
+  .case-snapshot .label { color: var(--gray-500); font-weight: 500; }
+  .case-snapshot .value { font-weight: 600; }
+
+  .ask-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 14px 0 20px;
+  }
+  .ask-card {
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: white;
+  }
+  .ask-card.preferred { border-color: var(--emerald-light); background: var(--good-bg); }
+  .ask-card.floor { border-color: var(--gray-500); }
+  .ask-card .ask-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .ask-card.preferred .ask-label { color: var(--emerald-dark); }
+  .ask-card .ask-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--charcoal);
+  }
+  .ask-card .ask-psf { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+  .ask-card .ask-pct { font-size: 12px; font-weight: 600; color: var(--emerald-dark); margin-top: 6px; }
+  .ask-card .ask-note { font-size: 11px; color: var(--gray-500); margin-top: 8px; line-height: 1.4; }
+
+  .callout {
+    background: var(--good-bg);
+    border-left: 4px solid var(--emerald-light);
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 13px;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout b { color: var(--emerald-dark); }
+
+  .sound-bite {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--emerald-light);
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-style: italic;
+    font-size: 13px;
+    line-height: 1.55;
+    border-radius: 0 4px 4px 0;
+  }
+  .sound-bite::before {
+    content: "\201C"; color: var(--emerald-light); font-size: 28px;
+    line-height: 0; vertical-align: -10px; margin-right: 4px; font-style: normal;
+  }
+  .sound-bite::after {
+    content: "\201D"; color: var(--emerald-light); font-size: 28px;
+    line-height: 0; vertical-align: -16px; margin-left: 2px; font-style: normal;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 14px;
+    font-size: 13px;
+  }
+  th {
+    background: var(--mint);
+    color: var(--emerald-dark);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 2px solid var(--mint);
+    font-size: 11px;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+
+  ul.checklist { list-style: none; padding-left: 0; font-size: 13px; margin: 0; }
+  ul.checklist li {
+    padding: 6px 0 6px 28px;
+    position: relative;
+    border-bottom: 1px dashed var(--gray-200);
+  }
+  ul.checklist li:last-child { border-bottom: none; }
+  ul.checklist li::before {
+    content: "\2610";
+    position: absolute;
+    left: 0;
+    color: var(--emerald-light);
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 12px 0 18px;
+    font-size: 13px;
+  }
+  .scenarios .scenario {
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: white;
+  }
+  .scenarios .scenario .s-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .scenarios .scenario .s-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--charcoal);
+  }
+  .scenarios .scenario .s-pct {
+    font-size: 11px; color: var(--emerald-dark); font-weight: 600; margin-top: 2px;
+  }
+  .scenarios .scenario .s-savings {
+    font-size: 11px; color: var(--gray-500); margin-top: 4px;
+  }
+
+  .footer {
+    color: var(--gray-500);
+    font-size: 10px;
+    margin-top: 36px;
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-200);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  @media print {
+    body { padding: 24px; max-width: none; font-size: 12px; }
+    .export-bar { display: none !important; }
+    h2 { page-break-after: avoid; }
+    .ask-grid { page-break-inside: avoid; }
+    .callout, .sound-bite { page-break-inside: avoid; }
+    .case-snapshot { page-break-inside: avoid; }
+    .scenarios { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-header-text">
+    <div class="eyebrow">Internal Hearing Prep &mdash; Consultant &amp; Owner</div>
+    <h1>Presentation Notes</h1>
+    <div class="meta">20022 Atasca Villas Dr, Humble, TX 77346 &middot; HCAD account 114-302-003-0012 &middot; Tax Year 2026</div>
+  </div>
+  <div class="export-bar" id="export-bar">
+    <button class="btn-export" onclick="exportPDF()" type="button" aria-label="Export as PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Export PDF</span>
+    </button>
+  </div>
+</div>
+
+<div class="internal-banner">
+  <b>INTERNAL DOCUMENT &mdash; HEARING PREP USE ONLY.</b> Strategy, scripts, and pre-hearing checklist for the property owner and/or authorized agent. Do not file with the appraisal district. The customer-facing exhibit is the &sect;41.43(b)(3) Equity Analysis at <code>studio.taxdrop.com/test/evidence-pack-v2</code>.
+</div>
+
+<h2>The 30-second read</h2>
+<p>Thin-margin equity case with one clean shot. HCAD's own 2026 Equity Analysis selected five comparables for this subject &mdash; <b>Comp #4 (20107 18th Fairway Dr)</b> is identical to subject across 13 ingested HCAD attributes (same year built, same sqft, same subdivision, same grade, same CDU, same exterior, same HVAC, same foundation, same land use code). HCAD appraised Comp #4 at $253,930 vs subject at $256,910 &mdash; an unequal appraisal of $2,980 (1.16%) above an identical property. Lead with Comp #4 as the killer comp; don't volunteer the median PSF calculation (it lands at $256,904, essentially equal to noticed). Settlement target: $250&ndash;$252K; walk-away: $253,930. Realistic outcome: $250&ndash;$254K reduction in informal settle, ~$95&ndash;$200 annual tax savings.</p>
+
+<h2>Case snapshot</h2>
+<div class="case-snapshot">
+  <div><span class="label">Owner of record:</span> <span class="value">Leblanc, Beau (no homestead on file)</span></div>
+  <div><span class="label">HCAD account:</span> <span class="value">114-302-003-0012</span></div>
+  <div><span class="label">Notice date:</span> <span class="value">2026-04-17 (not yet certified)</span></div>
+  <div><span class="label">Prior protest:</span> <span class="value">None on file</span></div>
+  <div><span class="label">2025 noticed:</span> <span class="value">$238,925</span></div>
+  <div><span class="label">2026 noticed:</span> <span class="value"><b>$256,910</b> (+7.53% YoY)</span></div>
+  <div><span class="label">Subject sqft:</span> <span class="value">1,633</span></div>
+  <div><span class="label">Subject PSF:</span> <span class="value">$157.32</span></div>
+  <div><span class="label">Best comp (C4):</span> <span class="value">$253,930 ($155.50/sqft)</span></div>
+  <div><span class="label">Lowest comp (C5):</span> <span class="value">$251,406 ($154.43/sqft)</span></div>
+  <div><span class="label">Median comp PSF:</span> <span class="value">$157.32 (= subject &mdash; useless for §41.43(b)(3) argument)</span></div>
+  <div><span class="label">Subdivision:</span> <span class="value">Golf Villas of Atascocita (all 6 properties)</span></div>
+</div>
+
+<h2>Ask strategy</h2>
+<div class="ask-grid">
+  <div class="ask-card">
+    <div class="ask-label">Open at (stretch)</div>
+    <div class="ask-amount">$245,000</div>
+    <div class="ask-psf">$150.03 / sqft</div>
+    <div class="ask-pct">&minus;4.6% &middot; saves $11,910</div>
+    <div class="ask-note">Anchored below all five comps. Aggressive opener; signals appetite to escalate to ARB. Don't expect CAD to bite, but it sets the negotiation band.</div>
+  </div>
+  <div class="ask-card preferred">
+    <div class="ask-label">Settle at (target)</div>
+    <div class="ask-amount">$250,000</div>
+    <div class="ask-psf">$153.09 / sqft</div>
+    <div class="ask-pct">&minus;2.7% &middot; saves $6,910</div>
+    <div class="ask-note"><b>Realistic landing.</b> Sits between Comp #5 ($251,406) and the lowest-PSF approach ($252,184). Inside CAD's informal-concession range for tight equity cases. Worth ~$170&ndash;$300 in annual tax savings.</div>
+  </div>
+  <div class="ask-card floor">
+    <div class="ask-label">Walk with (floor)</div>
+    <div class="ask-amount">$253,930</div>
+    <div class="ask-psf">$155.50 / sqft</div>
+    <div class="ask-pct">&minus;1.16% &middot; saves $2,980</div>
+    <div class="ask-note">Equal to Comp #4's noticed value. This is the §41.43(b)(3) statutory floor &mdash; CAD cannot defend a higher value without contradicting their own evidence. Do NOT settle above this.</div>
+  </div>
+</div>
+
+<h2>Why this works &mdash; the key facts</h2>
+<table>
+  <thead><tr><th>Argument</th><th>Statutory basis</th><th>Why it's defensible</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Comp #4 is identical on every HCAD-published attribute</b></td>
+      <td>&sect;41.43(b)(3)</td>
+      <td>13 attributes verified identical from HCAD bulk export. CAD cannot dispute their own data.</td>
+    </tr>
+    <tr>
+      <td><b>All 6 properties same subdivision (Golf Villas of Atascocita)</b></td>
+      <td>&sect;41.43(b)(3)</td>
+      <td>Same-subdivision comps are the strongest "equal &amp; uniform" evidence under TX precedent.</td>
+    </tr>
+    <tr>
+      <td><b>HCAD selected these comps themselves</b></td>
+      <td>Evidentiary</td>
+      <td>Their 2026 Equity Analysis (filed exhibit) chose this exact 5-comp set. They've conceded comparability.</td>
+    </tr>
+    <tr>
+      <td><b>C4 has comparable YoY increase (+7.57% vs subject +7.53%)</b></td>
+      <td>Equity</td>
+      <td>Subject is not "behind" on market trend; the unequal appraisal is purely a base-year-value issue.</td>
+    </tr>
+    <tr>
+      <td><b>C2 has cap loss applied</b></td>
+      <td>Context only</td>
+      <td>C2 noticed $259,832 but appraised $240,387 (10% cap). Don't lead with this &mdash; cap is for prior owner, not us. Mentioning it weakens our equity argument.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Watch out for &mdash; CAD's likely counters</h2>
+<table>
+  <thead><tr><th>CAD might say</th><th>Counter</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>"Subject and Comp #4 have different year built or condition that justifies the difference."</td>
+      <td>"Your own filed exhibit lists them as identical. Year built 1995/1995, CDU Average/68% both, Grade B- both, exterior Brick/Veneer both, HVAC Central Heat/AC both, foundation Slab both. Your data is your evidence."</td>
+    </tr>
+    <tr>
+      <td>"Our adjustment methodology accounts for differences."</td>
+      <td>"Section &sect;41.43(b)(3) requires the median of comparable properties appropriately adjusted. With identical attributes, no adjustment is appropriate. Comp #4 stands at $253,930."</td>
+    </tr>
+    <tr>
+      <td>"The median PSF is $157.32 &mdash; equal to subject."</td>
+      <td>Do NOT engage on median PSF. Pivot back to direct comparable: "I'm asserting an identical-property equity claim under &sect;41.43(b)(3), not a median-PSF claim. Comp #4 is the basis."</td>
+    </tr>
+    <tr>
+      <td>"You sold the property recently for $X" or "You're not on homestead."</td>
+      <td>No recent sale; not on homestead. Both are neutral &mdash; equity argument doesn't depend on either.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Hearing script &mdash; sound bites</h2>
+
+<h3>Opening (informal)</h3>
+<div class="sound-bite">Per HCAD's own 2026 Equity Analysis filed for this account, Comp #4 at 20107 18th Fairway Drive is identical to subject across every physical attribute HCAD publishes &mdash; same year built (1995), same living area (1,633 sqft), same subdivision, same grade (B-), same CDU (Average / 68%), same exterior (Brick / Veneer), same HVAC (Central Heat/AC), same foundation (Slab), same land use code (1001). HCAD noticed Comp #4 at $253,930. Equity under &sect;41.43(b)(3) requires the same value here. We request $245,000 as an opener.</div>
+
+<h3>If CAD pushes back on $245K</h3>
+<div class="sound-bite">We're not arguing market value &mdash; we're arguing equity. Your own filed exhibit selected Comp #4 as the most comparable property to this subject. You appraised it at $253,930. You cannot defend appraising an identical property $2,980 higher. We'd settle at $250,000 to avoid ARB.</div>
+
+<h3>Closing (settle)</h3>
+<div class="sound-bite">$250,000. That's $3,930 below Comp #4 and $2,184 below the lowest-PSF indication from your own comp set. Both parties have a defensible position. I'll sign today.</div>
+
+<h3>If forced to ARB</h3>
+<div class="sound-bite">Walk with $253,930 minimum. Anchor on the &sect;41.43(b)(3) statutory floor &mdash; Comp #4 noticed at $253,930. CAD's own evidence makes this indefensible to argue against.</div>
+
+<h2>Pre-hearing checklist</h2>
+<ul class="checklist">
+  <li>Print this Presentation Notes document</li>
+  <li>Print the customer-facing Equity Analysis (studio.taxdrop.com/test/evidence-pack-v2 &mdash; PDF or Docx export)</li>
+  <li>Print HCAD's filed 2026 Equity Analysis exhibit (print date 5/27/2026) &mdash; this is their evidence, bring it to use against them</li>
+  <li>Highlighter on HCAD exhibit: <b>Comp #4 noticed market value $253,930</b></li>
+  <li>Highlighter on HCAD exhibit: All 5 comps share neighborhood code 2383.00 / 18045</li>
+  <li>Verify Comp #4's appraised value hasn't been changed since the 5/27/2026 print date (re-check HCAD account 114-302-003-0008 day-before hearing)</li>
+  <li>Confirm hearing date, time, and location with property owner</li>
+  <li>Owner brings government-issued ID and proof of ownership (deed or tax statement)</li>
+  <li>Open at $245,000 &mdash; settle target $250,000 &mdash; floor $253,930</li>
+  <li>Do NOT volunteer the median PSF calculation ($256,904 &mdash; weakens our argument)</li>
+  <li>Do NOT settle above $253,930 (Comp #4's value is the statutory floor)</li>
+  <li>If informal lands &gt;$253,930, request formal ARB hearing &mdash; the case is clean enough to win</li>
+</ul>
+
+<h2>Financial outcome scenarios for the owner</h2>
+<p style="color:var(--gray-500);font-size:12px;margin:0 0 10px;">Annual property tax savings assume combined Humble ISD + Harris County tax rate of ~3.2%. Tax bill changes are linear with appraised value reductions. TaxDrop fee: 25% of first-year savings.</p>
+<div class="scenarios">
+  <div class="scenario">
+    <div class="s-label">Best case (open accepted)</div>
+    <div class="s-value">$245,000</div>
+    <div class="s-pct">$11,910 reduction</div>
+    <div class="s-savings">~$381 / yr tax savings<br>TaxDrop fee: ~$95</div>
+  </div>
+  <div class="scenario">
+    <div class="s-label">Target case (settle)</div>
+    <div class="s-value">$250,000</div>
+    <div class="s-pct">$6,910 reduction</div>
+    <div class="s-savings">~$221 / yr tax savings<br>TaxDrop fee: ~$55</div>
+  </div>
+  <div class="scenario">
+    <div class="s-label">Worst case (floor accepted)</div>
+    <div class="s-value">$253,930</div>
+    <div class="s-pct">$2,980 reduction</div>
+    <div class="s-savings">~$95 / yr tax savings<br>TaxDrop fee: ~$24</div>
+  </div>
+</div>
+<p style="color:var(--gray-500);font-size:12px;"><b>Set expectations honestly:</b> realistic outcome is $250&ndash;$254K. Annual tax savings of $95&ndash;$300 are real but small. Owner should understand this is a thin-margin case &mdash; the §41.43(b)(3) argument is statutorily strong but the dollar magnitude is modest. Multi-year compounding (TX 10% appraisal cap once homesteaded) makes even modest reductions matter long-term.</p>
+
+<h2>Data sources &amp; verification</h2>
+<table>
+  <tbody>
+    <tr><td><b>Subject + 5 comps source</b></td><td>HCAD 2026 bulk property export (real_acct_owner.zip)</td></tr>
+    <tr><td><b>Subject ingested</b></td><td>2026-04-28 to TaxDrop CAD database (Postgres)</td></tr>
+    <tr><td><b>Building characteristics ingested</b></td><td>2026-05-29 from HCAD Real_building_land.zip (building_res.txt, fixtures.txt, structural_elem1.txt)</td></tr>
+    <tr><td><b>Comp set</b></td><td>HCAD's own filed 2026 Equity Analysis for account 114-302-003-0012 (print date 5/27/2026)</td></tr>
+    <tr><td><b>Data accuracy verified</b></td><td>100% match between TaxDrop DB and HCAD's filed exhibit for all 6 parcels on every ingested field</td></tr>
+    <tr><td><b>Map data</b></td><td>Google Static Maps + Street View (live API at view time)</td></tr>
+    <tr><td><b>Customer-facing exhibit URL</b></td><td>studio.taxdrop.com/test/evidence-pack-v2</td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  TaxDrop Internal Hearing Prep &middot; Tax Year 2026 &middot; HCAD account 114-302-003-0012 &middot; Generated 2026-05-29 &middot; Do not file with appraisal district
+</div>
+
+<script>
+  function exportPDF() {
+    window.print();
+  }
+</script>
+</body>
+</html>

@@ -401,9 +401,11 @@ function ResultsView({ result, method, onCopy }) {
         <div className="spacer" />
         <div className="method-tag">
           <span className="d" />
-          {method === "ai" ? "Read by AI" : "Read by rules"}
+          {method === "ai" ? "Read by AI" : method === "ai-vision" ? "Read by AI · page images" : "Read by rules"}
         </div>
       </div>
+
+      <DataQualityBanner dq={r.dataQuality} />
 
       {/* County copy only: a plain, un-branded, facts-only document.
           When the packet doesn't support a real reduction, CountySummary/Comps

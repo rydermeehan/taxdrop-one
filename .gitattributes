@@ -1,0 +1,4 @@
+# PDFs are binary assets. Without this, git's heuristic can misclassify one as
+# text (it did for fl-dr-486.pdf), which risks CRLF corruption of the byte
+# stream and produces thousand-line diffs instead of "Binary files differ".
+*.pdf binary

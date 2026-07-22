@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxDrop — CAD Source Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Brand */
+      --brand-deep: #0C593E;
+      --brand: #0B8F52;
+      --brand-mint: #DFFFEA;
+      --brand-lime: #C4FF64;
+
+      /* Surface */
+      --paper: #F7F8F5;
+      --paper-2: #EEF0EA;
+      --surface: #FFFFFF;
+      --surface-tint: #FBFCF9;
+      --hairline: #E8EAE3;
+      --hairline-strong: #D6D9D0;
+      --shadow-sm: 0 1px 0 rgba(20, 30, 25, .03), 0 1px 2px rgba(20, 30, 25, .04);
+      --shadow-md: 0 1px 0 rgba(20, 30, 25, .04), 0 4px 16px rgba(20, 30, 25, .06);
+
+      /* Ink */
+      --ink-1: #0E1F1A;
+      --ink-2: #475149;
+      --ink-3: #7A847C;
+      --ink-4: #A8B0A8;
+
+      /* Status */
+      --ok: #0B8F52;
+      --ok-tint: #E5F5EC;
+      --warn: #C4831A;
+      --warn-tint: #FBF1DE;
+      --bad: #BF2C26;
+      --bad-tint: #FBE6E5;
+      --info: #5B5BB8;
+      --info-tint: #ECEAF8;
+      --violet: #7A4AB0;
+      --violet-tint: #F1EAF8;
+
+      --radius: 10px;
+      --radius-sm: 6px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(196, 255, 100, 0.12), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(11, 143, 82, 0.06), transparent 60%),
+        var(--paper);
+      color: var(--ink-1);
+      padding: 28px 32px 64px;
+      line-height: 1.5;
+      font-feature-settings: "ss01", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { max-width: 1560px; margin: 0 auto; }
+
+    /* ───── Top bar ───── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .lockup { display: flex; align-items: center; gap: 14px; }
+    .mark {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand) 70%);
+      display: grid; place-items: center;
+      color: #fff; font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 15px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.15), 0 1px 0 rgba(11, 89, 62, .2);
+      letter-spacing: -0.5px;
+    }
+    .lockup-text {
+      display: flex; flex-direction: column; line-height: 1.1; gap: 2px;
+    }
+    .lockup-text .brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 13px;
+      color: var(--ink-1); letter-spacing: -0.1px;
+    }
+    .lockup-text .crumb {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--ink-3);
+      text-transform: uppercase; letter-spacing: 0.6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .crumb .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-tint); animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(11, 143, 82, 0.4); }
+      50%      { box-shadow: 0 0 0 5px rgba(11, 143, 82, 0); }
+    }
+
+    .header-actions { display: flex; gap: 6px; align-items: center; position: relative; }
+
+    /* ───── Recommended actions bell ───── */
+    .bell-wrap { position: relative; }
+    .bell {
+      width: 36px; height: 32px;
+      border: 1px solid var(--hairline-strong);
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--ink-1);
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+      position: relative;
+    }
+    .bell:hover { background: var(--surface-tint); border-color: #BCC2B5; color: var(--brand-deep); }
+    .bell.active { background: var(--ok-tint); border-color: var(--brand); color: var(--brand-deep); }
+    .bell svg { width: 16px; height: 16px; }
+    .bell-count {
+      position: absolute;
+      top: -6px; right: -6px;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      border-radius: 9px;
+      background: var(--bad);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 600;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 2px var(--paper);
+      letter-spacing: 0;
+    }
+    .bell-count.zero { background: var(--ok); }
+
+    .reco-panel {
+      position: absolute;
+      top: calc(100% + 10px); right: 0;
+      width: 440px; max-width: calc(100vw - 32px);
+      max-height: 70vh;
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius);
+      box-shadow: 0 16px 48px rgba(14, 31, 26, .14), 0 4px 12px rgba(14, 31, 26, .06);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: rise .18s ease both;
+    }
+    .reco-panel.open { display: flex; }
+    .reco-panel::before {
+      content: ''; position: absolute; top: -7px; right: 12px;
+      width: 12px; height: 12px;
+      background: var(--surface);
+      border-left: 1px solid var(--hairline);
+      border-top: 1px solid var(--hairline);
+      transform: rotate(45deg);
+    }
+    .reco-head {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--hairline);
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(to bottom, #FBFCF9, #F4F6F0);
+    }
+    .reco-head .title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 14px;
+      color: var(--ink-1);
+      letter-spacing: -0.2px;
+    }
+    .reco-head .meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px; color: var(--ink-3);
+      text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .reco-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+    .reco-group-label {
+      padding: 10px 16px 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--ink-3);
+      text-transform: uppercase; letter-spacing: 0.7px;
+      background: var(--surface-tint);
+      border-bottom: 1px solid var(--hairline);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .reco-group-label .gpip {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .reco-group-label.followup .gpip  { background: var(--bad); }
+    .reco-group-label.ingest .gpip    { background: var(--warn); }
+    .reco-group-label.send_pia .gpip  { background: var(--info); }
+    .reco-group-label.setup .gpip     { background: var(--violet); }
+    .reco-group-label.manual .gpip    { background: var(--ink-3); }
+    .reco-item {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--hairline);
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px;
+      transition: background 100ms ease;
+      cursor: pointer;
+    }
+    .reco-item:last-child { border-bottom: none; }
+    .reco-item:hover { background: var(--surface-tint); }
+    .reco-item-text { flex: 1; min-width: 0; }
+    .reco-item .ri-county {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 13px;
+      color: var(--ink-1);
+      letter-spacing: -0.1px;
+      margin-bottom: 2px;
+    }
+    .reco-item .ri-msg {
+      font-size: 12px;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+    .reco-item .ri-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--ink-3);
+      margin-top: 4px;
+      letter-spacing: 0.2px;
+    }
+    .reco-item .ri-action {
+      flex-shrink: 0;
+    }
+    .reco-empty {
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--ink-3);
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .reco-empty .check {
+      display: inline-flex;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--ok-tint);
+      color: var(--ok);
+      align-items: center; justify-content: center;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    /* ───── Buttons ───── */
+    .btn {
+      padding: 7px 12px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+      font-size: 12.5px;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: -0.05px;
+      display: inline-flex; align-items: center; gap: 6px;
+      text-decoration: none;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 80ms ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--brand-deep); color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 1px 0 rgba(11,89,62,.18);
+    }
+    .btn-primary:hover { background: #084A33; }
+    .btn-primary:active { transform: translateY(0.5px); }
+    .btn-outline {
+      background: var(--surface); color: var(--ink-1);
+      border-color: var(--hairline-strong);
+    }
+    .btn-outline:hover { background: var(--surface-tint); border-color: #BCC2B5; color: var(--brand-deep); }
+    .btn-sm { padding: 5px 10px; font-size: 11.5px; border-radius: 5px; }
+    .btn .ico { width: 12px; height: 12px; opacity: .8; }
+
+    /* ───── Title block ───── */
+    .title-row {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .title-row h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px; line-height: 1.1; font-weight: 600;
+      color: var(--ink-1); letter-spacing: -0.6px;
+    }
+    .title-row .subtitle {
+      color: var(--ink-2); font-size: 13.5px; margin-top: 4px;
+      max-width: 60ch;
+    }
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px; color: var(--brand-deep);
+      text-transform: uppercase; letter-spacing: 1.2px;
+      margin-bottom: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .eyebrow::before {
+      content: ''; width: 18px; height: 1px; background: var(--brand-deep); opacity: .6;
+    }
+
+    /* ───── Vitals panel ───── */
+    .vitals {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .vital {
+      padding: 18px 20px;
+      position: relative;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .vital + .vital { border-left: 1px solid var(--hairline); }
+    .vital .l {
+      font-size: 10.5px; color: var(--ink-3);
+      text-transform: uppercase; font-weight: 600; letter-spacing: 0.7px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .vital .l .pip { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-4); }
+    .vital.ok    .l .pip { background: var(--ok); }
+    .vital.warn  .l .pip { background: var(--warn); }
+    .vital.bad   .l .pip { background: var(--bad); }
+    .vital.info  .l .pip { background: var(--info); }
+    .vital .n {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 30px; font-weight: 600; color: var(--ink-1);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.8px;
+      line-height: 1.1;
+      margin-top: 6px;
+    }
+    .vital.ok   .n { color: var(--brand-deep); }
+    .vital.warn .n { color: var(--warn); }
+    .vital.bad  .n { color: var(--bad); }
+    .vital .sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px; color: var(--ink-3); margin-top: 2px;
+    }
+
+    /* ───── Filter rail ───── */
+    .filters {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 10px 12px;
+      display: flex; gap: 12px; align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+    }
+    .filter-group { display: inline-flex; align-items: center; gap: 4px; }
+    .filter-group-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; text-transform: uppercase;
+      color: var(--ink-3); letter-spacing: 0.7px;
+      margin-right: 6px;
+    }
+    /* Segmented priority chips */
+    .seg {
+      display: inline-flex;
+      background: var(--paper-2);
+      border-radius: 7px;
+      padding: 2px;
+      gap: 0;
+    }
+    .seg label {
+      cursor: pointer;
+      font-size: 11.5px; font-weight: 500;
+      display: inline-flex; align-items: center;
+      user-select: none;
+    }
+    .seg input { position: absolute; opacity: 0; pointer-events: none; }
+    .seg-fill {
+      padding: 4px 10px;
+      border-radius: 5px;
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--ink-3);
+      transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+    .seg-fill .pip { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; transition: opacity 120ms ease; }
+    .seg input:checked + .seg-fill {
+      background: var(--surface);
+      box-shadow: 0 0 0 1px var(--hairline-strong), 0 1px 2px rgba(0,0,0,.04);
+    }
+    .seg input:checked + .seg-fill .pip { opacity: 1; }
+    .seg label[data-prio="critical"] input:checked + .seg-fill { color: var(--bad); }
+    .seg label[data-prio="normal"]   input:checked + .seg-fill { color: #345B97; }
+    .seg label[data-prio="low"]      input:checked + .seg-fill { color: var(--ink-2); }
+
+    .filter-divider {
+      width: 1px; height: 22px; background: var(--hairline);
+    }
+    .toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none;
+      font-size: 12.5px; color: var(--ink-2);
+      padding: 4px 8px; border-radius: 6px;
+      transition: background 120ms ease;
+    }
+    .toggle:hover { background: var(--paper-2); }
+    .toggle input { width: 14px; height: 14px; accent-color: var(--brand); cursor: pointer; }
+
+    .select-wrap {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .select-wrap .lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; text-transform: uppercase;
+      color: var(--ink-3); letter-spacing: 0.6px;
+    }
+    select.fsel {
+      appearance: none; -webkit-appearance: none;
+      padding: 5px 26px 5px 10px;
+      border: 1px solid var(--hairline-strong);
+      border-radius: 6px;
+      background: var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 4l3 3 3-3' stroke='%237A847C' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 8px center;
+      font-family: inherit; font-size: 12px; color: var(--ink-1);
+      cursor: pointer;
+      transition: border-color 120ms ease;
+    }
+    select.fsel:hover { border-color: #BCC2B5; }
+    select.fsel:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(11, 143, 82, .12); }
+
+    .legend {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--ink-3);
+      letter-spacing: 0.2px;
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .legend .key {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 6px;
+      background: var(--paper-2);
+      border-radius: 4px;
+    }
+
+    /* ───── Result count bar ───── */
+    .result-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 4px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ink-3);
+      letter-spacing: 0.3px;
+    }
+    .result-count .r-num {
+      color: var(--ink-1);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .result-count.filtered .r-num:first-of-type {
+      color: var(--brand-deep);
+    }
+    .result-clear {
+      background: transparent;
+      border: none;
+      color: var(--brand-deep);
+      font-family: inherit;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 120ms ease;
+    }
+    .result-clear:hover { background: var(--ok-tint); }
+
+    /* ───── Table ───── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead {
+      background: linear-gradient(to bottom, #FBFCF9, #F4F6F0);
+      border-bottom: 1px solid var(--hairline-strong);
+    }
+    th {
+      text-align: left; padding: 11px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 600;
+      color: var(--ink-2);
+      text-transform: uppercase; letter-spacing: 0.7px;
+      cursor: pointer; user-select: none; white-space: nowrap;
+      transition: color 120ms ease, background 120ms ease;
+      position: sticky; top: 0; z-index: 1;
+      background: linear-gradient(to bottom, #FBFCF9, #F4F6F0);
+    }
+    th::after {
+      content: ''; display: inline-block; margin-left: 6px;
+      width: 0; height: 0; opacity: .35;
+      border-left: 3px solid transparent; border-right: 3px solid transparent;
+      border-top: 3px solid currentColor; vertical-align: middle;
+      transform: translateY(-1px);
+    }
+    th[data-sort=""]::after, th:not([data-sort])::after { display: none; }
+    th:hover { color: var(--brand-deep); background: linear-gradient(to bottom, #F0F5EC, #E8F0E3); }
+    td {
+      padding: 12px 14px;
+      border-top: 1px solid var(--hairline);
+      vertical-align: top;
+      font-size: 12.5px;
+      color: var(--ink-1);
+    }
+    tbody tr {
+      transition: background 80ms ease;
+    }
+    tbody tr:hover td { background: #FAFCF7; }
+    tbody tr:first-child td { border-top: none; }
+
+    /* County cell */
+    .county {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; color: var(--ink-1);
+      font-size: 13.5px;
+      letter-spacing: -0.15px;
+    }
+    .cad-name {
+      color: var(--ink-3); font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.1px;
+      margin-top: 2px;
+    }
+    .num {
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      color: var(--ink-1);
+    }
+    .num.muted { color: var(--ink-3); }
+    .yr {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500; font-size: 12px;
+    }
+
+    /* Badges (refined) */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px 2px 7px;
+      border-radius: var(--radius-pill);
+      font-size: 10.5px; font-weight: 500;
+      white-space: nowrap;
+      letter-spacing: 0.1px;
+      border: 1px solid transparent;
+      line-height: 1.6;
+    }
+    .badge .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+    .badge-prio-critical { background: var(--bad-tint);   color: var(--bad);   }
+    .badge-prio-normal   { background: #E5EEF8;           color: #345B97;      }
+    .badge-prio-low      { background: var(--paper-2);    color: var(--ink-3); }
+
+    .badge-source-public_url { background: var(--ok-tint);    color: var(--ok); }
+    .badge-source-pia_email  { background: var(--warn-tint);  color: var(--warn); }
+    .badge-source-dropbox    { background: #E0F0FF;           color: #1a4f8a; }
+    .badge-source-gdrive     { background: var(--violet-tint);color: var(--violet); }
+    .badge-source-manual     { background: var(--paper-2);    color: var(--ink-3); }
+
+    .badge-state-in_sync             { background: var(--ok-tint);     color: var(--ok); }
+    .badge-state-new_file_available  { background: var(--warn-tint);   color: var(--warn); }
+    .badge-state-pia_due,
+    .badge-state-pia_followup_due    { background: var(--bad-tint);    color: var(--bad); }
+    .badge-state-never_ingested      { background: var(--info-tint);   color: var(--info); }
+    .badge-state-stale               { background: var(--violet-tint); color: var(--violet); }
+    .badge-state-unknown,
+    .badge-state-paused              { background: var(--paper-2);     color: var(--ink-3); }
+
+    /* Geographic state (Texas / California / Florida / Georgia …) */
+    .badge-geo-other { background: var(--paper-2);    color: var(--ink-3); }
+    .badge-geo-TX    { background: var(--info-tint);   color: var(--info); }
+    .badge-geo-CA    { background: var(--ok-tint);     color: var(--ok); }
+    .badge-geo-FL    { background: var(--warn-tint);   color: var(--warn); }
+    .badge-geo-GA    { background: var(--violet-tint); color: var(--violet); }
+
+    /* Notes / URL cell */
+    .note-block {
+      display: flex; flex-direction: column; gap: 4px;
+      max-width: 360px;
+    }
+    .url {
+      color: var(--ink-2); text-decoration: none;
+      font-size: 11.5px;
+      font-family: 'JetBrains Mono', monospace;
+      display: inline-flex; align-items: center; gap: 6px;
+      max-width: 100%;
+      transition: color 120ms ease;
+    }
+    .url .ico { width: 11px; height: 11px; flex-shrink: 0; opacity: .7; }
+    .url:hover { color: var(--brand-deep); }
+    .url:hover .ico { opacity: 1; }
+    .url .url-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pia-link {
+      color: var(--warn);
+      background: var(--warn-tint);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .pia-link:hover { color: #8C5C0E; background: #F6E5BD; }
+    .notes {
+      color: var(--ink-3);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .runner-script {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--ink-3);
+      background: var(--paper-2);
+      padding: 1px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      letter-spacing: 0.1px;
+    }
+
+    /* Age indicator */
+    .age {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px; color: var(--ink-2);
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .age::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--ok); flex-shrink: 0;
+    }
+    .age.warn { color: var(--warn); font-weight: 600; }
+    .age.warn::before { background: var(--warn); }
+    .age.bad  { color: var(--bad);  font-weight: 600; }
+    .age.bad::before  { background: var(--bad); }
+    .age.none { color: var(--ink-4); }
+    .age.none::before { background: var(--ink-4); opacity: .5; }
+    .date-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px; color: var(--ink-2);
+    }
+    .em-dash { color: var(--ink-4); }
+
+    /* Action col */
+    .action-cell .btn { font-size: 11.5px; padding: 5px 10px; }
+    .action-empty { color: var(--ink-4); font-size: 13px; line-height: 1; }
+
+    /* States */
+    .key-warning {
+      background: var(--bad-tint);
+      border: 1px solid #F4C1BF;
+      color: #8B1F1B;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      font-size: 13px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .key-warning a { color: var(--bad); font-weight: 600; }
+
+    .empty {
+      text-align: center; padding: 56px 24px;
+      color: var(--ink-3); font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--ink-1); color: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(14, 31, 26, .3);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toast::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--brand-lime);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Loading skeleton */
+    .skel-row td {
+      padding: 14px;
+    }
+    .skel {
+      display: inline-block;
+      height: 10px; border-radius: 3px;
+      background: linear-gradient(90deg, #EFF1EC 0%, #F7F8F5 50%, #EFF1EC 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ───── Password gate ───── */
+    .gate {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(900px 600px at 70% 20%, rgba(196, 255, 100, 0.15), transparent 60%),
+        radial-gradient(700px 500px at 20% 90%, rgba(11, 143, 82, 0.12), transparent 60%),
+        var(--paper);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .gate-card {
+      width: 100%; max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      box-shadow: 0 24px 64px rgba(14, 31, 26, .14), 0 4px 12px rgba(14, 31, 26, .04);
+      padding: 32px 28px 24px;
+      text-align: center;
+      animation: rise .35s ease both;
+    }
+    .gate-mark {
+      width: 44px; height: 44px;
+      border-radius: 11px;
+      margin: 0 auto 18px;
+      background: linear-gradient(135deg, var(--brand-deep), var(--brand) 70%);
+      display: grid; place-items: center;
+      color: #fff; font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 20px;
+      letter-spacing: -0.5px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 6px 20px rgba(11, 89, 62, .25);
+    }
+    .gate-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px; font-weight: 600;
+      color: var(--ink-1);
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .gate-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--ink-3);
+      text-transform: uppercase; letter-spacing: 0.7px;
+      margin-bottom: 24px;
+    }
+    .gate-form { display: flex; flex-direction: column; gap: 10px; }
+    .gate-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--hairline-strong);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--ink-1);
+      background: var(--surface-tint);
+      transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+      outline: none;
+    }
+    .gate-input::placeholder { color: var(--ink-4); }
+    .gate-input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px rgba(11, 143, 82, .12);
+      background: var(--surface);
+    }
+    .gate-input.shake { animation: shake .35s ease; border-color: var(--bad); }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+    .gate-btn {
+      padding: 11px 14px;
+      background: var(--brand-deep);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: background 120ms ease, transform 80ms ease;
+    }
+    .gate-btn:hover { background: #084A33; }
+    .gate-btn:active { transform: translateY(0.5px); }
+    .gate-error {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--bad);
+      min-height: 14px;
+      margin-top: 4px;
+      letter-spacing: 0.2px;
+    }
+    .gate-foot {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--hairline);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--ink-3);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Page intro animation */
+    .vitals, .filters, .table-card, .title-row {
+      animation: rise .4s ease both;
+    }
+    .filters { animation-delay: .04s; }
+    .table-card { animation-delay: .08s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Responsive */
+    @media (max-width: 1280px) {
+      .vitals { grid-template-columns: repeat(4, 1fr); }
+      .vital:nth-child(n+5) { border-top: 1px solid var(--hairline); }
+      .vital:nth-child(5) { border-left: none; }
+    }
+    @media (max-width: 1100px) {
+      body { padding: 20px 16px 48px; }
+      .vitals { grid-template-columns: repeat(3, 1fr); }
+      .vital + .vital:nth-child(4),
+      .vital + .vital:nth-child(7) { border-left: none; border-top: 1px solid var(--hairline); }
+    }
+    @media (max-width: 720px) {
+      .vitals { grid-template-columns: repeat(2, 1fr); }
+      .vital + .vital { border-left: none; }
+      .vital + .vital:nth-child(odd) { border-left: 1px solid var(--hairline); }
+      .vital:nth-child(n+3) { border-top: 1px solid var(--hairline); }
+      .legend { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <div class="gate-mark">T</div>
+      <div class="gate-title">TaxDrop · Data Ops</div>
+      <div class="gate-sub">Authorized access</div>
+      <form class="gate-form" id="gate-form" autocomplete="off">
+        <input
+          type="password"
+          id="gate-input"
+          class="gate-input"
+          placeholder="Enter access password"
+          autocomplete="off"
+          autofocus
+          spellcheck="false"
+        >
+        <button type="submit" class="gate-btn">Unlock</button>
+        <div class="gate-error" id="gate-error">&nbsp;</div>
+      </form>
+      <div class="gate-foot">Internal · Ryder + team</div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="topbar">
+      <div class="lockup">
+        <div class="mark">T</div>
+        <div class="lockup-text">
+          <div class="brand">TaxDrop</div>
+          <div class="crumb"><span class="dot"></span>Data Ops · CAD Sources</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="bell-wrap">
+          <button class="bell" id="reco-bell" type="button" aria-label="Recommended actions">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 8a6 6 0 1 1 12 0c0 3.33.7 5.36 1.5 6.5.4.6.5 1.5-.5 1.5H5c-1 0-.9-.9-.5-1.5C5.3 13.36 6 11.33 6 8Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="bell-count zero" id="reco-count">0</span>
+          </button>
+          <div class="reco-panel" id="reco-panel" role="dialog" aria-label="Recommended actions">
+            <div class="reco-head">
+              <span class="title">Recommended actions</span>
+              <span class="meta" id="reco-meta">— pending</span>
+            </div>
+            <div class="reco-list" id="reco-list"></div>
+          </div>
+        </div>
+        <button class="btn btn-outline" onclick="reload()">
+          <svg class="ico" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 8a5.5 5.5 0 0 1 9.4-3.9M13.5 8a5.5 5.5 0 0 1-9.4 3.9M11.5 2v3h-3M4.5 14v-3h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Refresh
+        </button>
+        <a class="btn btn-outline" href="/database-workspace">Workspace</a>
+        <a class="btn btn-outline" href="/database-browse">Browser</a>
+      </div>
+    </div>
+
+    <div class="title-row">
+      <div>
+        <div class="eyebrow">Live monitor</div>
+        <h1>CAD Source Status</h1>
+        <p class="subtitle">Counties with fresh data, those needing PIA followups, and those awaiting ingestion. All TaxDrop appraisal-roll sources at a glance.</p>
+      </div>
+    </div>
+
+    <div class="vitals" id="summary">
+      <div class="vital">
+        <div class="l"><span class="pip"></span>Counties tracked</div>
+        <div class="n" id="s-total">—</div>
+        <div class="sub">total in roster</div>
+      </div>
+      <div class="vital ok">
+        <div class="l"><span class="pip"></span>On 2026 data</div>
+        <div class="n" id="s-2026">—</div>
+        <div class="sub">latest tax year ingested</div>
+      </div>
+      <div class="vital ok">
+        <div class="l"><span class="pip"></span>In sync</div>
+        <div class="n" id="s-in-sync">—</div>
+        <div class="sub">current with source</div>
+      </div>
+      <div class="vital warn">
+        <div class="l"><span class="pip"></span>New file available</div>
+        <div class="n" id="s-new">—</div>
+        <div class="sub">awaiting ingest</div>
+      </div>
+      <div class="vital bad">
+        <div class="l"><span class="pip"></span>PIA followup due</div>
+        <div class="n" id="s-pia">—</div>
+        <div class="sub">past 14d window</div>
+      </div>
+      <div class="vital warn">
+        <div class="l"><span class="pip"></span>Never ingested</div>
+        <div class="n" id="s-never">—</div>
+        <div class="sub">backfill candidates</div>
+      </div>
+      <div class="vital ok">
+        <div class="l"><span class="pip"></span>Total parcels</div>
+        <div class="n" id="s-parcels">—</div>
+        <div class="sub">across active CADs</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="filter-group">
+        <span class="filter-group-label">Priority</span>
+        <div class="seg">
+          <label data-prio="critical">
+            <input type="checkbox" id="f-critical" checked>
+            <span class="seg-fill"><span class="pip"></span>Critical</span>
+          </label>
+          <label data-prio="normal">
+            <input type="checkbox" id="f-normal" checked>
+            <span class="seg-fill"><span class="pip"></span>Normal</span>
+          </label>
+          <label data-prio="low">
+            <input type="checkbox" id="f-low" checked>
+            <span class="seg-fill"><span class="pip"></span>Low</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <label class="toggle">
+        <input type="checkbox" id="f-action-only">
+        Needs action only
+      </label>
+
+      <div class="filter-divider"></div>
+
+      <div class="select-wrap">
+        <span class="lbl">Source</span>
+        <select id="f-source" class="fsel">
+          <option value="">all</option>
+          <option value="public_url">public URL</option>
+          <option value="pia_email">PIA email</option>
+          <option value="dropbox">Dropbox</option>
+          <option value="gdrive">Drive</option>
+          <option value="manual">manual</option>
+        </select>
+      </div>
+
+      <div class="select-wrap">
+        <span class="lbl">State</span>
+        <select id="f-state" class="fsel">
+          <option value="">all</option>
+          <option value="TX">Texas</option>
+          <option value="CA">California</option>
+          <option value="FL">Florida</option>
+          <option value="GA">Georgia</option>
+        </select>
+      </div>
+
+      <div class="select-wrap">
+        <span class="lbl">Status</span>
+        <select id="f-status" class="fsel">
+          <option value="">all</option>
+          <option value="in_sync">in sync</option>
+          <option value="new_file_available">new file available</option>
+          <option value="pia_due">PIA due</option>
+          <option value="pia_followup_due">PIA followup due</option>
+          <option value="never_ingested">never ingested</option>
+          <option value="stale">stale</option>
+          <option value="paused">paused</option>
+          <option value="unknown">unknown</option>
+        </select>
+      </div>
+
+      <div class="select-wrap">
+        <span class="lbl">Tax yr</span>
+        <select id="f-year" class="fsel">
+          <option value="">all</option>
+        </select>
+      </div>
+
+      <div class="legend">
+        <span class="key">— = never ingested</span>
+        <span class="key">📧 = one-click PIA</span>
+      </div>
+    </div>
+
+    <div class="result-bar">
+      <div class="result-count">
+        Showing <span id="r-shown" class="r-num">—</span> of <span id="r-total" class="r-num">—</span> counties
+      </div>
+      <button class="result-clear" id="r-clear" type="button" hidden>Clear filters</button>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="county">County / CAD</th>
+            <th data-sort="us_state">State</th>
+            <th data-sort="priority">Pri</th>
+            <th data-sort="source_type">Source</th>
+            <th data-sort="last_ingested_tax_year">Tax yr</th>
+            <th data-sort="last_ingested_row_count" class="num">Parcels</th>
+            <th data-sort="state">Status</th>
+            <th data-sort="days_since_ingest" class="num">Last ingest</th>
+            <th data-sort="last_ingested_at" class="num">Last updated</th>
+            <th>Notes / URL</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr class="skel-row"><td colspan="11"><span class="skel" style="width:60%"></span></td></tr>
+          <tr class="skel-row"><td colspan="11"><span class="skel" style="width:75%"></span></td></tr>
+          <tr class="skel-row"><td colspan="11"><span class="skel" style="width:40%"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Engine calls route through the same-origin /api/cad-proxy, which injects
+    // the upstream key server-side (TAXDROP_CAD_API_KEY). No key in the browser.
+    // SHA-256 of the unlock password. Password = "sup".
+    const PASSWORD_HASH = 'a39bec7c3dc2c0bae76cb61a3c1a37f306eeb9516fbc64960ec46de1af47918f';
+    let state = { sources: [], summary: null, sortKey: 'priority', sortAsc: true };
+
+    async function sha256Hex(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function tryUnlock(input) {
+      const hash = await sha256Hex(input);
+      if (hash === PASSWORD_HASH) {
+        localStorage.setItem('taxdrop_unlocked', '1');
+        document.getElementById('gate').style.display = 'none';
+        if (ensureKey()) reload();
+        return true;
+      }
+      return false;
+    }
+
+    document.getElementById('gate-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('gate-input');
+      const err = document.getElementById('gate-error');
+      const ok = await tryUnlock(input.value);
+      if (!ok) {
+        err.textContent = 'Incorrect password';
+        input.classList.remove('shake');
+        // Force reflow so the animation re-triggers on repeated wrong guesses.
+        void input.offsetWidth;
+        input.classList.add('shake');
+        input.select();
+      } else {
+        err.innerHTML = '&nbsp;';
+      }
+    });
+
+    function ensureKey() { return true; } // auth handled server-side by cad-proxy
+
+    async function api(path, opts = {}) {
+      const headers = opts.body ? { 'Content-Type': 'application/json' } : {};
+      const r = await fetch('/api/cad-proxy?path=' + encodeURIComponent(path), { ...opts, headers });
+      if (r.status === 401) { throw new Error('API rejected key'); }
+      if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.detail || `HTTP ${r.status}`); }
+      return r.json();
+    }
+
+    function fmtN(n) { return (n == null) ? '<span class="em-dash">—</span>' : Number(n).toLocaleString(); }
+    function fmtAge(d) {
+      if (d == null) return '—';
+      if (d < 7) return d + 'd';
+      if (d < 60) return Math.floor(d) + 'd';
+      if (d < 365) return Math.floor(d/30) + 'mo';
+      return Math.floor(d/365) + 'y';
+    }
+    function fmtDate(iso) {
+      if (!iso) return '<span class="em-dash">—</span>';
+      const d = new Date(iso);
+      if (isNaN(d)) return '<span class="em-dash">—</span>';
+      return `<span class="date-mono">${d.toISOString().slice(0, 10)}</span>`;
+    }
+    function ageClass(d) { if (d == null) return 'none'; if (d > 60) return 'bad'; if (d > 30) return 'warn'; return ''; }
+    function escape(s) { return String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[ch]); }
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    async function reload() {
+      try {
+        const data = await api('/api/cad-status');
+        state.sources = data.sources;
+        state.summary = data.summary;
+        renderSummary();
+        renderYearFilter();
+        renderTable();
+        renderRecommendations();
+      } catch (e) {
+        document.getElementById('rows').innerHTML = `<tr><td colspan="11" class="empty">Error · ${escape(e.message)}</td></tr>`;
+      }
+    }
+
+    function renderYearFilter() {
+      const sel = document.getElementById('f-year');
+      const current = sel.value;
+      const years = [...new Set(state.sources.map(r => r.last_ingested_tax_year).filter(Boolean))]
+        .sort((a, b) => b - a);
+      sel.innerHTML = '<option value="">all</option>'
+        + years.map(y => `<option value="${y}">${y}</option>`).join('')
+        + '<option value="__none">— (never)</option>';
+      if (current) sel.value = current;
+    }
+
+    function renderSummary() {
+      const s = state.summary || {};
+      document.getElementById('s-total').textContent = s.total ?? '—';
+      document.getElementById('s-in-sync').textContent = s.in_sync ?? '—';
+      document.getElementById('s-new').textContent = s.new_file_available ?? '—';
+      document.getElementById('s-pia').textContent = s.pia_due ?? '—';
+      document.getElementById('s-never').textContent = s.never_ingested ?? '—';
+      document.getElementById('s-parcels').textContent = (s.total_parcels ?? 0) >= 1000000
+        ? (s.total_parcels / 1_000_000).toFixed(1) + 'M' : (s.total_parcels ?? 0).toLocaleString();
+      // Counties with 2026 data — derived client-side so it tracks reality even
+      // before the API summary is updated for new tax years.
+      const on2026 = state.sources.filter(r => r.last_ingested_tax_year === 2026).length;
+      document.getElementById('s-2026').textContent = on2026;
+    }
+
+    function filtersActive() {
+      return !document.getElementById('f-critical').checked
+          || !document.getElementById('f-normal').checked
+          || !document.getElementById('f-low').checked
+          || document.getElementById('f-action-only').checked
+          || document.getElementById('f-source').value !== ''
+          || document.getElementById('f-state').value !== ''
+          || document.getElementById('f-status').value !== ''
+          || document.getElementById('f-year').value !== '';
+    }
+
+    function clearFilters() {
+      document.getElementById('f-critical').checked = true;
+      document.getElementById('f-normal').checked = true;
+      document.getElementById('f-low').checked = true;
+      document.getElementById('f-action-only').checked = false;
+      document.getElementById('f-source').value = '';
+      document.getElementById('f-state').value = '';
+      document.getElementById('f-status').value = '';
+      document.getElementById('f-year').value = '';
+      renderTable();
+    }
+
+    // Pre-drafted PIA email body (matches the template Ryder has been sending
+    // by hand; one-click in Gmail). Subject is built per-row.
+    const PIA_BODY_TEMPLATE = (cadName) =>
+`Dear ${cadName || 'Appraisal District'},
+
+Pursuant to the Texas Public Information Act (Government Code Chapter 552), I am requesting the following public information:
+
+The complete 2026 (and most recent) preliminary appraisal roll for real property accounts in this CAD's jurisdiction, in the standard PACS export format (zip archive containing APPRAISAL_INFO.TXT plus improvement and land detail files). Real property only — no Business Personal Property or Mineral records needed.
+
+If a bulk download URL is available, please email the link. Otherwise please advise on cost and delivery method (download portal, FTP, mailed media). We can receive files via Google Drive — happy to share an upload folder on request.
+
+Per Texas Government Code Chapter 552, please provide the data in its native electronic format if practicable.
+
+Best regards,
+Ryder Meehan
+Property Tax Consultant License #13567
+Email: ryder@taxdrop.com`;
+
+    function piaMailtoHref(r) {
+      const subject = 'Public Information Act Request — Bulk 2026 Appraisal Roll Data';
+      const body = PIA_BODY_TEMPLATE(r.cad_name || titleCase(r.county));
+      const params = new URLSearchParams({
+        view: 'cm', fs: '1',
+        to: r.pia_email,
+        su: subject,
+        body: body,
+      });
+      return `https://mail.google.com/mail/?${params.toString()}`;
+    }
+
+    function titleCase(s) {
+      return String(s || '').split(/[ _-]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    function actionButton(r) {
+      switch (r.action) {
+        case 'ok':
+          return '<span class="action-empty">·</span>';
+        case 'ingest_now':
+          return `<button class="btn btn-primary btn-sm" onclick="copyIngestCmd('${escape(r.county)}','${escape(r.runner_script||'')}')">Copy ingest cmd</button>`;
+        case 'send_pia':
+        case 'followup_pia':
+          if (r.pia_email) {
+            return `<a class="btn btn-primary btn-sm" href="${piaMailtoHref(r)}" target="_blank" onclick="setTimeout(() => markPiaSent('${escape(r.county)}'), 500)">Send PIA email</a>`;
+          }
+          return `<button class="btn btn-outline btn-sm" onclick="markPiaSent('${escape(r.county)}')">Mark PIA sent</button>`;
+        case 'set_up':
+          return `<a class="btn btn-outline btn-sm" href="${escape(r.public_url||'#')}" target="_blank">Open source ↗</a>`;
+        case 'manual_check':
+          return `<a class="btn btn-outline btn-sm" href="${escape(r.public_url||'#')}" target="_blank">Check source ↗</a>`;
+        default:
+          return '<span class="action-empty">·</span>';
+      }
+    }
+
+    function copyIngestCmd(county, script) {
+      const cmd = script
+        ? `cd /Users/upgrow/Downloads/ryder-workspace/taxdrop/cad-data/ingest && PG_DSN=$(grep '^DATABASE_URL=' ../vercel-api/.env.admin | sed 's/^DATABASE_URL="//; s/\\\\n"$//; s/"$//') ../.venv/bin/python ${script}`
+        : `# No runner script for ${county} — set runner_script in cad_sources first`;
+      navigator.clipboard.writeText(cmd);
+      toast('Ingest command copied — paste into terminal');
+    }
+
+    async function markPiaSent(county) {
+      try {
+        await api('/api/cad-status/pia-sent', { method: 'POST', body: JSON.stringify({ county }) });
+        toast('PIA timestamp updated');
+        reload();
+      } catch (e) { toast('Error: ' + e.message); }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('rows');
+      const showCrit = document.getElementById('f-critical').checked;
+      const showNorm = document.getElementById('f-normal').checked;
+      const showLow = document.getElementById('f-low').checked;
+      const actionOnly = document.getElementById('f-action-only').checked;
+      const sourceFilter = document.getElementById('f-source').value;
+      const geoFilter = document.getElementById('f-state').value;
+      const statusFilter = document.getElementById('f-status').value;
+      const yearFilter = document.getElementById('f-year').value;
+
+      let rows = state.sources.filter(r => {
+        if (r.priority === 'critical' && !showCrit) return false;
+        if (r.priority === 'normal' && !showNorm) return false;
+        if (r.priority === 'low' && !showLow) return false;
+        if (sourceFilter && r.source_type !== sourceFilter) return false;
+        if (geoFilter && (r.us_state || 'TX') !== geoFilter) return false;
+        if (statusFilter && r.state !== statusFilter) return false;
+        if (yearFilter === '__none' && r.last_ingested_tax_year != null) return false;
+        if (yearFilter && yearFilter !== '__none' && String(r.last_ingested_tax_year) !== yearFilter) return false;
+        if (actionOnly && r.action === 'ok') return false;
+        return true;
+      });
+
+      // Result count strip — reflects active filters
+      const total = state.sources.length;
+      document.getElementById('r-shown').textContent = rows.length;
+      document.getElementById('r-total').textContent = total;
+      const active = filtersActive();
+      document.querySelector('.result-count').classList.toggle('filtered', active);
+      document.getElementById('r-clear').hidden = !active;
+
+      if (rows.length === 0) { tbody.innerHTML = `<tr><td colspan="11" class="empty">No matches.</td></tr>`; return; }
+
+      tbody.innerHTML = rows.map(r => {
+        const displayName = r.cad_name || titleCase(r.county);
+        const yrCell = r.last_ingested_tax_year
+          ? `<span class="yr">${r.last_ingested_tax_year}</span>`
+          : '<span class="em-dash" title="Tracked but not yet ingested">—</span>';
+        const sourceLabel = (r.source_type || '').replace('_', ' ');
+        const stateLabel = (r.state || '').replace(/_/g, ' ');
+        const geoCode = (r.us_state || 'TX').toUpperCase();
+        const geoClass = ['TX', 'CA', 'FL', 'GA'].includes(geoCode) ? geoCode : 'other';
+        return `
+        <tr>
+          <td>
+            <div class="county">${escape(displayName)}</div>
+            <div class="cad-name">${escape(titleCase(r.county))} County</div>
+          </td>
+          <td><span class="badge badge-geo-${geoClass}">${escape(geoCode)}</span></td>
+          <td><span class="badge badge-prio-${r.priority}"><span class="dot"></span>${r.priority}</span></td>
+          <td><span class="badge badge-source-${r.source_type}">${sourceLabel}</span></td>
+          <td>${yrCell}</td>
+          <td class="num">${fmtN(r.last_ingested_row_count)}</td>
+          <td><span class="badge badge-state-${r.state}"><span class="dot"></span>${stateLabel}</span></td>
+          <td class="num"><span class="age ${ageClass(r.days_since_ingest)}">${fmtAge(r.days_since_ingest)}</span></td>
+          <td class="num">${fmtDate(r.last_ingested_at)}</td>
+          <td>
+            <div class="note-block">
+              ${r.public_url ? `<a class="url" href="${escape(r.public_url)}" target="_blank" title="${escape(r.public_url)}"><svg class="ico" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 2.5h3.5V6M9 3l-5 5M5 2.5H3a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="url-text">${escape(r.public_url.replace(/^https?:\/\//,''))}</span></a>` : ''}
+              ${r.pia_email ? `<a class="url pia-link" href="${piaMailtoHref(r)}" target="_blank" title="One-click pre-drafted PIA request">📧 ${escape(r.pia_email)}</a>` : ''}
+              ${r.notes ? `<div class="notes">${escape(r.notes)}</div>` : ''}
+              ${r.runner_script ? `<span class="runner-script">ingest/${escape(r.runner_script)}</span>` : ''}
+            </div>
+          </td>
+          <td class="action-cell">${actionButton(r)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('f-critical').addEventListener('change', renderTable);
+    document.getElementById('f-normal').addEventListener('change', renderTable);
+    document.getElementById('f-low').addEventListener('change', renderTable);
+    document.getElementById('f-action-only').addEventListener('change', renderTable);
+    document.getElementById('f-source').addEventListener('change', renderTable);
+    document.getElementById('f-state').addEventListener('change', renderTable);
+    document.getElementById('f-status').addEventListener('change', renderTable);
+    document.getElementById('f-year').addEventListener('change', renderTable);
+    document.getElementById('r-clear').addEventListener('click', clearFilters);
+
+    // ───── Recommended actions panel ─────
+    // Action priority — most urgent first. Drives both the count and group order.
+    const ACTION_RANK = {
+      followup_pia: 1,  // PIA past followup window — Ryder is waiting on a response
+      ingest_now:   2,  // file is sitting there ready to load
+      send_pia:     3,  // never asked for data yet
+      set_up:       4,  // public source exists but no runner
+      manual_check: 5,  // manual audit
+    };
+    const GROUP_LABELS = {
+      followup_pia: { label: 'PIA followups due',     cls: 'followup' },
+      ingest_now:   { label: 'Updates ready to ingest', cls: 'ingest' },
+      send_pia:     { label: 'New PIA requests',      cls: 'send_pia' },
+      set_up:       { label: 'Sources to set up',     cls: 'setup' },
+      manual_check: { label: 'Manual checks',         cls: 'manual' },
+    };
+    function describeAction(r) {
+      const name = r.cad_name || titleCase(r.county);
+      switch (r.action) {
+        case 'followup_pia':
+          return `${name} hasn't responded to PIA in ${r.days_since_pia ?? '?'}d, follow up.`;
+        case 'send_pia':
+          return `Send PIA request to ${name}${r.pia_email ? '' : ' (no email on file yet)'}.`;
+        case 'ingest_now':
+          if (r.state === 'new_file_available') return `Update for ${name} available — pull and ingest.`;
+          if (r.state === 'never_ingested')     return `${name} now has data available, ingest it.`;
+          return `${name} has data ready to ingest.`;
+        case 'set_up':
+          return `Set up runner for ${name}${r.public_url ? ' (public source available)' : ''}.`;
+        case 'manual_check':
+          return `Check ${name} source manually.`;
+        default:
+          return name;
+      }
+    }
+    function actionMeta(r) {
+      const bits = [];
+      if (r.last_ingested_tax_year) bits.push(`last yr ${r.last_ingested_tax_year}`);
+      else bits.push('never ingested');
+      if (r.days_since_ingest != null) bits.push(`ingest ${fmtAge(r.days_since_ingest)} ago`);
+      if (r.days_since_pia != null) bits.push(`PIA ${fmtAge(r.days_since_pia)} ago`);
+      return bits.join(' · ');
+    }
+    function renderRecommendations() {
+      const items = (state.sources || []).filter(r => r.action && r.action !== 'ok');
+      // Sort: by action rank first, then by days_since_pia / days_since_ingest desc (most overdue first)
+      items.sort((a, b) => {
+        const ra = ACTION_RANK[a.action] ?? 99;
+        const rb = ACTION_RANK[b.action] ?? 99;
+        if (ra !== rb) return ra - rb;
+        const ad = a.days_since_pia ?? a.days_since_ingest ?? 0;
+        const bd = b.days_since_pia ?? b.days_since_ingest ?? 0;
+        return bd - ad;
+      });
+
+      const countEl = document.getElementById('reco-count');
+      countEl.textContent = items.length;
+      countEl.classList.toggle('zero', items.length === 0);
+      document.getElementById('reco-meta').textContent =
+        items.length === 0 ? 'all clear' : `${items.length} pending`;
+
+      const list = document.getElementById('reco-list');
+      if (items.length === 0) {
+        list.innerHTML = `<div class="reco-empty"><div class="check">✓</div><div>You're caught up.<br>No actions needed right now.</div></div>`;
+        return;
+      }
+
+      // Group by action so the panel reads as scannable sections.
+      const groups = {};
+      for (const r of items) {
+        (groups[r.action] = groups[r.action] || []).push(r);
+      }
+      const orderedKeys = Object.keys(groups).sort((a, b) => (ACTION_RANK[a] ?? 99) - (ACTION_RANK[b] ?? 99));
+
+      list.innerHTML = orderedKeys.map(key => {
+        const g = GROUP_LABELS[key] || { label: key, cls: '' };
+        const head = `<div class="reco-group-label ${g.cls}"><span class="gpip"></span>${g.label} · ${groups[key].length}</div>`;
+        const rows = groups[key].map(r => `
+          <div class="reco-item" data-county="${escape(r.county)}">
+            <div class="reco-item-text">
+              <div class="ri-county">${escape(r.cad_name || titleCase(r.county))}</div>
+              <div class="ri-msg">${escape(describeAction(r))}</div>
+              <div class="ri-meta">${escape(actionMeta(r))}</div>
+            </div>
+            <div class="ri-action">${actionButton(r)}</div>
+          </div>
+        `).join('');
+        return head + rows;
+      }).join('');
+
+      // Clicking an item (outside the action button) scrolls to that row in the table
+      list.querySelectorAll('.reco-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.ri-action')) return; // clicking the action button shouldn't scroll
+          const county = el.dataset.county;
+          const tbody = document.getElementById('rows');
+          const target = [...tbody.querySelectorAll('tr')].find(tr =>
+            tr.querySelector('.county')?.textContent.trim().toLowerCase() === titleCase(county).toLowerCase()
+            || tr.querySelector('.cad-name')?.textContent.trim().toLowerCase().startsWith(titleCase(county).toLowerCase())
+          );
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.style.transition = 'background .8s ease';
+            target.querySelectorAll('td').forEach(td => td.style.background = 'var(--brand-mint)');
+            setTimeout(() => target.querySelectorAll('td').forEach(td => td.style.background = ''), 1400);
+          }
+          closeRecoPanel();
+        });
+      });
+    }
+
+    function openRecoPanel() {
+      document.getElementById('reco-panel').classList.add('open');
+      document.getElementById('reco-bell').classList.add('active');
+    }
+    function closeRecoPanel() {
+      document.getElementById('reco-panel').classList.remove('open');
+      document.getElementById('reco-bell').classList.remove('active');
+    }
+    document.getElementById('reco-bell').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = document.getElementById('reco-panel').classList.contains('open');
+      if (open) closeRecoPanel(); else openRecoPanel();
+    });
+    // Close on outside click + Escape
+    document.addEventListener('click', (e) => {
+      const panel = document.getElementById('reco-panel');
+      if (!panel.classList.contains('open')) return;
+      if (!panel.contains(e.target) && !document.getElementById('reco-bell').contains(e.target)) closeRecoPanel();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRecoPanel(); });
+
+    // If the device has already passed the gate, skip it and load.
+    if (localStorage.getItem('taxdrop_unlocked') === '1') {
+      document.getElementById('gate').style.display = 'none';
+      reload();
+    }
+  </script>
+</body>
+</html>

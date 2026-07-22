@@ -40,7 +40,17 @@ function ensureAddressZip(addr) {
 // weight on a US-only product and it overflowed the filing card's copy row.
 // DISPLAY ONLY — never apply this to the value bound to the address <input> or
 // to anything POSTed upstream; the stored address stays exactly as geocoded.
-const cleanAddr = (a) => String(a || "").replace(/,\s*(USA|United States)\s*$/i, "").trim();
+// Normalize an address for display AND for lookups/forms/emails: decode
+// "+"-encoded spaces (Bubble mints paid links with the address form-encoded),
+// collapse whitespace, and drop a trailing country + any dangling comma.
+// TaxDrop One never shows "USA".
+const cleanAddr = (a) =>
+  String(a || "")
+    .replace(/\+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/,?\s*(USA|U\.S\.A\.?|United States(?: of America)?)\s*$/i, "")
+    .replace(/\s*,\s*$/, "")
+    .trim();
 
 const fmt = (n) => (n == null || isNaN(n) ? "—" : "$" + Math.round(n).toLocaleString("en-US"));
 const signed = (n) => (n < 0 ? "−" : "+") + "$" + Math.abs(Math.round(n)).toLocaleString("en-US");
@@ -208,16 +218,29 @@ function computeV3Strategy(s, comps) {
    entries are readiness config — they light up the day each state's engine data
    lands (data-gated; see the design doc). Legal facts sourced from that doc. */
 
-// TX protest deadline is May 15 every year. Once this year's window closes the
-// next one is May 15 of the following year, so we roll the displayed deadline
-// forward automatically instead of hardcoding a date that goes stale. NOTE: this
-// only moves the DISPLAYED filing window — CURRENT_TAX_YEAR stays put so the
-// stale-year engine gate isn't tripped (the roll data is still the prior year's).
-function txDeadline() {
-  const now = new Date();
-  const may15 = new Date(now.getFullYear(), 4, 15, 23, 59, 59); // month 4 = May
-  return "May 15, " + (now > may15 ? now.getFullYear() + 1 : now.getFullYear());
+// TX protest deadline is May 15 every year (Tax Code §41.44). Appraisal districts
+// mail Notices of Appraised Value starting ~April 1 (§25.19) and the online protest
+// portals open with them, so the filing window runs roughly April 1 → May 15. This
+// returns the applicable filing YEAR plus whether we're inside that window or still
+// pre-filing, so Step 2 can tell an early enrollee "filing opens in April, deadline
+// May 15, <year>" instead of "file now". Once May 15 passes we roll to next year's
+// cycle (pre-filing again until the following April):
+//   • before Apr 1   → current year, pre-filing (notices not out yet)
+//   • Apr 1 – May 15 → current year, OPEN
+//   • after May 15   → next year, pre-filing
+// DISPLAY-ONLY: this moves only the shown window; CURRENT_TAX_YEAR and the engine's
+// stale-year gate are untouched (the underlying roll data is still the prior year's).
+function txFilingWindow(now) {
+  now = now || new Date();
+  const y = now.getFullYear();
+  const may15 = new Date(y, 4, 15, 23, 59, 59); // month 4 = May
+  const apr1 = new Date(y, 3, 1, 0, 0, 0);      // month 3 = April
+  if (now > may15) return { year: y + 1, deadline: "May 15, " + (y + 1), open: false };
+  if (now < apr1)  return { year: y,     deadline: "May 15, " + y,       open: false };
+  return { year: y, deadline: "May 15, " + y, open: true };
 }
+// Back-compat: the static JURISDICTIONS config only needs the date string.
+function txDeadline() { return txFilingWindow().deadline; }
 
 const JURISDICTIONS = {
   TX: {
@@ -289,7 +312,12 @@ function stateFromAddress(addr) {
 // it stays state-correct (TX protest/appraisal district, CA appeal/assessor,
 // GA appeal/board of tax assessors, FL petition/property appraiser). Falls
 // back to neutral wording until the typed address reveals a state.
-function evidenceHowTo(stateId) {
+function evidenceHowTo(stateId, override) {
+  // A per-county override (from the catalog's filing.evidenceHowTo) wins — it's
+  // bespoke text spelling out that county's exact evidence-viewing mechanics
+  // (portal URL, account-number format, where the PIN comes from). Absent that,
+  // fall back to the per-state statutory default below.
+  if (override) return override;
   const cfg = stateId && JURISDICTIONS[stateId];
   if (!cfg) {
     return "After you challenge your assessment, the county office that set your value must share the evidence behind it — usually its comparable-sales data. Request it through your county's online appeals portal, or ask the assessing office in writing for the evidence tied to your property. Drop whatever they send — cover letter, comps sheet, or the full PDF — here.";
@@ -300,6 +328,27 @@ function evidenceHowTo(stateId) {
     ". Request it through your county's online " + cfg.proceeding +
     " portal, or ask the " + cfg.authorityType +
     " in writing for the evidence tied to your account. Drop whatever they send — cover letter, comps sheet, or the full PDF — here.";
+}
+
+// Render a string that may embed markdown links — [anchor words](https://url) —
+// into React nodes, so the descriptive words are the clickable link (not a bare
+// URL printed inline). Plain strings with no links pass straight through, so the
+// per-state fallbacks above are unaffected. Only http(s) URLs are linked.
+function renderRich(str) {
+  if (typeof str !== "string" || str.indexOf("](") === -1) return str;
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  const out = [];
+  let last = 0, m, i = 0;
+  while ((m = re.exec(str)) !== null) {
+    if (m.index > last) out.push(str.slice(last, m.index));
+    out.push(
+      <a key={i++} href={m[2]} target="_blank" rel="noopener noreferrer"
+         style={{ color: "#1d6b41", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 2 }}>{m[1]}</a>
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < str.length) out.push(str.slice(last));
+  return out;
 }
 
 // Resolve the full Jurisdiction for a lookup: pick the state's config and fill
@@ -623,7 +672,7 @@ function ReferBlock() {
       </div>
       <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", background: "#ffffff1a", border: "1px solid #ffffff33", borderRadius: 11, padding: "12px 16px", fontSize: 14, fontWeight: 600, color: "#eaf2ec", letterSpacing: ".01em" }}>taxdrop.one/r/SHARE15</div>
-        <button onClick={copyRefer} style={{ background: "#fff", color: "#16542f", border: "none", borderRadius: 11, padding: "13px 26px", fontSize: 14.5, fontWeight: 800, fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,.18)" }}>{copied ? "Copied ✓" : "Copy link"}</button>
+        <button onClick={copyRefer} className="td-btn" style={{ background: "#fff", color: "#16542f", border: "none", borderRadius: 11, padding: "13px 26px", fontSize: 14.5, fontWeight: 800, fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,.18)" }}>{copied ? "Copied ✓" : "Copy link"}</button>
       </div>
     </section>
   );
@@ -738,12 +787,25 @@ function App() {
   const fileRef = useRef(null);
   const addrRef = useRef(null);
 
+  // ?test=1&address=… → agent/testing bypass. Forces the INSTANT render path and
+  // auto-runs analyze() so the live engine report shows with no intake, payment,
+  // or review submit. Grants NO data access on its own: cad-proxy still requires
+  // the sup cookie (or a token), so without a /sup login the lookup 402s and we
+  // show a hint. Safe to leave in prod — real customers never carry ?test=1.
+  // (2026-07-22 — report test bypass link.)
+  const testMode = (() => {
+    const q = new URLSearchParams(window.location.search);
+    return /^(1|true|yes)$/i.test(q.get("test") || "") && !!(q.get("address") || "").trim();
+  })();
+
   // Paid-link arrival: /r/<token>?address=… → pre-fill the address and lock the
   // field so the customer goes straight to uploading evidence. (Bubble mints the
   // link and URL-encodes the address it captured at checkout.)
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
-    const a = (p.get("address") || "").trim();
+    // Normalize on the way in so the "+"-encoded, USA-suffixed address Bubble puts
+    // in the link never reaches the engine lookup, the copy block, or the forms.
+    const a = cleanAddr(p.get("address"));
     if (a) { setAddress(a); setLinked(true); }
     // Strip the link token from the address bar so it doesn't linger in browser
     // history, screenshots, or copy-paste into support chats. The td_link cookie
@@ -788,6 +850,9 @@ function App() {
   useEffect(() => {
     // ?demo bypasses the review flow (the sample-result effect handles it).
     if (/[?&]demo\b/.test(window.location.search)) { setBooting(false); return; }
+    // ?test=1 bypass: skip the /api/report boot so a sup cookie can't flip us
+    // into review mode. reviewMode stays false → the instant analyze() path.
+    if (testMode) { setBooting(false); return; }
     const q = new URLSearchParams(window.location.search);
     const arrivedViaLink = /^\/r(\/|$)/.test(window.location.pathname) || q.has("r") || !!q.get("address");
     let alive = true;
@@ -829,6 +894,14 @@ function App() {
     return () => { alive = false; };
   }, []);
 
+  // Wire Google Places autocomplete onto the address input. `reviewMode` is in
+  // the deps deliberately: the editable address field lives in TWO branches
+  // (the reviewMode ReviewIntake input and the instant-tool input), and the
+  // async boot flips reviewMode AFTER first paint. Without re-running on that
+  // flip, the widget stayed bound to the input that just unmounted, so the
+  // visible field had no autocomplete for logged-in agents (reviewMode=true).
+  // The cleanup tears the old widget down and removes its orphaned dropdown so
+  // re-wiring doesn't leave stale .pac-container nodes behind. (2026-07-22)
   useEffect(() => {
     if (linked) return; // address is fixed by the paid link — no search/autocomplete
     let ac = null, tries = 0, timer = null;
@@ -849,8 +922,18 @@ function App() {
       });
     };
     wire();
-    return () => { if (timer) clearTimeout(timer); };
-  }, [status, linked]);
+    return () => {
+      if (timer) clearTimeout(timer);
+      // Detach the widget from the (possibly unmounting) input and drop its
+      // dropdown. Only one address input is mounted at a time, so clearing all
+      // .pac-container nodes is safe and prevents duplicate/orphan dropdowns.
+      if (ac && window.google && window.google.maps && window.google.maps.event) {
+        window.google.maps.event.clearInstanceListeners(ac);
+        if (typeof ac.unbindAll === "function") ac.unbindAll();
+      }
+      document.querySelectorAll(".pac-container").forEach((el) => el.remove());
+    };
+  }, [status, linked, reviewMode]);
 
   const pickFiles = (incoming) => {
     const list = Array.from(incoming || []).filter(Boolean);
@@ -922,6 +1005,7 @@ function App() {
 
     let our = null;
     let engineStale = false;
+    let ourStatus = 0; // last cad-proxy status — 402 means the access gate refused us
     let lookupAddr = address.trim();
     try {
       lookupAddr = await ensureAddressZip(address.trim());
@@ -930,6 +1014,7 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address: lookupAddr }),
       });
+      ourStatus = resp.status;
       if (resp.ok) {
         const data = await resp.json();
         // The engine always returns the freshest row it has for a parcel
@@ -954,7 +1039,7 @@ function App() {
     step(2);
 
     if (!cad && !our) {
-      return { ok: false, error: "We couldn't read the evidence or find this property. Check the address and that the PDF is the county's evidence packet (not a scan)." };
+      return { ok: false, authError: ourStatus === 402, error: "We couldn't read the evidence or find this property. Check the address and that the PDF is the county's evidence packet (not a scan)." };
     }
     const r = decide(cad, our, address.trim());
     step(3);
@@ -969,7 +1054,15 @@ function App() {
     setStatus("analyzing"); setStep(0); setError("");
     try {
       const d = await computeDraft(setStep);
-      if (!d.ok) { setError(d.error); setStatus("error"); return; }
+      if (!d.ok) {
+        // In ?test=1 mode a 402 means no sup cookie — the gate refused the
+        // lookup. Point the tester at /sup instead of the generic parse error.
+        setError(testMode && d.authError
+          ? "Access needed to run this test report — log in once at /sup, then reload this link."
+          : d.error);
+        setStatus("error");
+        return;
+      }
       await new Promise((res) => setTimeout(res, 350));
       setResult(d.r);
       setCadRaw(d.cadRaw);
@@ -980,7 +1073,17 @@ function App() {
       setError("Something went wrong analyzing this property. Please try again.");
       setStatus("error");
     }
-  }, [address, computeDraft]);
+  }, [address, computeDraft, testMode]);
+
+  // ?test=1 bypass: once the prefill effect has set the address, auto-run the
+  // instant analysis exactly once so the live report renders with no clicks.
+  const testFiredRef = useRef(false);
+  useEffect(() => {
+    if (!testMode || testFiredRef.current) return;
+    if (!address.trim() || status !== "idle") return;
+    testFiredRef.current = true;
+    analyze();
+  }, [testMode, address, status, analyze]);
 
   // Upload evidence files straight to Blob (client-upload), namespaced to this
   // purchase's jti. Resolves jti on demand — the boot /api/report call may not
@@ -1040,7 +1143,14 @@ function App() {
           if (ccResp.ok) {
             const cc = await ccResp.json().catch(() => ({}));
             const comps = Array.isArray(cc && cc.comps) ? cc.comps : [];
-            if (comps.length) d.our.sales_comps = comps;
+            // Clear Capital returns coords as lat/lng; normalize to
+            // latitude/longitude so the report map + console plot sales pins by
+            // exact coordinates (not ambiguous address geocoding). (2026-07-22.)
+            if (comps.length) d.our.sales_comps = comps.map((c) => ({
+              ...c,
+              latitude: c.latitude != null ? c.latitude : c.lat,
+              longitude: c.longitude != null ? c.longitude : c.lng,
+            }));
           }
         } catch (e) { /* no sales comps — Section 6 is omitted */ }
       }
@@ -1308,7 +1418,7 @@ function App() {
               </React.Fragment>
             ) : (
               <div style={{ fontSize: 13.5, color: "#5d6f64", lineHeight: 1.55, marginBottom: 14, background: "#f4f8f5", border: "1px solid #e6ebe6", borderRadius: 11, padding: "13px 16px" }}>
-                <span style={{ fontWeight: 700, color: "#16241c" }}>How to get your county evidence:</span> {evidenceHowTo(stateFromAddress(address))}
+                <span style={{ fontWeight: 700, color: "#16241c" }}>How to get your county evidence:</span> {renderRich(evidenceHowTo(stateFromAddress(address)))}
               </div>
             )}
 
@@ -1364,7 +1474,7 @@ function App() {
               </div>
             ) : null}
 
-            <button onClick={primaryAction} disabled={primaryDisabled} style={{ ...ctaStyle, cursor: primaryDisabled ? "not-allowed" : "pointer", background: primaryDisabled ? "#b9cabf" : "linear-gradient(135deg,#27764a,#15512e)", boxShadow: primaryDisabled ? "none" : "0 6px 18px rgba(22,84,47,.28)" }}>
+            <button onClick={primaryAction} disabled={primaryDisabled} className="td-btn" style={{ ...ctaStyle, cursor: primaryDisabled ? "not-allowed" : "pointer", background: primaryDisabled ? "#b9cabf" : "linear-gradient(135deg,#27764a,#15512e)", boxShadow: primaryDisabled ? "none" : "0 6px 18px rgba(22,84,47,.28)" }}>
               {isAnalyzing ? (
                 <React.Fragment>
                   <span style={{ width: 16, height: 16, border: "2.5px solid rgba(255,255,255,.4)", borderTopColor: "#fff", borderRadius: 999, display: "inline-block", animation: "spin .7s linear infinite" }}></span>
@@ -1496,14 +1606,14 @@ function JurisChips({ jIn }) {
 }
 
 // Prominent, state-aware "how to get the county's evidence" card (intake step 3).
-function EvidenceHowTo({ stateId, jIn, narrow }) {
+function EvidenceHowTo({ stateId, jIn, narrow, override }) {
   return (
     <div style={{ border: "1.5px solid #cfe3d6", background: "#fff", borderRadius: 14, padding: narrow ? "18px 18px" : "20px 22px", marginBottom: 16, boxShadow: "0 1px 2px rgba(20,40,28,.04),0 8px 22px rgba(20,40,28,.05)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 9, fontSize: 15.5, fontWeight: 800, color: "#16241c" }}>
         <FileIcon c="#1d6b41" />
         How to get your {jIn.authorityType}'s evidence
       </div>
-      <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: "#4a574e", fontWeight: 500 }}>{evidenceHowTo(stateId)}</p>
+      <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: "#4a574e", fontWeight: 500 }}>{renderRich(evidenceHowTo(stateId, override))}</p>
     </div>
   );
 }
@@ -1689,9 +1799,16 @@ function ReviewIntake(p) {
   const jEff = (cat && JURISDICTIONS[cat.state]) || jIn;
 
   const fileWord = jEff.fileVerb ? jEff.fileVerb.toLowerCase() : "file";
-  // Prefer the catalog's real, county-accurate deadline over the state default.
-  const s2Deadline = (cat && cat.deadline) || jEff.deadline || "the deadline";
-  const s2Summary = "File your " + (jEff.proceedingTitle || "protest") + " before " + s2Deadline + " — filing is what unlocks the county's evidence.";
+  // TX gets a year-aware deadline and a pre-filing state: the backend catalog sends
+  // year-free "May 15", and an early enrollee (before the ~April notice/portal open,
+  // or after this year's May 15) can't file yet. Other states' deadlines are already
+  // notice-relative ("45 days after your notice"), so they need neither treatment.
+  const txw = jEff.id === "TX" ? txFilingWindow() : null;
+  const preFiling = !!(txw && !txw.open);
+  const s2Deadline = txw ? txw.deadline : ((cat && cat.deadline) || jEff.deadline || "the deadline");
+  const s2Summary = preFiling
+    ? "Filing for " + txw.year + " opens when your Notice of Appraised Value arrives — usually in April. Deadline: " + txw.deadline + "."
+    : "File your " + (jEff.proceedingTitle || "protest") + " before " + s2Deadline + " — filing is what unlocks the county's evidence.";
   const s3Summary = "Optional — add the " + jEff.authorityType + "'s evidence packet once it arrives and we'll push for an even lower value.";
 
   const linkStyle = { color: "#1d6b41", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 2 };
@@ -1726,7 +1843,7 @@ function ReviewIntake(p) {
   } else {
     // No verified destination — an address-scoped search, never a guessed URL.
     // Uses the state's own authority term, not the Texas-only "appraisal district".
-    const q = encodeURIComponent((String(lockAddr || address || "").replace(/,?\s*USA$/i, "").trim() || jEff.authorityType) + " " + jEff.authorityType + " online " + jEff.proceeding);
+    const q = encodeURIComponent((cleanAddr(lockAddr || address) || jEff.authorityType) + " " + jEff.authorityType + " online " + jEff.proceeding);
     filingItemA = <React.Fragment><strong style={{ color: "#16241c" }}>Fastest:</strong> file online through your {jEff.authorityType}'s {jEff.proceeding} portal — <a href={"https://www.google.com/search?q=" + q} target="_blank" rel="noopener" style={linkStyle}>find your {jEff.authorityType} ↗</a>.</React.Fragment>;
   }
 
@@ -1760,10 +1877,15 @@ function ReviewIntake(p) {
       <StepCard num="2" done={done[1]} open={open === 1} onToggle={() => onToggle(1)}
         title={"File your " + (jEff.proceedingTitle || "protest")} summary={s2Summary}>
         <div style={{ background: "#FFF8E1", border: "1px solid #C99700", borderRadius: 10, padding: "12px 16px", display: "flex", gap: 10, alignItems: "baseline", marginBottom: 16, fontSize: 14, color: "#6b4d00", lineHeight: 1.55 }}>
-          <span style={{ fontWeight: 800, color: "#9a7400", flexShrink: 0, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase" }}>Deadline</span>
-          <span>{s2Deadline}. File first — the county only shares the evidence behind your value after you {fileWord}.</span>
+          <span style={{ fontWeight: 800, color: "#9a7400", flexShrink: 0, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase" }}>{preFiling ? "Filing window" : "Deadline"}</span>
+          {preFiling ? (
+            <span>Opens ~April {txw.year} · deadline {txw.deadline}. Your {jEff.authorityType} hasn't mailed {txw.year} Notices of Appraised Value yet — filing opens when yours arrives. Nothing to file yet; we'll have your case ready to file the day it does.</span>
+          ) : (
+            <span>{s2Deadline}. File first — the county only shares the evidence behind your value after you {fileWord}.</span>
+          )}
         </div>
         <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 11, ...body }}>
+          {preFiling ? <div style={{ fontStyle: "italic", color: "#5d6f64" }}>Here's how you'll file once the {txw.year} window opens:</div> : null}
           <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>a.</span><span>{filingItemA}</span></div>
           <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>b.</span><span><strong style={{ color: "#16241c" }}>Or by mail:</strong> print, sign, and post the form to the address on it — postmark by your deadline.</span></div>
           <div style={{ display: "flex", gap: 10 }}><span style={{ fontWeight: 800, color: "#0B8F52", flexShrink: 0 }}>c.</span><span>After you file, request the {jEff.authorityType}'s evidence — that's the packet you add in step 3.</span></div>
@@ -1783,7 +1905,7 @@ function ReviewIntake(p) {
         <div style={{ ...body, marginBottom: 14 }}>
           Add this once your {jEff.authorityType} sends its evidence back — you don't need it to submit now. We'll build your case from our own comparables, then re-check it the moment you add the packet.
         </div>
-        <EvidenceHowTo stateId={(cat && cat.state) || stateFromAddress(address)} jIn={jEff} narrow={narrow} />
+        <EvidenceHowTo stateId={(cat && cat.state) || stateFromAddress(address)} jIn={jEff} narrow={narrow} override={cat && cat.filing && cat.filing.evidenceHowTo} />
         <div onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }} onDragLeave={(e) => { e.preventDefault(); setDragging(false); }} onDrop={onDrop} onClick={() => fileRef.current && fileRef.current.click()} style={dropStyle}>
           <input type="file" multiple
             accept=".pdf,.xlsx,.xlsm,.xls,.xlsb,.csv,.tsv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
@@ -1827,7 +1949,7 @@ function ReviewIntake(p) {
         {submitError ? (
           <div style={{ marginTop: 14, padding: "13px 15px", background: "#fbeceb", border: "1px solid #f0c9c5", borderRadius: 11, color: "#9e2a2a", fontSize: 14, fontWeight: 500 }}>{submitError}</div>
         ) : null}
-        <button onClick={primaryAction} disabled={primaryDisabled} style={{ ...ctaStyle, cursor: primaryDisabled ? "not-allowed" : "pointer", background: primaryDisabled ? "#b9cabf" : "linear-gradient(135deg,#27764a,#15512e)", boxShadow: primaryDisabled ? "none" : "0 6px 18px rgba(22,84,47,.28)" }}>
+        <button onClick={primaryAction} disabled={primaryDisabled} className="td-btn" style={{ ...ctaStyle, cursor: primaryDisabled ? "not-allowed" : "pointer", background: primaryDisabled ? "#b9cabf" : "linear-gradient(135deg,#27764a,#15512e)", boxShadow: primaryDisabled ? "none" : "0 6px 18px rgba(22,84,47,.28)" }}>
           {isAnalyzing ? (
             <React.Fragment>
               <span style={{ width: 16, height: 16, border: "2.5px solid rgba(255,255,255,.4)", borderTopColor: "#fff", borderRadius: 999, display: "inline-block", animation: "spin .7s linear infinite" }}></span>
@@ -2112,7 +2234,7 @@ function CopyPanel({ title, onCopy, children }) {
     <div style={{ border: "1px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "#F4F6F8", borderBottom: "1px solid #E5E7EB", gap: 10 }}>
         <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#3A4148" }}>{title}</span>
-        <button onClick={onCopy} style={{ all: "unset", boxSizing: "border-box", cursor: "pointer", background: "#111", color: "#fff", fontWeight: 600, fontSize: 13, padding: "6px 12px", borderRadius: 6 }}>Copy</button>
+        <button onClick={onCopy} className="td-btn" style={{ all: "unset", boxSizing: "border-box", cursor: "pointer", background: "#111", color: "#fff", fontWeight: 600, fontSize: 13, padding: "6px 12px", borderRadius: 6 }}>Copy</button>
       </div>
       <div style={{ padding: "16px 18px" }}>{children}</div>
     </div>
@@ -2120,16 +2242,47 @@ function CopyPanel({ title, onCopy, children }) {
 }
 
 const GreenBtn = ({ onClick, disabled, children }) => (
-  <button onClick={onClick} disabled={disabled} style={{ all: "unset", boxSizing: "border-box", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.6 : 1, background: "#0B8F52", color: "#fff", fontWeight: 600, fontSize: 14.5, padding: "9px 16px", borderRadius: 7 }}>{children}</button>
+  <button onClick={onClick} disabled={disabled} className="td-btn" style={{ all: "unset", boxSizing: "border-box", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.6 : 1, background: "#0B8F52", color: "#fff", fontWeight: 600, fontSize: 14.5, padding: "9px 16px", borderRadius: 7 }}>{children}</button>
 );
 const GhostBtn = ({ onClick, disabled, href, children }) => {
   const style = { boxSizing: "border-box", textDecoration: "none", display: "inline-block", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.6 : 1, background: "#fff", color: "#0C593E", border: "1px solid #C3C9CF", fontWeight: 600, fontSize: 14.5, padding: "9px 16px", borderRadius: 7 };
-  if (href) return <a href={href} target="_blank" rel="noopener" style={style}>{children}</a>;
-  return <button onClick={onClick} disabled={disabled} style={{ all: "unset", ...style }}>{children}</button>;
+  if (href) return <a href={href} target="_blank" rel="noopener" className="td-btn" style={style}>{children}</a>;
+  return <button onClick={onClick} disabled={disabled} className="td-btn" style={{ all: "unset", ...style }}>{children}</button>;
 };
 const DarkBtn = ({ onClick, children }) => (
-  <button onClick={onClick} style={{ all: "unset", boxSizing: "border-box", cursor: "pointer", marginTop: 18, background: "#111", color: "#fff", fontWeight: 600, fontSize: 15, padding: "11px 20px", borderRadius: 7 }}>{children}</button>
+  <button onClick={onClick} className="td-btn" style={{ all: "unset", boxSizing: "border-box", cursor: "pointer", marginTop: 18, background: "#111", color: "#fff", fontWeight: 600, fontSize: 15, padding: "11px 20px", borderRadius: 7 }}>{children}</button>
 );
+
+/* Embeds the reviewed, agent-edited evidence pack in Step 2 of the delivered
+   report. The pack page self-fetches the approved draft with the customer's
+   token cookie (/api/report) and renders it with its own styling, including the
+   agent's WYSIWYG overlay — so this is the exact report the customer submits.
+   Same-origin, so we poll the frame body to size it to its content (no inner
+   scrollbar); a cross-origin read just keeps the fallback height. */
+function ReviewedReportFrame() {
+  const ref = React.useRef(null);
+  const [h, setH] = React.useState(1400);
+  React.useEffect(() => {
+    let n = 0;
+    const id = setInterval(() => {
+      n++;
+      try {
+        const doc = ref.current && ref.current.contentWindow && ref.current.contentWindow.document;
+        const el = doc && (doc.getElementById("state-report") || doc.body);
+        if (el) {
+          const height = Math.max(el.scrollHeight, doc.body ? doc.body.scrollHeight : 0, doc.documentElement ? doc.documentElement.scrollHeight : 0);
+          if (height > 200) setH(height + 40);
+        }
+      } catch (e) { clearInterval(id); } // cross-origin — keep the fallback height
+      if (n > 24) clearInterval(id); // ~10s of settling, then stop
+    }, 400);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <iframe ref={ref} src="/test/evidence-pack-v3?review=1" title="Your reviewed evidence report" scrolling="no"
+      style={{ width: "100%", height: h, border: "1px solid #E5E7EB", borderRadius: 10, background: "#fff", display: "block" }} />
+  );
+}
 
 /* ───────── the redesigned report ───────── */
 function ReportView({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }) {
@@ -2206,10 +2359,6 @@ function ReportView({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }
   const statCols = narrow ? "repeat(2, 1fr)" : "repeat(4, 1fr)";
   const mainPad = narrow ? "18px 14px 64px" : "28px 24px 80px";
   const maxW = 920;
-
-  // County-facing attachment: the real analyzer county pack when a CAD packet is
-  // present, else our own evidence pack (both defensible to hand the appraiser).
-  const countyAttach = () => triggerExport(hasCad ? "cad-county" : "our", "pdf");
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#1A1A1A", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#F4F6F8" }}>
@@ -2315,14 +2464,20 @@ function ReportView({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }
           {/* STEP 2 — Evidence */}
           <StepCard num="2" done={done[1]} open={open === 1} onToggle={() => toggle(1)}
             title="Review, then submit the evidence"
-            summary={(showComps ? b.comps.length + " comps from the county's own books. " : "Your evidence pack. ") + "Download as PDF, or DOCX to refine."}>
-            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#3A4148", margin: "16px 0 12px", maxWidth: 720 }}>These are the {b.stateId === "TX" ? "district's" : "county's"} <strong>own assessed values</strong> for comparable homes — not sale prices, so they're hard for the county to dispute. Your requested value follows their median.</p>
+            summary={stored ? "Your reviewed evidence report, finalized by a TaxDrop tax expert. Download as PDF, or DOCX to refine." : (showComps ? b.comps.length + " comps from the county's own books. " : "Your evidence pack. ") + "Download as PDF, or DOCX to refine."}>
+            {stored ? (
+              <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#3A4148", margin: "16px 0 12px", maxWidth: 720 }}>A TaxDrop tax expert has reviewed and finalized your evidence. The report below is exactly what you'll submit — download it as a PDF to attach to your {j.proceeding}, or the DOCX if you want to refine it further.</p>
+            ) : (
+              <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#3A4148", margin: "16px 0 12px", maxWidth: 720 }}>These are the {b.stateId === "TX" ? "district's" : "county's"} <strong>own assessed values</strong> for comparable homes — not sale prices, so they're hard for the county to dispute. Your requested value follows their median.</p>
+            )}
             {readNotice ? (
               <div style={{ background: "#FFF8E1", border: "1px solid #C99700", borderRadius: 8, padding: "11px 15px", fontSize: 14, lineHeight: 1.55, color: "#7a5800", maxWidth: 720, marginBottom: showComps ? 12 : 0 }}>
                 <strong>Heads up — part of this packet couldn't be read cleanly.</strong> {readNotice}
               </div>
             ) : null}
-            {showComps ? (
+            {stored ? (
+              <ReviewedReportFrame />
+            ) : showComps ? (
               <div style={{ border: "1px solid #E5E7EB", borderRadius: 10, overflow: "hidden", overflowX: "auto" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "22px 1fr 84px 116px 72px", gap: 12, alignItems: "center", padding: "9px 16px", background: "#F4F6F8", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#3A4148", minWidth: 480 }}>
                   <span></span><span>Address</span><span style={{ textAlign: "right" }}>Sqft</span><span style={{ textAlign: "right" }}>Value</span><span style={{ textAlign: "right" }}>Per sqft</span>
@@ -2349,7 +2504,7 @@ function ReportView({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }
               <GhostBtn onClick={() => triggerExport("our", "docx")} disabled={!!exporting}>{busy("our:docx") ? "Generating…" : "Editable version (DOCX)"}</GhostBtn>
             </div>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: "#3A4148", margin: "12px 0 0", maxWidth: 720 }}>Looks right? Upload the PDF with your {j.proceeding} (or in your appeals portal). Want to add photos of needed repairs or drop a comp? Edit the DOCX first — every extra flaw you document helps.</p>
-            <DarkBtn onClick={() => markDone(1)}>Evidence submitted — next: negotiate →</DarkBtn>
+            <DarkBtn onClick={() => markDone(1)}>{stored ? "Evidence reviewed — next: submit findings & negotiate →" : "Evidence submitted — next: negotiate →"}</DarkBtn>
           </StepCard>
 
           {/* STEP 3 — Informal settlement */}
@@ -2370,9 +2525,11 @@ function ReportView({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }
               </CopyPanel>
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <GreenBtn onClick={countyAttach} disabled={!!exporting}>{busy("cad-county:pdf") || busy("our:pdf") ? "Generating…" : "Download county-facing attachment (PDF)"}</GreenBtn>
-              <span style={{ fontSize: 13.5, color: "#3A4148" }}>Your comps + a one-page explanation, written for the appraiser.</span>
+            <div style={{ background: "#F0FFF5", border: "1px solid #DFFFEA", borderRadius: 10, padding: "13px 16px", marginTop: 12, fontSize: 14, lineHeight: 1.6, color: "#3A4148", maxWidth: 800 }}>
+              <strong style={{ color: "#0C593E" }}>Attach your evidence package.</strong> Attach the final evidence packet you downloaded in step 2 to this email — that's your county-facing evidence, drawn from the district's own values.
+              {b.parcelId ? (
+                <div style={{ marginTop: 8 }}><strong style={{ color: "#1A1A1A" }}>Confirm your Property ID (PID):</strong> <span style={{ fontVariantNumeric: "tabular-nums" }}>{b.parcelId}</span> — make sure this matches the {b.parcelLabel} number printed on your notice before you send.</div>
+              ) : null}
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "1fr 1fr", gap: 12, marginTop: 16, maxWidth: 800 }}>
@@ -2393,11 +2550,15 @@ function ReportView({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }
             <DarkBtn onClick={() => markDone(2)}>Settled or heading to hearing →</DarkBtn>
           </StepCard>
 
-          {/* STEP 4 — Formal hearing */}
+          {/* STEP 4 — Formal hearing (optional, rarely needed) */}
           <StepCard num="4" done={done[3]} open={open === 3} onToggle={() => toggle(3)}
-            title="Formal hearing (if it comes to that)"
-            summary={"Only 10–15% of cases get here. If yours does, you'll walk in prepared."}>
-            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#3A4148", margin: "16px 0 14px", maxWidth: 720 }}>The {j.boardLong} ({j.boardShort}) is {b.ex.boardKind}. Hearings run about 15 minutes, and homeowners represent themselves all the time. You have three ways to appear:</p>
+            title="Formal hearing — optional, rarely needed"
+            summary={"Most cases settle in step 3. Fewer than 10–15% ever reach a hearing — only continue here if you turned the county's offer down."}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#F0FFF5", border: "1px solid #DFFFEA", borderRadius: 10, padding: "13px 16px", margin: "16px 0 14px", maxWidth: 800 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#0C593E", background: "#DFFFEA", borderRadius: 999, padding: "3px 9px", flexShrink: 0, marginTop: 1 }}>Optional</span>
+              <p style={{ fontSize: 14, lineHeight: 1.6, color: "#3A4148", margin: 0 }}><strong style={{ color: "#1A1A1A" }}>You probably won't need this.</strong> The vast majority of {j.proceeding}s are resolved informally in step 3. You only reach a formal hearing if you <em>declined</em> the county's informal offer — so if step 3 settled your value at or below your fallback, you're done and can skip this step.</p>
+            </div>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#3A4148", margin: "0 0 14px", maxWidth: 720 }}>If it does come to that: the {j.boardLong} ({j.boardShort}) is {b.ex.boardKind}. Hearings run about 15 minutes, and homeowners represent themselves all the time. You have three ways to appear:</p>
 
             <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "repeat(3, 1fr)", gap: 10, maxWidth: 800 }}>
               {[[b.ex.affidavitLabel, b.ex.affidavit], ["In person", b.ex.inPerson], ["By phone or video", b.ex.remote]].map((a, i) => (
@@ -2469,9 +2630,9 @@ function Result({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }) {
   // refund request to support; swap for the real endpoint/checkout once it's built.
   const REFUND_EMAIL = "support@taxdrop.com";
   const onRefund = () => {
-    const subject = "TaxDrop One refund request — " + (address || "");
+    const subject = "TaxDrop One refund request — " + cleanAddr(address);
     const body = "My property came back fairly assessed for " + CURRENT_TAX_YEAR +
-      ", so no protest is recommended. I'd like a refund.\n\nProperty: " + (address || "");
+      ", so no protest is recommended. I'd like a refund.\n\nProperty: " + cleanAddr(address);
     window.location.href = "mailto:" + REFUND_EMAIL +
       "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
   };
@@ -2529,7 +2690,7 @@ function Result({ r, onReset, address, lockAddr, cadRaw, cadMethod, stored }) {
           ? { background: "#2f4536", color: "#fff", border: "1px solid #3e5746" }
           : { background: "#ffffff22", color: "#fff", border: "1px solid #ffffff44" });
     return (
-      <button onClick={() => triggerExport(which, format)} disabled={!!exporting}
+      <button onClick={() => triggerExport(which, format)} disabled={!!exporting} className="td-btn"
         style={{ borderRadius: 10, padding: "11px 24px", fontSize: 13.5, fontWeight: isPrimary ? 800 : 700, fontFamily: "inherit", cursor: exporting ? "default" : "pointer", opacity: exporting && !busy ? 0.55 : 1, ...styles }}>
         {busy ? "Generating…" : label}
       </button>
@@ -2940,12 +3101,12 @@ function FairNextSteps({ narrow, exporting, onSaveReport, onRefund }) {
         <div style={card}>
           <div style={{ fontSize: 17, fontWeight: 800, color: "#16241c", marginBottom: 7 }}>Save your report for next year</div>
           <p style={{ margin: "0 0 18px", fontSize: 13.5, lineHeight: 1.5, color: "#5d6f64" }}>Keep this analysis on file. We'll re-check your assessment when the {CURRENT_TAX_YEAR + 1} roll lands — values move, and next year may be different.</p>
-          <button onClick={onSaveReport} disabled={!!exporting} style={{ ...btn(true), opacity: exporting ? 0.6 : 1 }}>{exporting ? "Saving…" : "Save my report"}</button>
+          <button onClick={onSaveReport} disabled={!!exporting} className="td-btn" style={{ ...btn(true), opacity: exporting ? 0.6 : 1 }}>{exporting ? "Saving…" : "Save my report"}</button>
         </div>
         <div style={card}>
           <div style={{ fontSize: 17, fontWeight: 800, color: "#16241c", marginBottom: 7 }}>Get a refund now</div>
           <p style={{ margin: "0 0 18px", fontSize: 13.5, lineHeight: 1.5, color: "#5d6f64" }}>No savings, no fee — that's the deal. If you'd rather not wait for next year, request a full refund and we'll take care of it.</p>
-          <button onClick={onRefund} style={btn(false)}>Request a refund</button>
+          <button onClick={onRefund} className="td-btn" style={btn(false)}>Request a refund</button>
         </div>
       </div>
     </section>

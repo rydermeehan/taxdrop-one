@@ -12,6 +12,14 @@
   const PDF_WORKER = "https://cdn.jsdelivr.net/npm/pdf-parse@2.4.5/dist/pdf-parse/web/pdf.worker.min.mjs";
   let _pdfMod = null;
 
+  // pdf.js (rendering build) — used ONLY for the vision fallback: rasterize PDF
+  // pages to JPEGs when the flattened text read is weak (scanned packets,
+  // rotated/landscape equity grids). Loaded lazily so the common text path
+  // never pays for it. Pinned to match the pdf-parse-bundled pdf.js era.
+  const PDFJS_ESM = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.min.mjs";
+  const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs";
+  let _pdfjsMod = null;
+
   // SheetJS via ESM CDN — loaded lazily on first Excel drop. Free/community
   // build is sufficient for reading .xlsx / .xls / .xlsm; we never write.
   // (2026-06-11: multi-file + Excel rollout.)
@@ -35,6 +43,23 @@
     const data = await res.json();
     if (!data || !data.ok || typeof data.text !== "string") {
       throw new Error((data && data.error) || "reader endpoint returned no text");
+    }
+    return data.text;
+  }
+
+  // Vision read: same schema prompt, but the evidence is delivered as page
+  // images instead of flattened text. Used as a fallback for packets that
+  // don't yield clean text (scanned PDFs, rotated/landscape grids).
+  async function aiCompleteVision(prompt, images) {
+    const res = await fetch(AI_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: prompt, images: images }),
+    });
+    if (!res.ok) throw new Error("vision reader returned " + res.status);
+    const data = await res.json();
+    if (!data || !data.ok || typeof data.text !== "string") {
+      throw new Error((data && data.error) || "vision reader returned no text");
     }
     return data.text;
   }
@@ -68,7 +93,7 @@ How to find each field (labels vary by county — match by meaning):
   - equityMedian = the subject median on the EQUITY / UNIFORMITY grid (unequal-appraisal comps, usually no sale prices). Labels: "Median Equity Value", "Subject Value At Median", "Equity Median". This is the §41.43(b)(3) uniformity median.
   If the packet has only one grid/median, set the matching one (salesMedian if it's a sales grid, equityMedian if it's an equity grid) and leave the other null. Read each grid's SUBJECT row median, never a comparable's value.
 - medianPsf = the median Value-per-square-foot if the packet states one. Labels: "Median ... Value / Sqft", "Median $/SF", "Indicated Value / SQFT ... Median". null if none.
-- comps[].value = each comparable's FINAL indicated value for the subject — the most-adjusted figure on that comp's row. Labels: "Final Adj Sale Price", "Indicated Value", "Adjusted Sales Price", "Indicated MKT Value", "Comparative Value". For EQUITY/EQUALITY comps that show no adjusted figure, use that comparable's "Market Value".
+- comps[].value = each comparable's FINAL indicated value for the subject — the most-adjusted figure on that comp's row. Labels: "Final Adj Sale Price", "Indicated Value", "Ind Value", "Adjusted Sales Price", "Indicated MKT Value", "Comparative Value". For EQUITY/EQUALITY comps that show no adjusted figure, use that comparable's "Market Value". NEVER use the comparable's account / Prop ID / Parcel / GEO ID number as its value — those are identifiers, not dollars (e.g. a "Prop ID 10746" is NOT a $10,746 value). A comparable's value is always in the same ballpark as the subject's value; if a number you're about to use is an order of magnitude smaller than the subject's value, it is the wrong field — find the indicated/market value instead.
 - comps[].sqft = that comparable's Living Area in square feet.
 - comps[].psf = that comparable's stated Value/Sqft or Indicated Value per SQFT, if shown. Else null (the engine computes it).
 - comps[].netAdjustment = the comp's "Net Adjustment" / "Total Adjustment" / "Adjustment" amount (the dollar change applied to its sale or market value to make it comparable to the subject). Keep the sign if shown. null if none.
@@ -83,10 +108,102 @@ OUTPUT BUDGET: Return MINIFIED JSON (no line breaks, no extra spaces). Keep ever
 
 CRITICAL: If the document lists MULTIPLE subject properties, extract ONLY THE FIRST subject and the comparables that belong to it. Return every comparable for that one subject.
 
-SOME PACKETS ARE POSITIONAL GRIDS: a column-header list appears once (e.g. "Prop ID, GEO ID, ... Market Value, ... Indicated Value"), then a "Subject" block lists that subject's values in the same order, then each "Comp #1 / Comp #2 ..." block lists its values in the same order. When you see this, match values to headers by position: the subject.value is the Subject block's "Market Value"; each comp's value is that comp block's "Indicated Value" (typically the last large dollar figure in the block, after the adjustments). The header row repeats on every page — ignore the repeats.
+SOME PACKETS ARE POSITIONAL GRIDS: a column-header list appears once (e.g. "Prop ID, GEO ID, ... Market Value, ... Ind Value"), then a "Subject" block lists that subject's values in the same order, then each "Comp #1 / Comp #2 ..." block lists its values in the same order. When you see this, match values to headers by position: the subject.value is the Subject block's "Market Value"; each comp's value is that comp block's "Indicated Value" / "Ind Value" — the LAST large dollar figure in the block, after the adjustments and the land value. The FIRST number in each comp block is the "Prop ID" (a parcel identifier like 10746 or 32923) — it is NEVER the value; skip it. Sanity check every comp value against the subject's value: if they differ by ~10x, you have grabbed the Prop ID by mistake — use the trailing Indicated Value instead. The header row repeats on every page — ignore the repeats.
 
 EVIDENCE:
 `;
+
+  // Vision variant of the schema prompt: identical extraction rules, but the
+  // evidence arrives as page images. Read EVERY page — the equity / sales grid
+  // is often the LAST page and may be rotated to landscape.
+  const VISION_PROMPT = SCHEMA_PROMPT.replace(
+    /EVIDENCE:\s*$/,
+    "The CAD evidence packet is provided as the attached page images, in order. Read every page — including the final pages and any rotated/landscape comparison grids — and extract the structure above.\n"
+  );
+
+  async function loadPdfjs() {
+    if (_pdfjsMod) return _pdfjsMod;
+    const mod = await import(PDFJS_ESM);
+    if (mod.GlobalWorkerOptions) mod.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+    _pdfjsMod = mod;
+    return mod;
+  }
+
+  // Rasterize a PDF's pages to JPEG data URLs for the vision read. CAD packets
+  // put the cover/subject info up front and the comparable grid at the BACK, so
+  // when a packet is longer than the page cap we keep the first 3 pages (subject
+  // + values) and the last (cap−3) pages (the grids) rather than blindly taking
+  // the front. Resolution/quality are tuned to stay readable while keeping the
+  // POST under the serverless body limit.
+  async function pdfPagesToImages(file, opts) {
+    const o = opts || {};
+    const maxPages = o.maxPages || 12;
+    const maxWidth = o.maxWidth || 1300;
+    const quality = o.quality || 0.6;
+    const maxTotalChars = o.maxTotalChars || 16 * 1024 * 1024; // ~ server cap
+
+    const pdfjs = await loadPdfjs();
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const doc = await pdfjs.getDocument({ data: buf }).promise;
+    const total = doc.numPages;
+
+    let order;
+    if (total <= maxPages) {
+      order = [];
+      for (let i = 1; i <= total; i++) order.push(i);
+    } else {
+      order = [1, 2, 3];
+      for (let i = total - (maxPages - 3) + 1; i <= total; i++) order.push(i);
+    }
+
+    const images = [];
+    let acc = 0;
+    for (const pageNum of order) {
+      const page = await doc.getPage(pageNum);
+      const base = page.getViewport({ scale: 1 });
+      const scale = base.width > 0 ? Math.min(maxWidth / base.width, 2) : 1;
+      const viewport = page.getViewport({ scale: scale > 0 ? scale : 1 });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext("2d");
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      const url = canvas.toDataURL("image/jpeg", quality);
+      acc += url.length;
+      if (acc > maxTotalChars) break;
+      images.push(url);
+    }
+    return images;
+  }
+
+  // Run the vision read on a single PDF file. Returns the coerced data shape on
+  // success, or null if it can't produce a usable result.
+  async function extractFromImages(pdfFile) {
+    let images;
+    try {
+      images = await pdfPagesToImages(pdfFile);
+    } catch (e) {
+      return null;
+    }
+    if (!images || !images.length) return null;
+    const raw = await aiCompleteVision(VISION_PROMPT, images);
+    const data = coerce(parseLooseJSON(raw));
+    return usable(data) ? data : null;
+  }
+
+  // Is a text-read result too weak to trust? Mirrors the engine's guards so we
+  // know WHEN to spend a vision read: no subject value, <2 comps, an
+  // all-identical (degenerate) comp set, or a comp set where half the values
+  // sit an order of magnitude below the subject (parcel-ID / land-only reads).
+  function weakExtraction(d) {
+    if (!d || !d.subject) return true;
+    const subjVal = d.subject.assessedValue;
+    const vals = (d.comps || []).map((c) => c.value).filter((v) => v != null);
+    if (subjVal == null || vals.length < 2) return true;
+    if (new Set(vals.map((v) => Math.round(v))).size === 1) return true;
+    const tiny = vals.filter((v) => v < subjVal * 0.4).length;
+    return tiny >= Math.ceil(vals.length / 2);
+  }
 
   async function loadPdf() {
     if (_pdfMod) return _pdfMod;
@@ -183,7 +300,29 @@ EVIDENCE:
       };
     }
     const combined = parts.join("\n\n");
-    const out = await extract(combined);
+    let out = await extract(combined);
+
+    // Vision fallback: if the text read came back weak/degenerate and a PDF was
+    // dropped, rasterize its pages and re-read with the vision model. Scanned or
+    // rotated landscape grids (e.g. Victoria CAD) flatten to garbled text that
+    // the text model echoes the subject value across; page images read far
+    // better. Only spend the vision read when the cheap text read fell short,
+    // and only adopt it if it's genuinely better than what we already have.
+    const textWeak = !out.ok || (out.data && weakExtraction(out.data));
+    if (textWeak) {
+      const pdfFile = list.find((f) => fileKind(f) === "pdf");
+      if (pdfFile) {
+        try {
+          const visionData = await extractFromImages(pdfFile);
+          if (visionData && (!out.ok || !weakExtraction(visionData))) {
+            out = { ok: true, method: "ai-vision", data: visionData };
+          }
+        } catch (e) {
+          /* vision unavailable (no key, render error, timeout) — keep text */
+        }
+      }
+    }
+
     if (out.ok && failed.length) {
       out.warning = "Some files couldn't be read: " + failed.slice(0, 3).join(", ");
     }

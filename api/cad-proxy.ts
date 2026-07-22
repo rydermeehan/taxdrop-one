@@ -6,7 +6,8 @@ import { claimOrVerifyProperty } from './_entitlements.js';
 export const config = { maxDuration: 60 };
 
 const UPSTREAM = 'https://savings-engine-database.vercel.app';
-// Server-side only. Set TAXDROP_CAD_API_KEY in Vercel env — no hardcoded fallback.
+// Server-side only. Set TAXDROP_CAD_API_KEY in Vercel env — no hardcoded
+// fallback (the literal was rotated out; a missing key fails closed below).
 const API_KEY = process.env.TAXDROP_CAD_API_KEY || '';
 
 // --- Access control (off until ACCESS_CONTROL_ENABLED is set) --------------
@@ -115,6 +116,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { path, ...rest } = req.query;
   if (!path || typeof path !== 'string') {
     return res.status(400).json({ error: 'Missing path query parameter' });
+  }
+
+  // Fail closed if the upstream key isn't configured (no hardcoded fallback).
+  if (!API_KEY) {
+    return res.status(503).json({ error: 'upstream_key_not_configured' });
   }
 
   // Entitlement gate (no-op unless ACCESS_CONTROL_ENABLED). Fail closed on an

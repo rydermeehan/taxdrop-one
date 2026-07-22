@@ -366,8 +366,64 @@
     // the draft's original taxSaved by the reduction ratio, mirroring
     // api/_overrides.ts. current.draft.result holds the originals.
     function updateScorecard(m) {
-      if (!liveDirty) return; // ignore the report's initial-load emit
       const setTxt = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+      // Approach label — shown on every emit (informational, even before a toggle)
+      // so the agent always sees WHICH approach is binding and both indicated
+      // values. The delivered opinion is the LOWER defensible of the equity
+      // (comp-driven) and sales-comparison approaches; both are editable in
+      // /review, so this makes the competition legible and explains when a comp
+      // edit can't move the number (it's on the losing approach).
+      const lbl = document.getElementById("scApproach");
+      if (lbl) {
+        const eq = Number(m.equity) || 0, sa = Number(m.sales) || 0;
+        if (m.noCase || !(Number(m.opinion) > 0)) {
+          lbl.textContent = "⚖ No defensible comp-based reduction on the current set.";
+        } else if (m.approach === "sales") {
+          lbl.textContent = "⚖ Opinion follows the sales-comparison approach (" + fmt(sa) + ")"
+            + (eq > 0 ? " — equity comps indicate " + fmt(eq) + "; editing equity only lowers the opinion once it drops below the sales value." : "") + ".";
+        } else if (m.approach === "equity") {
+          lbl.textContent = "⚖ Opinion follows the equity comps (" + fmt(eq) + ")"
+            + (sa > 0 ? " — sales comparison indicates " + fmt(sa) + "." : ".");
+        } else {
+          lbl.textContent = "";
+        }
+      }
+      // Case Strategy — name the approach (unequal-appraisal/equity vs market/
+      // sales, or a combination when both are developed) and the comp basis it
+      // rests on, kept consistent with the scorecard numbers (stored draft until
+      // a real toggle, live after). (2026-07-21 — Ryder: strategy must state the
+      // approach + whether comps are sales, equity, or a combination.)
+      const cs = document.getElementById("caseStrategy");
+      if (cs) {
+        const rcs = (current && current.draft && current.draft.result) || {};
+        const eqN = document.querySelectorAll(".compchk:checked").length;
+        const saN = document.querySelectorAll(".salechk:checked").length;
+        const aName = m.approach === "sales" ? "market sales-comparison" : (m.approach === "equity" ? "unequal-appraisal (equity)" : null);
+        if (m.noCase || !aName) {
+          cs.textContent = "No defensible comp-based reduction on the current comp set — walk this one back or gather stronger comps.";
+        } else {
+          const bothDeveloped = eqN >= 3 && saN >= 3;
+          const basis = bothDeveloped
+            ? "Combination — " + eqN + " equity comp" + (eqN === 1 ? "" : "s") + " and " + saN + " sales comp" + (saN === 1 ? "" : "s") + " developed; the opinion of value follows the " + aName + " approach (the lower defensible of the two)"
+            : (m.approach === "sales"
+                ? "Market sales-comparison approach on " + saN + " sales comp" + (saN === 1 ? "" : "s")
+                : "Unequal-appraisal (equity) approach on " + eqN + " equity comp" + (eqN === 1 ? "" : "s"));
+          let notice, opinion, reduction, taxSaved;
+          if (liveDirty) {
+            notice = Number(m.notice) || Number(rcs.notice) || 0;
+            opinion = Number(m.opinion) || 0;
+            reduction = Math.max(notice - opinion, 0);
+            const oR = Number(rcs.reduction) || 0, oT = Number(rcs.taxSaved) || 0;
+            taxSaved = oR > 0 ? Math.round((oT / oR) * reduction) : 0;
+          } else {
+            notice = Number(rcs.notice) || 0; opinion = Number(rcs.target) || 0;
+            reduction = Number(rcs.reduction) || 0; taxSaved = Number(rcs.taxSaved) || 0;
+          }
+          const pct = notice > 0 ? (reduction / notice * 100) : 0;
+          cs.textContent = basis + ". Requesting " + fmt(opinion) + " on the " + fmt(notice) + " notice — a " + fmt(reduction) + " reduction (" + pct.toFixed(1) + "%)" + (taxSaved > 0 ? ", worth ~" + fmt(taxSaved) + "/yr" : "") + ".";
+        }
+      }
+      if (!liveDirty) return; // numbers stay on the stored draft until a real comp toggle
       const r = (current && current.draft && current.draft.result) || {};
       const notice = Number(m.notice) || Number(r.notice) || 0;
       if (notice > 0) setTxt("scNotice", fmt(notice));
@@ -717,7 +773,7 @@
         "</div>" +
         (rv.draftError ? '<div class="warnbox err"><b>Auto-draft failed:</b> ' + esc(rv.draftError) + " — build this report by hand.</div>" : "") +
         // Case strategy
-        (strategy ? '<div class="strategy"><div class="eyebrow"><span class="lbl">Case strategy</span><span class="rule"></span></div><div class="body">' + esc(strategy) + "</div></div>" : "") +
+        (strategy ? '<div class="strategy"><div class="eyebrow"><span class="lbl">Case strategy</span><span class="rule"></span></div><div class="body" id="caseStrategy">' + esc(strategy) + "</div></div>" : "") +
         flagsHtml +
         // Values
         '<div class="values">' +
@@ -726,11 +782,15 @@
           valCard("Reduction", fmt(r.reduction), false, "scReduction") +
           valCard("Est. tax saved", (r.taxSaved != null ? fmt(r.taxSaved) + "/yr" : "—"), true, "scTaxSaved") +
         "</div>" +
+        // Live approach indicator — filled by updateScorecard from the report's
+        // emitted value. Explains which approach is binding so the agent knows
+        // why the number stops moving once the sales floor takes over.
+        '<div id="scApproach" style="margin:-6px 2px 2px;color:var(--gray-700);font-size:12px;line-height:1.4"></div>' +
         (thin ? '<div class="warnbox thin" style="margin-top:-6px">⚠ Thin case — the reduction is under 3% of the noticed value; it may not clear the ARB threshold.</div>' : "") +
         factsHtml +
         // Comps
         (ourComps.length
-          ? '<div class="sec"><div class="sechead"><h2>Evidence comps</h2><span class="note">' + keptComps.length + " kept · recommended value follows the kept median</span></div>" +
+          ? '<div class="sec"><div class="sechead"><h2>Equity comps</h2><span class="note">' + keptComps.length + " kept · recommended value follows the kept median</span></div>" +
               '<div id="liveComp" class="livecomp"></div>' +
               '<div class="comps-wrap"><table class="comps"><thead><tr>' +
                 "<th>Keep</th><th>Address</th><th class=\"r\">Dist</th><th class=\"r\">Market</th><th class=\"r\">Sqft</th><th class=\"r\">$/sqft</th><th class=\"r\">Adj $/sqft</th><th class=\"r\">" + adjColLabel + "</th><th class=\"r\">Yr Built</th>" + (hasSaleYr ? "<th class=\"r\">Yr Sold</th>" : "") +

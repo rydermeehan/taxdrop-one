@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#e9efe9}</style>
+</head><body>
+<div id="root"></div>
+<script>
+  // Stub the paid-customer boot so app.jsx enters reviewMode with a locked address.
+  window.blobClientUpload = async () => ({ url: "x" });
+  const origFetch = window.fetch;
+  window.fetch = async (url, opts) => {
+    const u = String(url);
+    if (u.indexOf("/api/report") === 0 || u.indexOf("/api/report") > -1) {
+      return { ok: true, status: 200, json: async () => ({ status: "none", jti: "harness" }) };
+    }
+    if (u.indexOf("/api/form-schema") > -1) {
+      return { ok: true, status: 200, json: async () => ({
+        available: true, state: "TX", county: "harris", form: "Form 50-132", outputFileName: "form-50-132.pdf",
+        fields: [
+          { key: "name", label: "Owner name", placeholder: "Jane Q. Homeowner", required: true },
+          { key: "phone", label: "Phone", placeholder: "(555) 123-4567", required: false },
+          { key: "street", label: "Mailing street address", placeholder: "123 Main St", required: true },
+          { key: "cityStateZip", label: "City, State ZIP", placeholder: "Houston, TX 77070", required: true },
+          { key: "email", label: "Email", placeholder: "you@example.com", required: false }
+        ]
+      }) };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+</script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+<script type="text/babel" src="app.jsx"></script>
+</body></html>

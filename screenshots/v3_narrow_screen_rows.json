@@ -1,0 +1,320 @@
+{
+  "section3Found": true,
+  "rows": [
+    {
+      "idx": 0,
+      "text": "",
+      "width": 175,
+      "height": 69.78125,
+      "lineHeight": 17.6,
+      "approxLines": 4,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 1,
+      "text": "Street view",
+      "width": 175,
+      "height": 91,
+      "lineHeight": 17.6,
+      "approxLines": 5,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 2,
+      "text": "PID #",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 3,
+      "text": "Property address",
+      "width": 175,
+      "height": 46.1875,
+      "lineHeight": 17.6,
+      "approxLines": 3,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 4,
+      "text": "Subdivision",
+      "width": 175,
+      "height": 46.1875,
+      "lineHeight": 17.6,
+      "approxLines": 3,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 5,
+      "text": "State class",
+      "width": 175,
+      "height": 63.78125,
+      "lineHeight": 17.6,
+      "approxLines": 4,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 6,
+      "text": "Distance from subject",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 7,
+      "text": "Building characteristics",
+      "width": 1033,
+      "height": 25,
+      "lineHeight": 16,
+      "approxLines": 2,
+      "fontSize": "10px"
+    },
+    {
+      "idx": 8,
+      "text": "Living area (SF)",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 9,
+      "text": "Year built",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 10,
+      "text": "Bedrooms",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 11,
+      "text": "2024 Market Values",
+      "width": 1033,
+      "height": 25,
+      "lineHeight": 16,
+      "approxLines": 2,
+      "fontSize": "10px"
+    },
+    {
+      "idx": 12,
+      "text": "Land value",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 13,
+      "text": "Land $/SF",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 14,
+      "text": "Improvement value",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 15,
+      "text": "Improvement $/SF",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 16,
+      "text": "CAD market value",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 17,
+      "text": "CAD market $/SF",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 18,
+      "text": "Adjustments",
+      "width": 1033,
+      "height": 25,
+      "lineHeight": 16,
+      "approxLines": 2,
+      "fontSize": "10px"
+    },
+    {
+      "idx": 19,
+      "text": "Land value adj.",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 20,
+      "text": "Size adj.",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 21,
+      "text": "Age/condition adj.",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 22,
+      "text": "Additional (pool/garage/etc)",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 23,
+      "text": "Totals",
+      "width": 1033,
+      "height": 25,
+      "lineHeight": 16,
+      "approxLines": 2,
+      "fontSize": "10px"
+    },
+    {
+      "idx": 24,
+      "text": "Total net adjustment",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 25,
+      "text": "Total net adjustment ($/SF)",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 26,
+      "text": "Derivation",
+      "width": 1033,
+      "height": 25,
+      "lineHeight": 16,
+      "approxLines": 2,
+      "fontSize": "10px"
+    },
+    {
+      "idx": 27,
+      "text": "CAD market value",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 28,
+      "text": "Total net adjustments",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 29,
+      "text": "Adjusted property value",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 30,
+      "text": "% diff vs comp CAD",
+      "width": 175,
+      "height": 28.59375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 31,
+      "text": "Indicator (Subject SF basis)",
+      "width": 1033,
+      "height": 25,
+      "lineHeight": 16,
+      "approxLines": 2,
+      "fontSize": "10px"
+    },
+    {
+      "idx": 32,
+      "text": "Adjusted $/SF (Subject SF)",
+      "width": 175,
+      "height": 29.09375,
+      "lineHeight": 17.6,
+      "approxLines": 2,
+      "fontSize": "11px"
+    },
+    {
+      "idx": 33,
+      "text": "Median adjusted value of comps",
+      "width": 318,
+      "height": 40.796875,
+      "lineHeight": 20.8,
+      "approxLines": 2,
+      "fontSize": "13px"
+    }
+  ],
+  "tableRect": {
+    "x": 123,
+    "y": 1659.84375,
+    "width": 1034,
+    "height": 1138.796875
+  },
+  "pageScrollWidth": 1280,
+  "viewportWidth": 1280,
+  "headingText": "3. Comparable Property Analysis"
+}

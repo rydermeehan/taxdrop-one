@@ -1,0 +1,113 @@
+Generate Report
+Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics). Try example: 20022 Atasca Villas Dr
+Property Appraisal Report
+Tax Year 2026 · CAD-Style v3 (Draft for Mike's Review)
+Export PDF
+Export Docx
+Presentation Notes
+1. Subject Property
+Street address
+2915 Bay Hollow Ct, Katy, TX 77450
+CAD account number
+2271-01-002-0100-914
+CAD 2026 noticed land value
+$161,590
+CAD 2026 noticed improvement value
+$1,008,654
+CAD 2026 noticed market value
+$1,170,244 ($219/sqft)
+2. Owner's Requested 2026 Market Value
+2026 CAD NOTICE VALUE
+$1,170,244
+$219/sqft
+REQUESTED MARKET VALUE
+$1,112,696
+$208/sqft · 95.1% of CAD notice
+3. Comparable Property Analysis
+
+5 comparable properties from the same subdivision as the subject, sorted by living-area proximity. All share property classification A1 and the same school district.
+
+SSubject (2915 Bay Hollow Ct)
+12910 Bay Hollow Ct
+22903 Autumn Lake Dr
+32614 Autumn Lake Dr
+43103 Winding Shore Ln
+522706 Moonlit Lake Ct
+Pin numbers correspond to comparable column numbers in the table below. Map data © Google.
+ 	SUBJECT
+2915 BAY HOLLOW CT	COMP #1
+2910 BAY HOLLOW CT	COMP #2
+2903 AUTUMN LAKE DR	COMP #3
+2614 AUTUMN LAKE DR	COMP #4
+3103 WINDING SHORE LN	COMP #5
+22706 MOONLIT LAKE CT
+Street view	
+No imagery
+	
+No imagery
+	
+No imagery
+	
+No imagery
+	
+No imagery
+	
+
+CAD account	2271-01-002-0100-914	2271-01-002-0120-914	2271-01-002-0020-914	2271-01-001-0120-914	2271-02-003-0140-914	2271-01-001-0080-914
+Property address	2915 Bay Hollow Ct	2910 Bay Hollow Ct	2903 Autumn Lake Dr	2614 Autumn Lake Dr	3103 Winding Shore Ln	22706 Moonlit Lake Ct
+Location from subject (miles)	—	0.04 mi	0.07 mi	0.06 mi	0.18 mi	0.10 mi
+Subdivision	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village	Cinco Ranch South Lake Village
+State class	A1	A1	A1	A1	A1	A1
+BUILDING CHARACTERISTICS
+Living area (SF)	5,338	5,184	5,272	5,266	5,480	5,194
+Year built	1992	1992	1996	1992	1992	1992
+Bedrooms	5	5	6	5	5	5
+2026 MARKET VALUES
+Land value	$161,590	$177,749	$143,000	$143,000	$257,400	$146,900
+Land value ($/SF) — based on living area	$30/sqft	$34/sqft	$27/sqft	$27/sqft	$47/sqft	$28/sqft
+Market improvement value	$1,008,654	$905,751	$1,058,223	$1,158,230	$947,900	$913,525
+Market improvement value ($/SF)	$189/sqft	$175/sqft	$201/sqft	$220/sqft	$173/sqft	$176/sqft
+CAD market value	$1,170,244	$1,083,500	$1,201,223	$1,301,230	$1,205,300	$1,060,425
+CAD market value ($/SF)	$219/sqft	$209/sqft	$228/sqft	$247/sqft	$220/sqft	$204/sqft
+ADJUSTMENTS
+Land value adjustment		−$16,159	+$18,590	+$18,590	−$95,810	+$14,690
+Improvement adjustment — size		−$3,126	−$1,485	−$1,755	+$3,206	−$2,861
+Age/condition adjustment		$0	−$14,397	$0	$0	$0
+Additional (pools, garages, misc.)		$0	$0	$0	$0	$0
+TOTALS
+Total net adjustment ($)		−$19,285	+$2,708	+$16,835	−$92,604	+$11,829
+Total net adjustment ($/SF)		−$4/sqft	+$1/sqft	+$3/sqft	−$17/sqft	+$2/sqft
+DERIVATION
+CAD market value		$1,083,500	$1,201,223	$1,301,230	$1,205,300	$1,060,425
+Total net adjustments		−$19,285	+$2,708	+$16,835	−$92,604	+$11,829
+Adjusted property value		$1,064,215	$1,203,931	$1,318,065	$1,112,696	$1,072,254
+% difference from comp CAD market value		-1.8%	+0.2%	+1.3%	-7.7%	+1.1%
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF property value — based on Subject SF		$199/sqft	$226/sqft	$247/sqft	$208/sqft	$201/sqft
+Median adjusted value of comps	$1,112,696
+Median adjusted value ($/SF — based on Subject SF)	$208/sqft
+4. Analysis
+
+For each of the 5 comparables in Section 3, the CAD's noticed market value is adjusted for size, age/condition, land value, and additional features (pools, garages, misc.) to produce an indicated value for the subject. The median of those 5 indicated values is the requested ask.
+
+Median adjusted property value (5 comparables): $1,112,696
+Implied $/SF on subject footprint: $208/sqft
+Subject's living area: 5,338 sqft
+Subject's current notice: $1,170,244
+Difference: $57,548 (4.92% above the comparable median)
+5. Adjustment Methodology
+
+Each comparable's raw $/sqft is normalized to the subject before the equity median is taken, so the baseline reflects what the comparable would cost on equal footing with the subject — not its raw market price. The adjustments below mirror the engine that produced Section 4's recommendation.
+
+ADJUSTMENT	MAGNITUDE	WHAT IT CORRECTS FOR
+Size (GLA)	±10% per size delta	Economies of scale: bigger homes have lower $/sqft (fixed costs — kitchen, roof, mechanicals — amortize over more square footage). Larger comp adjusts up toward the subject's smaller footprint; smaller comp adjusts down.
+Age	0.3%/yr · year delta capped at ±15 yr (max ±4.5%)	Newer comp adjusts down; older comp adjusts up. Uses effective year built when the CAD publishes it — a renovated 1967 home with an effective year of 2007 compares as a 2007 build, not a 1967 build.
+Land value	max ±10% of $/sqft	Adjusts for CAD-published land valuation differences between the subject and comp. The cap prevents a single high-land-value comp from collapsing the baseline on a low-land subject (or vice versa).
+Additional (pools, garages, misc.)	flat-$ per CAD-published methodology	Pool, garage spaces, fireplace, and similar features are adjusted in dollar terms when the CAD publishes the flag. Values match HCAD/DCAD published methodology. Skipped on individual comps when the relevant flag is missing.
+Single-comp cap	±30% from raw	No single comp can adjust more than 30% from its unadjusted $/sqft. Keeps the brief defensible against a CAD reviewer who would challenge a 50% swing on any one comparable.
+
+Adjustments are applied multiplicatively in the order shown; the single-comp cap is enforced last so the displayed Adj $/sqft never deviates more than 30% from its raw value. Additional (pool/garage/misc.) adjustments fire per-comp based on whether the CAD published reliable flags for that property.
+
+Non-appraisal disclaimer: This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and adjustment methodologies. The requested market value reflects the property owner's good-faith opinion of value based on equity with comparable properties; it does not represent a market-value opinion for any purpose other than this protest. (Placeholder text — pending Mike's final wording.)
+
+Fort Bend Central Appraisal District · Tax Year 2026 · Account 2271-01-002-0100-914 · Page 1 of 1

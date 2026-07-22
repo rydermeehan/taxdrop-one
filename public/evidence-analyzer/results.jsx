@@ -58,6 +58,32 @@ function Hero({ r }) {
   );
 }
 
+/* ---- data-quality banner --------------------------------------------------
+   Shown when analyze() had to drop comparables whose extracted value couldn't
+   be a real indicated value (parcel ID / land-only figure read as dollars).
+   Surfaces the read problem instead of silently recommending a garbage number.
+   (2026-06-29 — Rockwall packet read Prop IDs as comp values.) */
+function DataQualityBanner({ dq }) {
+  if (!dq || (!dq.droppedCount && !dq.sanitySuppressed)) return null;
+  return (
+    <div
+      style={{
+        background: "#FFF4D6",
+        border: "1px solid #E5B644",
+        color: "#8a6500",
+        borderRadius: 8,
+        padding: "12px 16px",
+        margin: "0 0 16px",
+        fontSize: 13.5,
+        lineHeight: 1.5,
+      }}
+    >
+      <b>Heads up — we couldn't read part of this packet cleanly.</b>
+      <div style={{ marginTop: 4 }}>{dq.message}</div>
+    </div>
+  );
+}
+
 /* ---- findings ------------------------------------------------------------- */
 function Findings({ findings }) {
   if (!findings.length) return null;

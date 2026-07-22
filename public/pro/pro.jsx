@@ -430,6 +430,7 @@ function decide(cad, our, address) {
     ladder, medianCards, comps: rawComps,
     taxSaved: reduction * (TAX_RATE / 100),
     cadMismatch: cadMismatchInfo,
+    dataQuality: effectiveCad ? effectiveCad.dataQuality || null : null,
   };
 }
 
@@ -791,6 +792,17 @@ function App() {
 /* ───────────────────────── result view ───────────────────────── */
 function Result({ r, onReset, address, cadRaw, cadMethod }) {
   const th = THEME[r.tier];
+  // Render-time backstop against an all-identical comp set slipping through to
+  // the table (engine guard already empties these; this covers stale cached
+  // analyzer.js / future regressions). Victoria CAD, 2026-06-29.
+  const compsDegenerate =
+    Array.isArray(r.comps) && r.comps.length >= 2 &&
+    new Set(r.comps.map((c) => Math.round(c.val))).size === 1;
+  const showComps = r.comps.length && !compsDegenerate;
+  const readNotice = (r.dataQuality && r.dataQuality.message) ||
+    (compsDegenerate
+      ? "Every comparable read back at the same value — the packet's comparable grid couldn't be read individually, so there's nothing to compare. Re-upload a clearer copy or check the packet before relying on this."
+      : null);
   const stat = {
     selected: { label: "Recommended", bg: th.main, color: "#fff", icon: "✓" },
     backup: { label: "Defensible backup", bg: "#fbf3e2", color: "#a8772a", icon: "★" },
@@ -1039,7 +1051,7 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
           </div>
         ) : null}
 
-        {r.comps.length ? (
+        {showComps ? (
           <div style={{ background: "#fff", border: "1px solid #e4ebe7", borderRadius: 14, overflow: "hidden" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.3fr 1fr .9fr 1.1fr", background: "#18241f", color: "#fff", fontSize: 11.5, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase" }}>
               <div style={{ padding: "11px 16px" }}>Comparable</div>
@@ -1060,6 +1072,13 @@ function Result({ r, onReset, address, cadRaw, cadMethod }) {
                 </div>
               );
             })}
+          </div>
+        ) : null}
+
+        {readNotice ? (
+          <div style={{ background: "#fff4d6", border: "1px solid #e5b644", color: "#7a5800", borderRadius: 12, padding: "13px 16px", fontSize: 13.5, lineHeight: 1.5, marginTop: showComps ? 12 : 0 }}>
+            <b>Heads up — part of this packet couldn't be read cleanly.</b>
+            <div style={{ marginTop: 4 }}>{readNotice}</div>
           </div>
         ) : null}
       </div>

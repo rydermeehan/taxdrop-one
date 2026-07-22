@@ -1,0 +1,38 @@
+<table class="methodology-table">
+          <thead>
+            <tr><th>Adjustment</th><th>Magnitude</th><th>What it corrects for</th></tr>
+          </thead>
+          <tbody>
+            
+      <tr>
+        <td class="adj-name">Size (GLA)</td>
+        <td class="adj-mag">±10% per size delta</td>
+        <td class="adj-desc">Economies of scale: bigger homes have lower $/sqft (fixed costs — kitchen, roof, mechanicals — amortize over more square footage). Larger comp adjusts up toward the subject's smaller footprint; smaller comp adjusts down.</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Age</td>
+        <td class="adj-mag">0.3%/yr · year delta capped at ±15 yr (max ±4.5%)</td>
+        <td class="adj-desc">Newer comp adjusts down; older comp adjusts up. Uses effective year built when the CAD publishes it — a renovated 1967 home with an effective year of 2007 compares as a 2007 build, not a 1967 build.</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Land value</td>
+        <td class="adj-mag">max ±10% of $/sqft</td>
+        <td class="adj-desc">Adjusts for CAD-published land valuation differences between the subject and comp. The cap prevents a single high-land-value comp from collapsing the baseline on a low-land subject (or vice versa).</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Additional (pools, garages, misc.)</td>
+        <td class="adj-mag">flat-$ per CAD-published methodology</td>
+        <td class="adj-desc">Pool, garage spaces, fireplace, and similar features are adjusted in dollar terms when the CAD publishes the flag. Values match HCAD/DCAD published methodology. Skipped on individual comps when the relevant flag is missing.</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Single-comp cap</td>
+        <td class="adj-mag">±30% from raw</td>
+        <td class="adj-desc">No single comp can adjust more than 30% from its unadjusted $/sqft. Keeps the brief defensible against a CAD reviewer who would challenge a 50% swing on any one comparable.</td>
+      </tr>
+    
+          </tbody>
+        </table>

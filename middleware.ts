@@ -22,6 +22,22 @@ export const config = {
   // would otherwise be rewritten under /pro/ and 404 / serve HTML). Must list
   // favicon.svg explicitly — the fallback rewrite turns /favicon.svg into
   // /pro/favicon.svg and serves the SPA shell instead of the icon.
+  //
+  // `forms/` is the same failure mode with worse consequences: the blank
+  // official protest/appeal PDFs live there, and without this exclusion
+  // /forms/tx-50-132.pdf returns 200 text/html (the SPA shell) instead of the
+  // form — so the download button hands a customer a web page when they think
+  // they're getting the document they have to file. Verified in production
+  // 2026-07-21. These are public government forms; they are intentionally NOT
+  // behind the password gate.
+  //
+  // `vendor/` is the same failure mode again: the self-hosted @vercel/blob
+  // upload bundle (blob-client-2.6.1.js) lives there. Without this exclusion
+  // the fallback rewrite turns /vendor/blob-client-2.6.1.js into
+  // /pro/vendor/... which 404s to the SPA shell (text/html), so the module
+  // import fails with "Failed to fetch dynamically imported module" and
+  // evidence uploads break — the exact bug this bundle was added to fix.
+  // (2026-07-21.)
   matcher: ['/((?!_vercel/|favicon.ico|favicon.svg|forms/|vendor/).*)'],
 };
 
@@ -38,7 +54,8 @@ const ACCESS_ON = /^(1|true|yes)$/i.test(process.env.ACCESS_CONTROL_ENABLED || '
 // password-gated so the public can't see the WIP — but a real customer arriving
 // via their /r/<token> link (which sets td_link) still gets in, so a refresh
 // doesn't lock them out. The gate is presence-only (edge can't run node:crypto);
-// the API endpoints do the real cryptographic verification. `/agent` is the door.
+// the API endpoints do the real cryptographic verification. `/sup` is the login
+// door; `/agent` is the authenticated agent tool (unauth → redirected to /sup).
 const INTERNAL_ENTRIES = new Set([
   '/', '/index.html',
   '/v2', '/v2/', '/v2/index.html',
@@ -60,14 +77,34 @@ const AGENT_ONLY = new Set(['/pro', '/pro/', '/pro/index.html', '/review', '/rev
 export default function middleware(req: Request) {
   const host = req.headers.get('host') || '';
 
-  // Agent login must work on EVERY taxdrop host, not just one.taxdrop.com:
-  // gated report paths also live on studio.taxdrop.com, so an agent has to be
-  // able to reach the login there too. `/agent` is the canonical door; `/sup`
-  // stays as a backward-compatible alias. Both serve the same login page.
+  // Agent surface — must work on EVERY taxdrop host (gated report paths also
+  // live on studio.taxdrop.com, so an agent has to reach the login/tool there).
+  //   - /sup            → login page (backward-compatible alias for the door)
+  //   - /agent          → the agent analyzer tool when authenticated; else the
+  //                       login page (returns here via ?next=/agent)
+  //   - /agent/<asset>  → static tool assets (agent.jsx …), served as-is
+  // The sup check here is presence-only (edge can't run node:crypto); the real
+  // enforcement is in cad-proxy.ts on every data call, so a forged td_sup gets
+  // the static shell but no engine data.
   const earlyUrl = new URL(req.url);
-  if (earlyUrl.pathname === '/agent' || earlyUrl.pathname === '/sup') {
+  const earlyPath = earlyUrl.pathname;
+  if (earlyPath === '/sup') {
     earlyUrl.pathname = '/sup.html';
     return rewrite(earlyUrl);
+  }
+  if (earlyPath === '/agent') {
+    if (hasSupCookie(req)) {
+      earlyUrl.pathname = '/agent/index.html';
+      return rewrite(earlyUrl);
+    }
+    // Preserve the caller's ?next (the edge gate passes the originally-requested
+    // gated path, e.g. /review) so login returns them there, not to the tool.
+    const login = new URL('/sup', req.url);
+    login.searchParams.set('next', earlyUrl.searchParams.get('next') || '/agent');
+    return Response.redirect(login.toString(), 307);
+  }
+  if (earlyPath.startsWith('/agent/')) {
+    return next(); // agent tool static assets resolve from the filesystem
   }
 
   if (host !== 'one.taxdrop.com') return next();
@@ -107,8 +144,14 @@ export default function middleware(req: Request) {
   if (ACCESS_ON && INTERNAL_ENTRIES.has(path)) {
     const allowed = AGENT_ONLY.has(path) ? hasSupCookie(req) : (hasSupCookie(req) || hasLinkCookie(req));
     if (!allowed) {
-      const login = new URL('/agent', req.url);
-      login.searchParams.set('next', path);
+      // Send unauthenticated users straight to the login page (/sup), preserving
+      // the requested path AND query so login returns them exactly where they
+      // were headed. Dropping url.search here broke test/deep links like
+      // /?test=1&address=… — after login the customer landed on bare root and
+      // lost the params. (/agent is now the tool, not the login door — routing
+      // through it would drop ?next.) (2026-07-22)
+      const login = new URL('/sup', req.url);
+      login.searchParams.set('next', path + url.search);
       return Response.redirect(login.toString(), 307);
     }
   }

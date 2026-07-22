@@ -112,8 +112,10 @@
       return { full_address: addr + ", FORT WORTH, TX 76179", site_address: addr, parcel_id: pid, total_market: mv, living_sqft: sf, year_built: yr, latitude: lat, longitude: lng, distance_mi: dist };
     };
     // Clear Capital sales-comp shape (matches the engine's normalized output).
-    var sale = function (addr, price, date, sf, yr, dist) {
-      return { address: addr + ", FORT WORTH, TX 76179", site_address: addr, sale_price: price, sale_date: date, living_sqft: sf, year_built: yr, distance_mi: dist, event_type: "Sale" };
+    // lat/lng use Clear Capital's raw key names (not latitude/longitude) so this
+    // fixture also exercises the report map's coord-key fallback. (2026-07-22.)
+    var sale = function (addr, price, date, sf, yr, dist, lat, lng) {
+      return { address: addr + ", FORT WORTH, TX 76179", site_address: addr, sale_price: price, sale_date: date, living_sqft: sf, year_built: yr, distance_mi: dist, event_type: "Sale", lat: lat, lng: lng };
     };
     return {
       result: { notice: notice, target: target, reduction: notice - target, taxSaved: Math.round((notice - target) * 0.022), method: "sales", winner: "our" },
@@ -134,11 +136,11 @@
         // indicated value edges just below the equity median, demonstrating the
         // sales approach WINNING and becoming the opinion of value.
         sales_comps: [
-          sale("6017 LAKESIDE DR",      1400000, "2025-03-24", 4507, 2005, 0.11),
-          sale("5904 HUDSON SAIL CIR",  1470000, "2025-11-05", 4648, 2022, 0.27),
-          sale("12479 PALMER DR",       1450000, "2024-12-10", 4487, 2024, 0.43),
-          sale("5901 THURMOND SAIL CT", 1465000, "2025-02-18", 4453, 2021, 0.25),
-          sale("6024 THURMOND SAIL CT", 1610000, "2025-06-27", 3890, 2016, 0.09),
+          sale("6017 LAKESIDE DR",      1400000, "2025-03-24", 4507, 2005, 0.11, 32.8890, -97.4610),
+          sale("5904 HUDSON SAIL CIR",  1470000, "2025-11-05", 4648, 2022, 0.27, 32.8923, -97.4653),
+          sale("12479 PALMER DR",       1450000, "2024-12-10", 4487, 2024, 0.43, 32.8945, -97.4670),
+          sale("5901 THURMOND SAIL CT", 1465000, "2025-02-18", 4453, 2021, 0.25, 32.8918, -97.4595),
+          sale("6024 THURMOND SAIL CT", 1610000, "2025-06-27", 3890, 2016, 0.09, 32.8908, -97.4620),
         ],
       },
       cad: {}, cadRaw: { delivered: true }, cadMethod: "self-test", lookupAddr: TEST_ADDRESS + ", FORT WORTH, TX 76179",

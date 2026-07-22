@@ -1,0 +1,51 @@
+{
+  "subjAlign": null,
+  "comp1Align": null,
+  "subjParentAlign": null,
+  "labelData": [
+    {
+      "label": "Improvement value",
+      "found": true,
+      "whiteSpace": "nowrap",
+      "width": 255.046875,
+      "height": 28.59375,
+      "lines": 2,
+      "parentWidth": 1033
+    },
+    {
+      "label": "Improvement $/SF",
+      "found": true,
+      "whiteSpace": "nowrap",
+      "width": 255.046875,
+      "height": 28.59375,
+      "lines": 2,
+      "parentWidth": 1033
+    },
+    {
+      "label": "CAD market $/SF",
+      "found": true,
+      "whiteSpace": "nowrap",
+      "width": 255.046875,
+      "height": 28.59375,
+      "lines": 2,
+      "parentWidth": 1033
+    },
+    {
+      "label": "Additional (pools, garages, misc.)",
+      "found": true,
+      "whiteSpace": "nowrap",
+      "width": 255.046875,
+      "height": 28.59375,
+      "lines": 2,
+      "parentWidth": 1033
+    }
+  ],
+  "hasMedianValueRow": true,
+  "hasMedianSFRow": false,
+  "yoyInSameCell": false,
+  "yoyFontSize": "12px",
+  "yoyColor": "rgb(92, 102, 111)",
+  "priorFound": false,
+  "yoyFound": true,
+  "priorParentHTML": null
+}

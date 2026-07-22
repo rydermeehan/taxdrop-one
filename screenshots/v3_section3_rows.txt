@@ -1,0 +1,40 @@
+Street view
+CAD account
+Property address
+Location from subject (miles)
+Subdivision
+State class
+BUILDING CHARACTERISTICS
+Living area (SF)
+Year built
+Bedrooms
+2026 MARKET VALUES
+Land value
+Land value ($/SF) — based on living area
+Market improvement value
+Market improvement value ($/SF)
+CAD market value
+CAD market value ($/SF)
+ADJUSTMENTS
+Land value adjustment
+Improvement adjustment — size
+Age/condition adjustment
+Additional (pools, garages, misc.)
+TOTALS
+Total net adjustment ($)
+Total net adjustment ($/SF)
+DERIVATION
+CAD market value
+Total net adjustments
+Adjusted property value
+% difference from comp CAD market value
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF property value — based on Subject SF
+Median adjusted value of comps
+Median adjusted value ($/SF — based on Subject SF)
+ADJUSTMENT
+Size (GLA)
+Age
+Land value
+Additional (pools, garages, misc.)
+Single-comp cap

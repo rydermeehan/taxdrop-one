@@ -66,9 +66,68 @@
     const board = state === "TX" ? "Appraisal Review Board" : state === "CA" ? "Assessment Appeals Board" : "Appraisal Review Board / Board of Review";
 
     // normalize comps
-    const comps = (data.comps || [])
+    const _normComps = (data.comps || [])
       .map((c, i) => normalizeComp(c, i, subject, lien))
       .filter((c) => c.value != null);
+
+    // ---- guard against mis-extracted comp values ----------------------------
+    // The reader (AI or heuristic) occasionally maps the WRONG column into a
+    // comp's `value` — most often the comparable's CAD Prop ID / parcel number
+    // (Rockwall packet, 2026-06-29: PID 10746 read as "$10,746" on a $212,044
+    // home), or a land-only figure. These land an order of magnitude below the
+    // subject and poison the median + second-lowest logic, producing absurd
+    // asks like "fight it down to $10,746." A real sales/equity indicated value
+    // is, by construction, in the subject's ballpark — reject any comp whose
+    // value can't plausibly be one. The 0.40 floor clears parcel-IDs (~5% of
+    // subject) and land-only reads while never clipping a genuinely low comp
+    // (real equity lows run ~75%+ of the subject's value).
+    const COMP_VALUE_FLOOR_RATIO = 0.40;
+    const droppedComps = [];
+    let comps =
+      assessed != null && assessed > 0
+        ? _normComps.filter((c) => {
+            if (c.value < assessed * COMP_VALUE_FLOOR_RATIO) {
+              droppedComps.push(c);
+              return false;
+            }
+            return true;
+          })
+        : _normComps;
+    let dataQuality = droppedComps.length
+      ? {
+          droppedCount: droppedComps.length,
+          keptCount: comps.length,
+          message:
+            (droppedComps.length === 1
+              ? "1 comparable was"
+              : droppedComps.length + " comparables were") +
+            " dropped: the value read from the packet was far below your subject — usually a parcel ID or land-only figure picked up as a dollar amount. Check the figures against your packet before relying on this analysis.",
+        }
+      : null;
+
+    // ---- guard against a degenerate (all-identical) comp set ----------------
+    // A read where EVERY surviving comparable carries the SAME value gives the
+    // panel nothing to compare — the rows look identical and "vs notice" is +$0
+    // across the board. This happens when a reader echoes the subject's own
+    // noticed value onto each comp row, or on hard-to-OCR commercial / sales
+    // grids (Victoria CAD, 2026-06-29). Treat an all-identical comp set as an
+    // unreliable read instead of presenting copies of one number as evidence.
+    if (comps.length >= 2) {
+      const distinctVals = new Set(comps.map((c) => Math.round(c.value)));
+      if (distinctVals.size === 1) {
+        const note =
+          "Every comparable came back at the same value (" + money(comps[0].value) +
+          ") — the packet's comparable values couldn't be read individually, so there is nothing to compare. Re-check the comparable grid in the packet before relying on this analysis.";
+        droppedComps.push.apply(droppedComps, comps);
+        comps = [];
+        dataQuality = {
+          droppedCount: droppedComps.length,
+          keptCount: 0,
+          sanitySuppressed: true,
+          message: (dataQuality ? dataQuality.message + " " : "") + note,
+        };
+      }
+    }
 
     const sortedAsc = [...comps].sort((a, b) => a.value - b.value);
     const lowest = sortedAsc[0] || null;
@@ -416,12 +475,48 @@
         { removed: trimmedRemoved });
     }
     strategies.sort((a, b) => a.value - b.value);
-    const bestStrategy = strategies.length ? strategies[0] : null;
+    let bestStrategy = strategies.length ? strategies[0] : null;
 
     // The requested value = the best (lowest) strategy. We never request below it.
     let targetVal = bestStrategy ? bestStrategy.value : null;
     if (targetVal == null && floorVal != null) targetVal = floorVal;
     if (floorVal == null && targetVal != null) floorVal = targetVal;
+
+    // ---- second backstop: recommendation-level $/sqft sanity ----------------
+    // The per-comp value floor above catches parcel-IDs / land-only reads one
+    // comp at a time. This is defense-in-depth at the RECOMMENDATION level: if
+    // the value we're about to request implies a $/sqft wildly out of line with
+    // the subject's own $/sqft, the underlying read isn't trustworthy — refuse
+    // to emit a number rather than hand an agent a garbage ask. A real
+    // reduction lands somewhat BELOW the subject's psf, never at a small
+    // fraction of it (a 75%+ cut has no comparable support) nor multiples above.
+    // Falls back to a value-vs-assessed ratio when subject sqft is unknown.
+    if (targetVal != null && assessed != null && assessed > 0) {
+      const RECO_PSF_LO = 0.25;
+      const RECO_PSF_HI = 4.0;
+      let outOfBand = false;
+      let cmp = "";
+      if (subjectPsf != null && subjectSqft) {
+        const ratio = targetVal / subjectSqft / subjectPsf;
+        outOfBand = ratio < RECO_PSF_LO || ratio > RECO_PSF_HI;
+        cmp = "$" + Math.round(targetVal / subjectSqft) + "/sqft vs the subject's $" + Math.round(subjectPsf) + "/sqft";
+      } else {
+        outOfBand = targetVal / assessed < RECO_PSF_LO;
+        cmp = money(targetVal) + " vs the subject's " + money(assessed);
+      }
+      if (outOfBand) {
+        const msg =
+          "The strongest figure we derived (" + cmp + ") is far out of line with the subject — a sign the packet was mis-read. No recommendation is shown; re-check the comparables against the packet before relying on this analysis.";
+        targetVal = null;
+        floorVal = null;
+        bestStrategy = null;
+        strategies.length = 0;
+        dataQuality = dataQuality
+          ? Object.assign({}, dataQuality, { sanitySuppressed: true, message: dataQuality.message + " " + msg })
+          : { droppedCount: 0, keptCount: comps.length, sanitySuppressed: true, message: msg };
+      }
+    }
+
     const supportedValue = targetVal;
 
     const hasCase = targetVal != null && assessed != null && targetVal < assessed;
@@ -539,6 +634,7 @@
     return {
       ok: true,
       hasCase,
+      dataQuality,
       recordWin,
       recordIssues,
       recordIndicated,

@@ -5,3 +5,9 @@ screenshots/
 *.csv
 *.zip
 *.rar
+
+# Vitest unit tests + config are dev-only. Without these globs Vercel would try
+# to build each api/*.test.ts as a serverless function (they import vitest and
+# have no handler export → broken/failed functions).
+api/*.test.ts
+vitest.config.ts

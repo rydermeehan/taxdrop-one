@@ -1,0 +1,2254 @@
+{
+  "tables": [
+    {
+      "idx": 0,
+      "rows": [
+        [
+          {
+            "tag": "TH",
+            "text": "",
+            "textAlign": "left",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(26, 26, 26)",
+            "fontWeight": "700",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(26, 26, 26)",
+            "bb": "1px solid rgb(26, 26, 26)"
+          },
+          {
+            "tag": "TH",
+            "text": "SUBJECT\n5749 LA VISTA CT",
+            "textAlign": "center",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(12, 89, 62)",
+            "fontWeight": "700",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(12, 89, 62)"
+          },
+          {
+            "tag": "TH",
+            "text": "COMP #1\n5805 LA VISTA CT",
+            "textAlign": "center",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(26, 26, 26)",
+            "fontWeight": "700",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(26, 26, 26)",
+            "bb": "1px solid rgb(26, 26, 26)"
+          },
+          {
+            "tag": "TH",
+            "text": "COMP #2\n5817 LA VISTA CT",
+            "textAlign": "center",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(26, 26, 26)",
+            "fontWeight": "700",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(26, 26, 26)",
+            "bb": "1px solid rgb(26, 26, 26)"
+          },
+          {
+            "tag": "TH",
+            "text": "COMP #3\n5813 LA VISTA CT",
+            "textAlign": "center",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(26, 26, 26)",
+            "fontWeight": "700",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(26, 26, 26)",
+            "bb": "1px solid rgb(26, 26, 26)"
+          },
+          {
+            "tag": "TH",
+            "text": "COMP #4\n5804 LA VISTA CT",
+            "textAlign": "center",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(11, 143, 82)",
+            "fontWeight": "700",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(11, 143, 82)",
+            "bb": "1px solid rgb(11, 143, 82)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Street view",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "center",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "center",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(255, 255, 255)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "center",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(255, 255, 255)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "center",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(255, 255, 255)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "center",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "PID #",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "00000184960000000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "00000184972000000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "00000185026000000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "00000185014000000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "00000184984000000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Property address",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "5749 La Vista Ct",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "5805 La Vista Ct",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "5817 La Vista Ct",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "5813 La Vista Ct",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "5804 La Vista Ct",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Subdivision",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "Edison Court Addn",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "Edison Court Addn",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "Edison Court Addn",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "Edison Court Addn",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "Edison Court Addn",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "State class",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "13",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "13",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "13",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "13",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "13",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Location from subject (miles)",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "\u2014",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "0.02 mi",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "0.05 mi",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "0.04 mi",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "0.03 mi",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "BUILDING CHARACTERISTICS",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(229, 231, 235)",
+            "fontWeight": "700",
+            "fontSize": "10px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Living area (SF)",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "2,504",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "2,504",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "2,504",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "2,496",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "2,400",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Year built",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Effective year built",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "1930",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Bedrooms",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "4",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "4",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "4",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "4",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "4",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "2026 MARKET VALUES",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(229, 231, 235)",
+            "fontWeight": "700",
+            "fontSize": "10px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Land value",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$255,000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$255,000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$255,000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$260,100",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$218,400",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Land value ($/SF \u2014 living area)",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$101.84",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$101.84",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$101.84",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$104.21",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$91.00",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Market improvement value",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$223,230",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$264,230",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$206,010",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$267,610",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$211,750",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Market improvement value ($/SF)",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$89.15",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$105.52",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$82.27",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$107.22",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$88.23",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "CAD market value",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$478,230",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$519,230",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$461,010",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$527,710",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$430,150",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "CAD market value ($/SF)",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$190.99",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$207.36",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$184.11",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$211.42",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$179.23",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "ADJUSTMENTS",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(229, 231, 235)",
+            "fontWeight": "700",
+            "fontSize": "10px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Land value adj.",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "\u2212$5,100",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$36,600",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Improvement adj. \u2014 size",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "\u2212$169",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "\u2212$1,787",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Age/condition adj.",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Additional (pools, garages, misc.)",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$10,000",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "TOTALS",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(229, 231, 235)",
+            "fontWeight": "700",
+            "fontSize": "10px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Total net adjustment",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$4,731",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$34,813",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Total net adjustment ($/SF)",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0.00",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0.00",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$1.90",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$14.51",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "DERIVATION",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(229, 231, 235)",
+            "fontWeight": "700",
+            "fontSize": "10px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "CAD market value",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$519,230",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$461,010",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$527,710",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$430,150",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Total net adjustments",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$0",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$4,731",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+$34,813",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Adjusted property value",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$519,230",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$461,010",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$532,441",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$464,963",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "% difference from comp CAD market value",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "0.0%",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "0.0%",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+0.9%",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "+8.1%",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "1px solid rgb(201, 208, 214)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "INDICATOR (BASED ON SUBJECT SF)",
+            "textAlign": "right",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(12, 89, 62)",
+            "fontWeight": "700",
+            "fontSize": "10px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Adjusted $/SF \u2014 based on Subject SF",
+            "textAlign": "start",
+            "color": "rgb(92, 102, 111)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(240, 250, 244)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$207.36",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$184.11",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$212.64",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          },
+          {
+            "tag": "TD",
+            "text": "$185.69",
+            "textAlign": "right",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgb(232, 248, 238)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(201, 208, 214)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Median adjusted value of comps",
+            "textAlign": "start",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgb(223, 255, 234)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(11, 143, 82)"
+          },
+          {
+            "tag": "TD",
+            "text": "$492,097",
+            "textAlign": "right",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgb(223, 255, 234)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "1px solid rgb(11, 143, 82)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Median adjusted value ($/SF \u2014 based on Subject SF)",
+            "textAlign": "start",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgb(223, 255, 234)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "2px solid rgb(12, 89, 62)"
+          },
+          {
+            "tag": "TD",
+            "text": "$197/sqft",
+            "textAlign": "right",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgb(223, 255, 234)",
+            "fontWeight": "700",
+            "fontSize": "13px",
+            "bt": "2px solid rgb(12, 89, 62)",
+            "bb": "2px solid rgb(12, 89, 62)"
+          }
+        ]
+      ]
+    },
+    {
+      "idx": 1,
+      "rows": [
+        [
+          {
+            "tag": "TH",
+            "text": "ADJUSTMENT",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TH",
+            "text": "MAGNITUDE",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TH",
+            "text": "WHAT IT CORRECTS FOR",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgb(244, 246, 248)",
+            "fontWeight": "600",
+            "fontSize": "11px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Size (GLA)",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "600",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "\u00b110% per size delta",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "Economies of scale: bigger homes have lower $/sqft (fixed costs \u2014 kitchen, roof, mechanicals \u2014 amortize over more square footage). Larger comp adjusts up toward",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Age",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "600",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "0.3%/yr \u00b7 year delta capped at \u00b115 yr (max \u00b14.5%)",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "Newer comp adjusts down; older comp adjusts up. Uses effective year built when the CAD publishes it \u2014 a renovated 1967 home with an effective year of 2007 compa",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Land value",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "600",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "max \u00b110% of $/sqft",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "Adjusts for CAD-published land valuation differences between the subject and comp. The cap prevents a single high-land-value comp from collapsing the baseline o",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Additional (pools, garages, misc.)",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "600",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "flat-$ per CAD-published methodology",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "Pool, garage spaces, fireplace, and similar features are adjusted in dollar terms when the CAD publishes the flag. Values match HCAD/DCAD published methodology.",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          }
+        ],
+        [
+          {
+            "tag": "TD",
+            "text": "Single-comp cap",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "600",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "\u00b130% from raw",
+            "textAlign": "left",
+            "color": "rgb(12, 89, 62)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(12, 89, 62)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          },
+          {
+            "tag": "TD",
+            "text": "No single comp can adjust more than 30% from its unadjusted $/sqft. Keeps the brief defensible against a CAD reviewer who would challenge a 50% swing on any one",
+            "textAlign": "left",
+            "color": "rgb(26, 26, 26)",
+            "bg": "rgba(0, 0, 0, 0)",
+            "fontWeight": "400",
+            "fontSize": "12.5px",
+            "bt": "0px none rgb(26, 26, 26)",
+            "bb": "1px solid rgb(229, 231, 235)"
+          }
+        ]
+      ]
+    }
+  ]
+}
