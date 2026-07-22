@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equal & Uniform Analysis — TaxDrop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f0f0; color: #1A1A1A; padding: 24px; }
+    .page { background: #fff; max-width: 1100px; margin: 0 auto 24px auto; padding: 32px 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    /* Print toolbar — hidden when printing */
+    .toolbar { background: #1A1A1A; color: #fff; max-width: 1100px; margin: 0 auto 16px auto; padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 12px; }
+    .toolbar .title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; flex: 1; color: #C4FF64; }
+    .btn { background: #0B8F52; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; }
+    .btn:hover { background: #0C593E; }
+    .btn-outline { background: transparent; border: 1px solid #fff; }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: start; padding-bottom: 12px; border-bottom: 2px solid #1A1A1A; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark { width: 32px; height: 32px; border-radius: 50%; background: #0C593E; color: #C4FF64; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
+    .brand-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
+    .header-meta { text-align: right; font-size: 11px; color: #5C666F; line-height: 1.5; }
+    .header-meta strong { color: #1A1A1A; }
+    .header-meta a { color: #0B8F52; text-decoration: none; }
+
+    /* Title bar */
+    .title-bar { background: #1A1A1A; color: #fff; padding: 8px 16px; margin: 16px -36px 0 -36px; text-align: center; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
+
+    /* Subject summary */
+    .subject-summary { display: flex; justify-content: space-between; align-items: end; margin: 16px 0 12px 0; gap: 16px; }
+    .subject-summary h1 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #1A1A1A; }
+    .subject-summary .owner { font-size: 11px; color: #5C666F; text-align: right; }
+    .indicated-banner { background: #DFFFEA; border-left: 4px solid #0B8F52; padding: 10px 16px; margin: 8px 0 16px 0; display: flex; justify-content: space-between; align-items: center; }
+    .indicated-banner .label { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; color: #0C593E; }
+    .indicated-banner .stats { font-size: 11px; color: #5C666F; }
+    .indicated-banner .stats strong { color: #0C593E; }
+
+    /* Table */
+    .comp-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+    .comp-table thead th { background: #f5f5f5; padding: 8px 6px; text-align: center; font-weight: 700; font-size: 11px; border: 1px solid #ddd; }
+    .comp-table thead th.col-subject { background: #FFF8E1; color: #8a6d00; }
+    .comp-table thead th.col-comp { background: #f5f5f5; color: #1A1A1A; }
+    .comp-table thead th.col-median { background: #1A1A1A; color: #fff; }
+    .comp-table tbody td { padding: 5px 6px; border: 1px solid #eee; vertical-align: middle; font-variant-numeric: tabular-nums; }
+    .comp-table .label-cell { background: #fafafa; font-weight: 500; color: #5C666F; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; padding-right: 10px; }
+    .comp-table .num { text-align: right; }
+    .comp-table tr.indicated-row td { background: #1A1A1A; color: #fff; font-weight: 700; font-size: 13px; }
+    .comp-table tr.indicated-row td.label-cell { background: #1A1A1A; color: #fff; }
+    .photo-cell { padding: 0 !important; height: 100px; background: #f8f8f8; }
+    .photo-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; color: #B6BCC2; font-size: 10px; flex-direction: column; gap: 4px; }
+    .small-cell { font-size: 10px; line-height: 1.3; }
+
+    /* Footer */
+    .footer { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 20px; border-top: 1px solid #ddd; font-size: 10px; color: #5C666F; }
+
+    /* Methodology block */
+    .methodology { margin-top: 24px; padding: 16px; background: #fafafa; border-radius: 6px; font-size: 11px; line-height: 1.6; color: #5C666F; }
+    .methodology strong { color: #1A1A1A; }
+    .methodology h3 { font-family: 'Space Grotesk', sans-serif; color: #0C593E; margin: 0 0 8px 0; font-size: 13px; }
+
+    /* Print rules */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .toolbar { display: none; }
+      .page { max-width: none; margin: 0; padding: 12mm 14mm; box-shadow: none; }
+      .title-bar { margin-left: -14mm; margin-right: -14mm; }
+      @page { size: letter landscape; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="title">TAXDROP — Equal &amp; Uniform Analysis</span>
+    <button class="btn btn-outline" onclick="window.close()">Close</button>
+    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <div class="page" id="page">
+    <div class="header">
+      <div class="brand">
+        <div class="brand-mark">T</div>
+        <div>
+          <div class="brand-name">TAXDROP</div>
+          <div style="font-size:10px;color:#5C666F">Property Tax Reduction Specialists</div>
+        </div>
+      </div>
+      <div style="text-align:center;flex:1">
+        <div style="font-size:10px;color:#5C666F">Prepared by:</div>
+        <div style="font-weight:600;font-size:13px">TaxDrop, Inc.</div>
+        <div style="font-size:10px;color:#5C666F" id="prep-date"></div>
+      </div>
+      <div class="header-meta">
+        <strong>app.taxdrop.com</strong><br>
+        <a href="mailto:hello@taxdrop.com">hello@taxdrop.com</a><br>
+        TX &amp; CA · 25% contingency · $0 if savings &lt; $500
+      </div>
+    </div>
+
+    <div class="title-bar">EQUAL &amp; UNIFORM ANALYSIS</div>
+
+    <div class="subject-summary">
+      <div>
+        <div style="font-size:10px;color:#5C666F;text-transform:uppercase;letter-spacing:0.4px">Subject Property</div>
+        <h1 id="subject-addr">—</h1>
+        <div style="font-size:11px;color:#5C666F" id="subject-loc">—</div>
+      </div>
+      <div class="owner">
+        <strong>Account #</strong> <span id="subject-account">—</span><br>
+        <strong>Owner</strong> <span id="subject-owner">—</span><br>
+        <strong>Class</strong> <span id="subject-class">—</span>
+      </div>
+    </div>
+
+    <div class="indicated-banner">
+      <div class="label">Indicated Value: <span id="indicated-value">—</span></div>
+      <div class="stats">
+        <span>Comps: <strong id="stat-comps">0</strong></span> &nbsp;·&nbsp;
+        <span>Min Adj: <strong id="stat-min">—</strong></span> &nbsp;·&nbsp;
+        <span>Max Adj: <strong id="stat-max">—</strong></span> &nbsp;·&nbsp;
+        <span>Median Adj: <strong id="stat-median">—</strong></span> &nbsp;·&nbsp;
+        <span>Subject 2026 Appraised: <strong id="stat-current">—</strong></span> &nbsp;·&nbsp;
+        <span>Reduction: <strong id="stat-reduction">—</strong></span>
+      </div>
+    </div>
+
+    <table class="comp-table" id="comp-table">
+      <thead id="comp-thead"></thead>
+      <tbody id="comp-tbody"></tbody>
+    </table>
+
+    <div class="methodology">
+      <h3>Methodology</h3>
+      <p>This Equal &amp; Uniform analysis (Texas Tax Code §41.43(b)(3)) compares the subject property to a representative sample of similar properties within the same Central Appraisal District. Comparables are selected on (1) same property class, (2) similar living area (60–150% of subject sqft), (3) similar year built (within ±15 years where available), and (4) proximate geography (same ZIP code or subdivision preferred, county-wide fallback). The <strong>indicated value</strong> equals the median per-square-foot value of the selected comparables × the subject's living area. Per §41.43(b)(3), if the appraisal district's value exceeds the median appraised value of a reasonable number of comparable properties appropriately adjusted, the protest must be granted.</p>
+      <p style="margin-top:8px">All comparable property data was extracted directly from the Central Appraisal District's official 2026 record. Source CAD records are publicly available and verifiable.</p>
+    </div>
+
+    <div class="footer">
+      <div>Account: <span id="footer-account">—</span> · <span id="footer-county">—</span> County</div>
+      <div id="footer-date">—</div>
+      <div>TaxDrop · Confidential</div>
+    </div>
+  </div>
+
+  <script>
+    // Engine calls route through same-origin /api/cad-proxy (key injected server-side).
+
+    function fmt$(n) { return (n === null || n === undefined || n === 0 || isNaN(n)) ? '—' : '$' + Math.round(Number(n)).toLocaleString(); }
+    function fmtN(n) { return (n === null || n === undefined || n === 0) ? '—' : Number(n).toLocaleString(); }
+    function fmt$psf(n) { return (n === null || n === undefined || n === 0 || isNaN(n)) ? '—' : '$' + Number(n).toFixed(2); }
+    function fmtMi(n) { return (n === null || n === undefined) ? '—' : Number(n).toFixed(2) + ' mi'; }
+
+    function median(arr) {
+      const sorted = arr.slice().sort((a,b) => a - b);
+      const m = sorted.length;
+      if (m === 0) return 0;
+      return m % 2 === 0 ? (sorted[m/2 - 1] + sorted[m/2]) / 2 : sorted[Math.floor(m/2)];
+    }
+
+    async function api(path) {
+      const r = await fetch('/api/cad-proxy?path=' + encodeURIComponent(path), { headers: {} });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${r.status}`);
+      }
+      return r.json();
+    }
+
+    function escape(s) { return String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[ch]); }
+
+    async function load() {
+      const u = new URL(location.href);
+      const county = u.searchParams.get('county');
+      const parcel = u.searchParams.get('parcel');
+      const compsParam = u.searchParams.get('comps') || '';
+      const selectedIds = compsParam.split(',').filter(Boolean);
+
+      if (!county || !parcel) {
+        document.getElementById('page').innerHTML = '<div style="padding:60px;text-align:center;color:#5C666F">Missing <code>county</code> and <code>parcel</code> parameters.</div>';
+        return;
+      }
+
+      const data = await api(`/api/workspace?county=${encodeURIComponent(county)}&parcel_id=${encodeURIComponent(parcel)}&max_candidates=200`);
+      const subj = data.subject;
+      const allComps = data.candidates || [];
+      // Use URL-provided comps if set, else fall back to default picks
+      const compIds = selectedIds.length > 0 ? selectedIds : (data.default_picks || []);
+      const comps = compIds.map(id => allComps.find(c => c.parcel_id === id)).filter(Boolean);
+
+      if (!subj) {
+        document.getElementById('page').innerHTML = '<div style="padding:60px;text-align:center;color:#aa1111">Subject not found.</div>';
+        return;
+      }
+      if (comps.length === 0) {
+        document.getElementById('page').innerHTML = '<div style="padding:60px;text-align:center;color:#aa1111">No comparable properties selected.</div>';
+        return;
+      }
+
+      // Subject header
+      document.getElementById('subject-addr').textContent = subj.site_address || '—';
+      document.getElementById('subject-loc').textContent = `${subj.site_city || ''} ${subj.site_zip || ''} · ${subj.county.toUpperCase()} County, TX · 2026 Tax Year`;
+      document.getElementById('subject-account').textContent = subj.parcel_id;
+      document.getElementById('subject-owner').textContent = subj.owner_name || '—';
+      document.getElementById('subject-class').textContent = subj.state_class || '—';
+
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      document.getElementById('prep-date').textContent = dateStr;
+      document.getElementById('footer-date').textContent = dateStr;
+      document.getElementById('footer-account').textContent = subj.parcel_id;
+      document.getElementById('footer-county').textContent = (subj.county || '').toUpperCase();
+
+      // Compute indicated values: per-comp PSF * subject sqft
+      const subjSqft = subj.living_sqft || 1;
+      const compsWithIndicated = comps.map(c => {
+        const psf = c.total_appraised && c.living_sqft ? c.total_appraised / c.living_sqft : 0;
+        return { ...c, _psf: psf, _indicated: psf * subjSqft };
+      });
+      const indicatedVals = compsWithIndicated.map(c => c._indicated).filter(v => v > 0);
+      const medianIndicated = median(indicatedVals);
+      const minIndicated = Math.min(...indicatedVals);
+      const maxIndicated = Math.max(...indicatedVals);
+
+      document.getElementById('indicated-value').textContent = fmt$(medianIndicated);
+      document.getElementById('stat-comps').textContent = comps.length;
+      document.getElementById('stat-min').textContent = fmt$(minIndicated);
+      document.getElementById('stat-max').textContent = fmt$(maxIndicated);
+      document.getElementById('stat-median').textContent = fmt$(medianIndicated);
+      document.getElementById('stat-current').textContent = fmt$(subj.total_appraised);
+      const reduction = (subj.total_appraised || 0) - medianIndicated;
+      document.getElementById('stat-reduction').textContent = reduction > 0 ? fmt$(reduction) : 'no case';
+
+      // Build the table — columns: SUBJECT | COMP 1 | COMP 2 | ... | MEDIAN COMP
+      // Find the comp closest to the median for the "median comp" column
+      const medianComp = compsWithIndicated.slice().sort((a, b) =>
+        Math.abs(a._indicated - medianIndicated) - Math.abs(b._indicated - medianIndicated)
+      )[0];
+
+      const cols = [
+        { type: 'subject', data: { ...subj, _psf: subj.total_appraised / subjSqft } },
+        ...compsWithIndicated.map(c => ({ type: 'comp', data: c })),
+        { type: 'median', data: medianComp }
+      ];
+
+      // Header row with column titles
+      const colWidth = (100 / cols.length).toFixed(2);
+      const colsForRow = cols;
+      const thead = document.getElementById('comp-thead');
+      thead.innerHTML = `
+        <tr>
+          <th class="label-cell" style="width:120px"></th>
+          ${colsForRow.map((c, i) => {
+            const cls = c.type === 'subject' ? 'col-subject' : c.type === 'median' ? 'col-median' : 'col-comp';
+            const label = c.type === 'subject' ? 'SUBJECT' : c.type === 'median' ? 'MEDIAN COMP' : `COMP ${i}`;
+            return `<th class="${cls}" style="width:${colWidth}%">${label}</th>`;
+          }).join('')}
+        </tr>
+        <tr>
+          <td class="label-cell" style="background:#fafafa">Subdivision</td>
+          ${colsForRow.map(c => `<td class="small-cell" style="text-align:center;color:#5C666F">${escape(c.data.subdivision || '—')}</td>`).join('')}
+        </tr>
+      `;
+
+      // Data rows
+      const rowDef = (label, valueFn, cls = '') => `
+        <tr>
+          <td class="label-cell">${label}</td>
+          ${colsForRow.map(c => `<td class="${cls}">${valueFn(c)}</td>`).join('')}
+        </tr>`;
+      const tbody = document.getElementById('comp-tbody');
+      const num = 'num';
+      tbody.innerHTML = [
+        rowDef('Prop ID', c => escape(c.data.parcel_id)),
+        rowDef('Situs Address', c => escape(c.data.site_address || '—'), 'small-cell'),
+        rowDef('Market Value', c => fmt$(c.data.total_market || c.data.total_appraised), num),
+        rowDef('Distance (mi)', c => c.type === 'subject' ? '—' : fmtMi(c.data.distance_mi), num),
+        rowDef('Property Class', c => escape(c.data.state_class || '—')),
+        rowDef('Year Built', c => c.data.year_built || '—', num),
+        rowDef('Improvement Value', c => fmt$(c.data.improvement_value), num),
+        rowDef('Living Area (sqft)', c => fmtN(c.data.living_sqft), num),
+        rowDef('Total $/sqft', c => fmt$psf(c.data._psf), num),
+        rowDef('Land Value', c => fmt$(c.data.land_value), num),
+        rowDef('Total Appraised', c => fmt$(c.data.total_appraised), num),
+        // Indicated value row (last, highlighted)
+        `<tr class="indicated-row">
+          <td class="label-cell">Indicated Value</td>
+          ${colsForRow.map(c => `<td class="${num}">${
+            c.type === 'subject' ? fmt$(c.data.total_appraised) : fmt$(c.data._indicated)
+          }</td>`).join('')}
+        </tr>`,
+      ].join('');
+    }
+
+    load().catch(err => {
+      document.getElementById('page').innerHTML = `<div style="padding:60px;text-align:center;color:#aa1111">Error: ${escape(err.message)}</div>`;
+    });
+  </script>
+</body>
+</html>

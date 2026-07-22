@@ -1,0 +1,117 @@
+Generate Report
+Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics). Try example: 20022 Atasca Villas Dr
+Property Appraisal Report
+Tax Year 2026 · CAD-Style v3 (Draft for Mike's Review)
+Export PDF
+Export Docx
+Presentation Notes
+1. Subject Property
+Street address
+5749 La Vista Ct, Dallas, TX 75206
+CAD account number
+00000184960000000
+CAD 2026 noticed land value
+$255,000
+CAD 2026 noticed improvement value
+$223,230
+CAD 2026 noticed market value
+$478,230 ($191/sqft)
+Prior-year noticed market value
+$390,300
+Year-over-year change
++$87,930 (22.53%)
+2. Owner's Requested 2026 Market Value
+2026 CAD NOTICE VALUE
+$478,230
+$191/sqft
+REQUESTED MARKET VALUE
+$461,010
+$184/sqft · 96.4% of CAD notice
+3. Comparable Property Analysis
+
+5 comparable properties from the same subdivision as the subject, sorted by living-area proximity. All share property classification 13 and school district code DALLAS ISD.
+
+SSubject (5749 La Vista Ct)
+15821 La Vista Ct
+25805 La Vista Ct
+35817 La Vista Ct
+45813 La Vista Ct
+55804 La Vista Ct
+Pin numbers correspond to comparable column numbers in the table below. Map data © Google.
+ 	SUBJECT
+5749 LA VISTA CT	COMP #1
+5821 LA VISTA CT	COMP #2
+5805 LA VISTA CT	COMP #3
+5817 LA VISTA CT	COMP #4
+5813 LA VISTA CT	COMP #5
+5804 LA VISTA CT
+Street view	
+	
+	
+	
+	
+	
+
+CAD account	00000184960000000	00000185032000000	00000184972000000	00000185026000000	00000185014000000	00000184984000000
+Property address	5749 La Vista Ct	5821 La Vista Ct	5805 La Vista Ct	5817 La Vista Ct	5813 La Vista Ct	5804 La Vista Ct
+Subdivision	Edison Court Addn	Edison Court Addn	Edison Court Addn	Edison Court Addn	Edison Court Addn	Edison Court Addn
+State class	13	13	13	13	13	13
+Location from subject (miles)	—	0.06 mi	0.02 mi	0.05 mi	0.04 mi	0.03 mi
+BUILDING CHARACTERISTICS
+Living area (SF)	2,504	2,504	2,504	2,504	2,496	2,400
+Year built	1930	1930	1930	1930	1930	1930
+Bedrooms	4	4	4	4	4	4
+2026 MARKET VALUES
+Land value	$255,000	$255,000	$255,000	$255,000	$260,100	$218,400
+Land value ($/SF) — based on living area	$102/sqft	$102/sqft	$102/sqft	$102/sqft	$104/sqft	$91/sqft
+Market improvement value	$223,230	$413,400	$264,230	$206,010	$267,610	$211,750
+Market improvement value ($/SF)	$89/sqft	$165/sqft	$106/sqft	$82/sqft	$107/sqft	$88/sqft
+CAD market value	$478,230	$668,400	$519,230	$461,010	$527,710	$430,150
+CAD market value ($/SF)	$191/sqft	$267/sqft	$207/sqft	$184/sqft	$211/sqft	$179/sqft
+ADJUSTMENTS
+Land value adjustment		$0	$0	$0	−$5,100	+$36,600
+Improvement adjustment — size		$0	$0	$0	−$169	−$1,787
+Age/condition adjustment		−$30,078	$0	$0	$0	$0
+Additional (pools, garages, misc.)		$0	$0	$0	+$10,000	$0
+TOTALS
+Total net adjustment ($)		−$30,078	$0	$0	+$4,731	+$34,813
+Total net adjustment ($/SF)		−$12/sqft	$0	$0	+$2/sqft	+$15/sqft
+DERIVATION
+CAD market value		$668,400	$519,230	$461,010	$527,710	$430,150
+Total net adjustments		−$30,078	$0	$0	+$4,731	+$34,813
+Adjusted property value		$638,322	$519,230	$461,010	$532,441	$464,963
+% difference from comp CAD market value		-4.5%	0.0%	0.0%	+0.9%	+8.1%
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF property value — based on Subject SF		$255/sqft	$207/sqft	$184/sqft	$213/sqft	$186/sqft
+Median adjusted value of comps	$519,230
+Median adjusted value ($/SF — based on Subject SF)	$207/sqft
+4. Analysis
+
+Year-over-year jump: the subject's noticed value rose 22.5% from $390,300 (2025) to $478,230 (2026). A jump of this magnitude in a single year is itself a §41.43(b)(1) market-value signal, independent of the unequal-appraisal argument below.
+
+The 5 comparables in Section 3, after size, age, land, and feature adjustments, produce a median adjusted value of $519,230 — at or above the subject's noticed value of $478,230. However, 2 of 5 adjusted comparables fall below the subject, supporting a single-comp argument under §41.43(b)(3).
+
+The lowest below-subject adjusted property value is $461,010 ($184/sqft on subject footprint). This is the anchor for the requested value.
+
+Lowest below-subject adjusted comp: $461,010
+Subject's current notice: $478,230
+Difference: $17,220 (3.60% above the lowest qualifying comparable)
+
+Defensibility note: this is a single-comp argument rather than a median anchor — the median sits above the subject. The ARB panel can verify by reading the "Adjusted property value" row of Section 3 and identifying the lowest entry below the subject's $478,230 notice.
+
+5. Adjustment Methodology
+
+Each comparable's raw $/sqft is normalized to the subject before the equity median is taken, so the baseline reflects what the comparable would cost on equal footing with the subject — not its raw market price. The adjustments below mirror the engine that produced Section 4's recommendation.
+
+ADJUSTMENT	MAGNITUDE	WHAT IT CORRECTS FOR
+Size (GLA)	±10% per size delta	Economies of scale: bigger homes have lower $/sqft (fixed costs — kitchen, roof, mechanicals — amortize over more square footage). Larger comp adjusts up toward the subject's smaller footprint; smaller comp adjusts down.
+Age	0.3%/yr · year delta capped at ±15 yr (max ±4.5%)	Newer comp adjusts down; older comp adjusts up. Uses effective year built when the CAD publishes it — a renovated 1967 home with an effective year of 2007 compares as a 2007 build, not a 1967 build.
+Land value	max ±10% of $/sqft	Adjusts for CAD-published land valuation differences between the subject and comp. The cap prevents a single high-land-value comp from collapsing the baseline on a low-land subject (or vice versa).
+Additional (pools, garages, misc.)	flat-$ per CAD-published methodology	Pool, garage spaces, fireplace, and similar features are adjusted in dollar terms when the CAD publishes the flag. Values match HCAD/DCAD published methodology. Skipped on individual comps when the relevant flag is missing.
+Single-comp cap	±30% from raw	No single comp can adjust more than 30% from its unadjusted $/sqft. Keeps the brief defensible against a CAD reviewer who would challenge a 50% swing on any one comparable.
+
+Adjustments are applied multiplicatively in the order shown; the single-comp cap is enforced last so the displayed Adj $/sqft never deviates more than 30% from its raw value. Additional (pool/garage/misc.) adjustments fire per-comp based on whether the CAD published reliable flags for that property.
+
+Non-appraisal disclaimer: This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and adjustment methodologies. The requested market value reflects the property owner's good-faith opinion of value based on equity with comparable properties; it does not represent a market-value opinion for any purpose other than this protest. (Placeholder text — pending Mike's final wording.)
+
+Dallas Central Appraisal District · Tax Year 2026 · Account 00000184960000000 · Page 1 of 1

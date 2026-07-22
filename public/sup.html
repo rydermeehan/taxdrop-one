@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>TaxDrop One — Agent</title>
+  <style>
+    :root { --td-emerald-dark:#0C593E; --td-emerald-light:#0B8F52; --td-mint:#DFFFEA; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+           font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+           background:linear-gradient(135deg,var(--td-mint) 0%,#fff 100%); color:#1A1A1A; }
+    .card { background:#fff; padding:40px; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08);
+            width:100%; max-width:380px; text-align:center; }
+    .badge { width:56px; height:56px; background:var(--td-emerald-light); border-radius:14px;
+             margin:0 auto 20px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px; }
+    h1 { font-family:"Space Grotesk",Inter,sans-serif; font-size:20px; margin:0 0 4px; color:var(--td-emerald-dark); }
+    p { margin:0 0 24px; color:#5C666F; font-size:14px; }
+    input { width:100%; padding:12px 14px; border:1px solid #d5dbe0; border-radius:10px; font-size:15px; margin-bottom:12px; }
+    button { width:100%; padding:12px; border:0; border-radius:10px; background:var(--td-emerald-dark);
+             color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:default; }
+    .err { color:#c0392b; font-size:13px; min-height:18px; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">🔒</div>
+    <h1>Agent access</h1>
+    <p>TaxDrop One — agents &amp; testing</p>
+    <form id="f">
+      <input id="pw" type="password" placeholder="Password" autocomplete="current-password" autofocus />
+      <button id="btn" type="submit">Enter</button>
+      <div class="err" id="err"></div>
+    </form>
+  </div>
+  <script>
+    const f = document.getElementById('f'), pw = document.getElementById('pw'),
+          btn = document.getElementById('btn'), err = document.getElementById('err');
+    const next = new URLSearchParams(location.search).get('next') || '/';
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault(); err.textContent = ''; btn.disabled = true;
+      try {
+        const r = await fetch('/api/sup-login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw.value }),
+        });
+        if (r.ok) { location.href = next; return; }
+        const d = await r.json().catch(() => ({}));
+        err.textContent = d.error === 'not_configured'
+          ? 'Server not configured (SUP_PASSWORD missing).' : 'Incorrect password.';
+      } catch { err.textContent = 'Network error. Try again.'; }
+      btn.disabled = false; pw.value = ''; pw.focus();
+    });
+  </script>
+</body>
+</html>

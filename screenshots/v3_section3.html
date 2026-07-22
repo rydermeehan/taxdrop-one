@@ -1,0 +1,165 @@
+<div id="state-report">
+      <div class="doc-header">
+        <div class="doc-header-text">
+          <h1>Property Appraisal Report</h1>
+          <div class="meta">Tax Year 2026 · <span style="color:#0B8F52;font-weight:600;">CAD-Style v3 (Draft for Mike's Review)</span></div>
+        </div>
+        <div class="export-bar">
+          <button class="btn-export" onclick="exportPDF()" id="btn-export-pdf" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Export PDF</span>
+          </button>
+          <button class="btn-export" onclick="exportDocx()" id="btn-export-docx" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            <span id="btn-docx-text">Export Docx</span>
+          </button>
+          <button class="btn-export btn-export-internal" onclick="openPresentationNotes()" type="button" title="Internal hearing-prep notes (only available for the 20022 Atasca Villas example today)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"></path><polyline points="9 7 12 4 15 7"></polyline><line x1="12" y1="4" x2="12" y2="16"></line></svg>
+            <span>Presentation Notes</span>
+          </button>
+        </div>
+      </div>
+    
+      <h2><span class="section-num">1.</span> Subject Property</h2>
+      <div class="subject-photo" style="margin: 0px 0px 16px; display: none;">
+        <img src="https://maps.googleapis.com/maps/api/streetview?size=640x320&amp;location=2915%20BAY%20HOLLOW%20CT%2C%20KATY%2077450%2C%2077450%2C%20TX&amp;return_error_code=true&amp;key=AIzaSyBtd8bzCW_lY6pd4NMYLIFDeU6vpuNYUFA" alt="Subject street view" loading="lazy" style="width:100%;max-width:640px;height:auto;border-radius:6px;display:block;" onerror="this.parentElement.style.display='none'">
+      </div>
+      <div class="subject-grid"><div class="sp-cell"><div class="sp-label">Street address</div><div class="sp-value">2915 Bay Hollow Ct, Katy, TX 77450</div></div><div class="sp-cell"><div class="sp-label">CAD account number</div><div class="sp-value">2271-01-002-0100-914</div></div><div class="sp-cell"><div class="sp-label">CAD 2026 noticed land value</div><div class="sp-value">$161,590</div></div><div class="sp-cell"><div class="sp-label">CAD 2026 noticed improvement value</div><div class="sp-value">$1,008,654</div></div><div class="sp-cell"><div class="sp-label">CAD 2026 noticed market value</div><div class="sp-value"><b>$1,170,244</b> ($219/sqft)</div></div></div>
+    
+        <h2><span class="section-num">2.</span> Owner's Requested 2026 Market Value</h2>
+        <div class="requested-value">
+          <div class="rv-block notice">
+            <div class="rv-label">2026 CAD Notice Value</div>
+            <div class="rv-amount">$1,170,244</div>
+            <div class="rv-psf">$219/sqft</div>
+          </div>
+          <div class="rv-block requested">
+            <div class="rv-label">Requested Market Value</div>
+            <div class="rv-amount">$1,112,696</div>
+            <div class="rv-psf">$208/sqft · 95.1% of CAD notice</div>
+          </div>
+        </div>
+      
+      <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
+      <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
+        5 comparable properties from the same subdivision as the subject, sorted by living-area proximity.
+        All share property classification A1 and the same school district.
+      </p>
+
+      <div class="location-map">
+        <img src="https://maps.googleapis.com/maps/api/staticmap?size=720x340&amp;scale=2&amp;maptype=hybrid&amp;markers=color:green%7Clabel:S%7C2915%20BAY%20HOLLOW%20CT%2C%20KATY%2077450%2C%2077450%2C%20TX&amp;markers=color:purple%7Clabel:1%7C2910%20BAY%20HOLLOW%20CT%2C%20KATY%2077450%2C%20TX&amp;markers=color:purple%7Clabel:2%7C2903%20AUTUMN%20LAKE%20DR%2C%20KATY%2077450%2C%20TX&amp;markers=color:purple%7Clabel:3%7C2614%20AUTUMN%20LAKE%20DR%2C%20KATY%2077450%2C%20TX&amp;markers=color:purple%7Clabel:4%7C3103%20WINDING%20SHORE%20LN%2C%20KATY%2077450%2C%20TX&amp;markers=color:purple%7Clabel:5%7C22706%20MOONLIT%20LAKE%20CT%2C%20KATY%2077450%2C%20TX&amp;key=AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE" alt="Property location map" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='none';">
+        <div class="map-caption">
+          <div class="map-legend"><span><span class="legend-pin pin-subject">S</span>Subject (2915 Bay Hollow Ct)</span>
+<span><span class="legend-pin pin-comp">1</span>2910 Bay Hollow Ct</span>
+<span><span class="legend-pin pin-comp">2</span>2903 Autumn Lake Dr</span>
+<span><span class="legend-pin pin-comp">3</span>2614 Autumn Lake Dr</span>
+<span><span class="legend-pin pin-comp">4</span>3103 Winding Shore Ln</span>
+<span><span class="legend-pin pin-comp">5</span>22706 Moonlit Lake Ct</span></div>
+          <div style="margin-top:6px;">Pin numbers correspond to comparable column numbers in the table below. Map data © Google.</div>
+        </div>
+      </div>
+
+      
+      <div class="equity-grid-wrapper">
+      <table class="equity-grid">
+        <thead><tr><th style="width:220px;text-align:left;">&nbsp;</th><th class="subject-col">Subject<br><span style="font-weight:400;font-size:10px;">2915 Bay Hollow Ct</span></th><th class="">Comp #1<br><span style="font-weight:400;font-size:10px;">2910 Bay Hollow Ct</span></th><th class="">Comp #2<br><span style="font-weight:400;font-size:10px;">2903 Autumn Lake Dr</span></th><th class="">Comp #3<br><span style="font-weight:400;font-size:10px;">2614 Autumn Lake Dr</span></th><th class="">Comp #4<br><span style="font-weight:400;font-size:10px;">3103 Winding Shore Ln</span></th><th class="match-col">Comp #5<br><span style="font-weight:400;font-size:10px;">22706 Moonlit Lake Ct</span></th></tr></thead>
+        <tbody>
+          <tr><td class="attr-label">Street view</td><td class="photo-cell subject-cell"><div class="no-photo">No imagery</div></td><td class="photo-cell "><div class="no-photo">No imagery</div></td><td class="photo-cell "><div class="no-photo">No imagery</div></td><td class="photo-cell "><div class="no-photo">No imagery</div></td><td class="photo-cell "><div class="no-photo">No imagery</div></td><td class="photo-cell match-cell"><img src="https://maps.googleapis.com/maps/api/streetview?size=400x240&amp;location=22706%20MOONLIT%20LAKE%20CT%2C%20KATY%2077450%2C%20TX&amp;return_error_code=true&amp;key=AIzaSyBtd8bzCW_lY6pd4NMYLIFDeU6vpuNYUFA" alt="Street view" loading="lazy" onerror="this.outerHTML='<div class=\&quot;no-photo\&quot;>No imagery</div>'"></td></tr>
+          <tr><td class="attr-label">CAD account</td><td class="subject-cell">2271-01-002-0100-914</td><td class="">2271-01-002-0120-914</td><td class="">2271-01-002-0020-914</td><td class="">2271-01-001-0120-914</td><td class="">2271-02-003-0140-914</td><td class="match-cell">2271-01-001-0080-914</td></tr>
+          <tr><td class="attr-label">Property address</td><td class="subject-cell">2915 Bay Hollow Ct</td><td class="">2910 Bay Hollow Ct</td><td class="">2903 Autumn Lake Dr</td><td class="">2614 Autumn Lake Dr</td><td class="">3103 Winding Shore Ln</td><td class="match-cell">22706 Moonlit Lake Ct</td></tr>
+          
+          <tr id="distance-row">
+            <td class="attr-label">Location from subject (miles)</td>
+            <td class="subject-cell">—</td>
+            <td class="" id="dist-comp-0">0.04 mi</td><td class="" id="dist-comp-1">0.07 mi</td><td class="" id="dist-comp-2">0.06 mi</td><td class="" id="dist-comp-3">0.18 mi</td><td class="match-cell" id="dist-comp-4">0.10 mi</td>
+          </tr>
+          <tr><td class="attr-label">Subdivision</td><td class="subject-cell">Cinco Ranch South Lake Village</td><td class="">Cinco Ranch South Lake Village</td><td class="">Cinco Ranch South Lake Village</td><td class="">Cinco Ranch South Lake Village</td><td class="">Cinco Ranch South Lake Village</td><td class="match-cell">Cinco Ranch South Lake Village</td></tr>
+          <tr><td class="attr-label">State class</td><td class="subject-cell">A1</td><td class="">A1</td><td class="">A1</td><td class="">A1</td><td class="">A1</td><td class="match-cell">A1</td></tr>
+          <tr class="section-header"><td colspan="7">Building characteristics</td></tr><tr><td class="attr-label">Living area (SF)</td><td class="subject-cell">5,338</td><td class="">5,184</td><td class="">5,272</td><td class="">5,266</td><td class="">5,480</td><td class="match-cell">5,194</td></tr><tr><td class="attr-label">Year built</td><td class="subject-cell">1992</td><td class="">1992</td><td class="">1996</td><td class="">1992</td><td class="">1992</td><td class="match-cell">1992</td></tr><tr><td class="attr-label">Bedrooms</td><td class="subject-cell">5</td><td class="">5</td><td class="">6</td><td class="">5</td><td class="">5</td><td class="match-cell">5</td></tr>
+          <tr class="section-header"><td colspan="7">2026 Market Values</td></tr><tr><td class="attr-label">Land value</td><td class="subject-cell">$161,590</td><td class="">$177,749</td><td class="">$143,000</td><td class="">$143,000</td><td class="">$257,400</td><td class="match-cell">$146,900</td></tr><tr><td class="attr-label">Land value ($/SF) — based on living area</td><td class="subject-cell">$30/sqft</td><td class="">$34/sqft</td><td class="">$27/sqft</td><td class="">$27/sqft</td><td class="">$47/sqft</td><td class="match-cell">$28/sqft</td></tr><tr><td class="attr-label">Market improvement value</td><td class="subject-cell">$1,008,654</td><td class="">$905,751</td><td class="">$1,058,223</td><td class="">$1,158,230</td><td class="">$947,900</td><td class="match-cell">$913,525</td></tr><tr><td class="attr-label">Market improvement value ($/SF)</td><td class="subject-cell">$189/sqft</td><td class="">$175/sqft</td><td class="">$201/sqft</td><td class="">$220/sqft</td><td class="">$173/sqft</td><td class="match-cell">$176/sqft</td></tr><tr><td class="attr-label">CAD market value</td><td class="subject-cell">$1,170,244</td><td class="">$1,083,500</td><td class="">$1,201,223</td><td class="">$1,301,230</td><td class="">$1,205,300</td><td class="match-cell">$1,060,425</td></tr><tr><td class="attr-label">CAD market value ($/SF)</td><td class="subject-cell">$219/sqft</td><td class="">$209/sqft</td><td class="">$228/sqft</td><td class="">$247/sqft</td><td class="">$220/sqft</td><td class="match-cell">$204/sqft</td></tr>
+          <tr class="section-header"><td colspan="7">Adjustments</td></tr><tr><td class="attr-label">Land value adjustment</td><td class="subject-cell"></td><td class="">−$16,159</td><td class="">+$18,590</td><td class="">+$18,590</td><td class="">−$95,810</td><td class="match-cell">+$14,690</td></tr><tr><td class="attr-label">Improvement adjustment — size</td><td class="subject-cell"></td><td class="">−$3,126</td><td class="">−$1,485</td><td class="">−$1,755</td><td class="">+$3,206</td><td class="match-cell">−$2,861</td></tr><tr><td class="attr-label">Age/condition adjustment</td><td class="subject-cell"></td><td class="">$0</td><td class="">−$14,397</td><td class="">$0</td><td class="">$0</td><td class="match-cell">$0</td></tr><tr><td class="attr-label">Additional (pools, garages, misc.)</td><td class="subject-cell"></td><td class="">$0</td><td class="">$0</td><td class="">$0</td><td class="">$0</td><td class="match-cell">$0</td></tr>
+          <tr class="section-header"><td colspan="7">Totals</td></tr><tr><td class="attr-label">Total net adjustment ($)</td><td class="subject-cell"></td><td class="">−$19,285</td><td class="">+$2,708</td><td class="">+$16,835</td><td class="">−$92,604</td><td class="match-cell">+$11,829</td></tr><tr><td class="attr-label">Total net adjustment ($/SF)</td><td class="subject-cell"></td><td class="">−$4/sqft</td><td class="">+$1/sqft</td><td class="">+$3/sqft</td><td class="">−$17/sqft</td><td class="match-cell">+$2/sqft</td></tr>
+          <tr class="section-header"><td colspan="7">Derivation</td></tr><tr><td class="attr-label">CAD market value</td><td class="subject-cell"></td><td class="">$1,083,500</td><td class="">$1,201,223</td><td class="">$1,301,230</td><td class="">$1,205,300</td><td class="match-cell">$1,060,425</td></tr><tr><td class="attr-label">Total net adjustments</td><td class="subject-cell"></td><td class="">−$19,285</td><td class="">+$2,708</td><td class="">+$16,835</td><td class="">−$92,604</td><td class="match-cell">+$11,829</td></tr><tr><td class="attr-label">Adjusted property value</td><td class="subject-cell"></td><td class="">$1,064,215</td><td class="">$1,203,931</td><td class="">$1,318,065</td><td class="">$1,112,696</td><td class="match-cell">$1,072,254</td></tr><tr><td class="attr-label">% difference from comp CAD market value</td><td class="subject-cell"></td><td class="">-1.8%</td><td class="">+0.2%</td><td class="">+1.3%</td><td class="">-7.7%</td><td class="match-cell">+1.1%</td></tr>
+          <tr class="section-header"><td colspan="7">Indicator (based on Subject SF)</td></tr><tr><td class="attr-label">Adjusted $/SF property value — based on Subject SF</td><td class="subject-cell"></td><td class="">$199/sqft</td><td class="">$226/sqft</td><td class="">$247/sqft</td><td class="">$208/sqft</td><td class="match-cell">$201/sqft</td></tr>
+        </tbody>
+        <tfoot>
+          
+              <tr>
+                <td colspan="2"><b>Median adjusted value of comps</b></td>
+                <td colspan="5" style="text-align:right;"><b>$1,112,696</b></td>
+              </tr>
+              
+              <tr>
+                <td colspan="2"><b>Median adjusted value ($/SF — based on Subject SF)</b></td>
+                <td colspan="5" style="text-align:right;"><b>$208/sqft</b></td>
+              </tr>
+            
+        </tfoot>
+      </table>
+      </div>
+    
+    
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          <p>For each of the 5 comparables in Section 3, the CAD's noticed market value is adjusted for size, age/condition, land value, and additional features (pools, garages, misc.) to produce an indicated value for the subject. The median of those 5 indicated values is the requested ask.</p>
+
+          <div class="calc-line">
+            Median adjusted property value (5 comparables): <b>$1,112,696</b><br>
+            Implied $/SF on subject footprint: <b>$208/sqft</b><br>
+            Subject's living area: 5,338 sqft<br>
+            Subject's current notice: $1,170,244<br>
+            Difference: <b>$57,548</b> (4.92% above the comparable median)
+          </div>
+        </div>
+      
+      <h2><span class="section-num">5.</span> Adjustment Methodology</h2>
+      <div class="analysis-summary">
+        <p>Each comparable's raw $/sqft is normalized to the subject before the equity median is taken, so the baseline reflects what the comparable would cost on equal footing with the subject — not its raw market price. The adjustments below mirror the engine that produced Section 4's recommendation.</p>
+        <table class="methodology-table">
+          <thead>
+            <tr><th>Adjustment</th><th>Magnitude</th><th>What it corrects for</th></tr>
+          </thead>
+          <tbody>
+            
+      <tr>
+        <td class="adj-name">Size (GLA)</td>
+        <td class="adj-mag">±10% per size delta</td>
+        <td>Economies of scale: bigger homes have lower $/sqft (fixed costs — kitchen, roof, mechanicals — amortize over more square footage). Larger comp adjusts up toward the subject's smaller footprint; smaller comp adjusts down.</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Age</td>
+        <td class="adj-mag">0.3%/yr · year delta capped at ±15 yr (max ±4.5%)</td>
+        <td>Newer comp adjusts down; older comp adjusts up. Uses effective year built when the CAD publishes it — a renovated 1967 home with an effective year of 2007 compares as a 2007 build, not a 1967 build.</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Land value</td>
+        <td class="adj-mag">max ±10% of $/sqft</td>
+        <td>Adjusts for CAD-published land valuation differences between the subject and comp. The cap prevents a single high-land-value comp from collapsing the baseline on a low-land subject (or vice versa).</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Additional (pools, garages, misc.)</td>
+        <td class="adj-mag">flat-$ per CAD-published methodology</td>
+        <td>Pool, garage spaces, fireplace, and similar features are adjusted in dollar terms when the CAD publishes the flag. Values match HCAD/DCAD published methodology. Skipped on individual comps when the relevant flag is missing.</td>
+      </tr>
+    
+      <tr>
+        <td class="adj-name">Single-comp cap</td>
+        <td class="adj-mag">±30% from raw</td>
+        <td>No single comp can adjust more than 30% from its unadjusted $/sqft. Keeps the brief defensible against a CAD reviewer who would challenge a 50% swing on any one comparable.</td>
+      </tr>
+    
+          </tbody>
+        </table>
+        <p class="methodology-note">Adjustments are applied multiplicatively in the order shown; the single-comp cap is enforced last so the displayed Adj $/sqft never deviates more than 30% from its raw value. Additional (pool/garage/misc.) adjustments fire per-comp based on whether the CAD published reliable flags for that property.</p>
+        <p class="methodology-note" style="margin-top:18px;padding:12px 14px;background:#FFF8E1;border-left:3px solid #F5B400;border-radius:4px;font-size:12px;color:#5C4400;">
+          <b>Non-appraisal disclaimer:</b> This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and adjustment methodologies. The requested market value reflects the property owner's good-faith opinion of value based on equity with comparable properties; it does not represent a market-value opinion for any purpose other than this protest. <i>(Placeholder text — pending Mike's final wording.)</i>
+        </p>
+      </div>
+    
+      <div class="footer">
+        Fort Bend Central Appraisal District · Tax Year 2026 · Account 2271-01-002-0100-914 · Page 1 of 1
+      </div>
+    </div>

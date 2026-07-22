@@ -1,0 +1,98 @@
+Generate Report
+Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics). Try example: 20022 Atasca Villas Dr
+Property Appraisal Report
+Tax Year 2026 · CAD-Style v3 (Draft for Mike's Review)
+Export PDF
+Export Docx
+Presentation Notes
+1. Subject Property
+Street address
+12309 Capella Trl, Austin, TX 78732
+PID #
+522132
+CAD 2026 noticed land value
+$462,357
+CAD 2026 noticed improvement value
+$740,101
+CAD 2026 noticed market value
+$1,202,458 ($286/sqft)
+2. Owner's Requested 2026 Market Value
+2026 CAD NOTICE VALUE
+$1,202,458
+$286/sqft
+REQUESTED MARKET VALUE
+$1,184,228
+$281/sqft · 98.5% of CAD notice
+3. Comparable Property Analysis
+
+4 comparable properties from the same county and property classification (no in-subdivision peers were available), sorted by living-area proximity. All share property classification A1 and the same school district.
+
+1 comparable excluded from the panel below:
+12716 Monte Castillo Pkwy — adjusted indicated value $1,814,487 is more than 30% above the median of the remaining comparables ($1,253,798). Excluded as a statistical outlier. (outlier filter)
+SSubject (12309 Capella Trl)
+1524 Summer Alcove Way
+2217 Emerald Ridge Dr
+311933 Granite Bay Pl
+42616 Rio Mesa Dr
+Pin numbers correspond to comparable column numbers in the table below. Map data © Google.
+ 	SUBJECT
+12309 CAPELLA TRL	COMP #1
+524 SUMMER ALCOVE WAY	COMP #2
+217 EMERALD RIDGE DR	COMP #3
+11933 GRANITE BAY PL	COMP #4
+2616 RIO MESA DR
+Street view	
+	
+	
+	
+No imagery
+	
+
+PID #	522132	760124	749156	709967	522291
+Property address	12309 Capella Trl	524 Summer Alcove Way	217 Emerald Ridge Dr	11933 Granite Bay Pl	2616 Rio Mesa Dr
+Subdivision	Lot 80 Blk B Steiner Ranch Phs 1	Lot 22 Blk W River Dance Phs 7-a	Lot 72 Blk W River Dance Phs 6-a	Lot 228 Blk A Steiner Ranch Phs 1	Lot 15 Blk B Steiner Ranch Phs 1
+State class	A1	A1	A1	A1	A1
+Location from subject (miles)	—	1.4 mi	1.1 mi	0.65 mi	0.51 mi
+BUILDING CHARACTERISTICS
+Living area (SF)	4,210	4,210	4,211	4,211	4,208
+Year built	2004	2011	2009	2006	2003
+2026 MARKET VALUES
+Land value	$462,357	$460,074	$776,571	$343,500	$430,550
+Land value ($/SF — living area)	$109.82	$109.28	$184.41	$81.57	$102.32
+Market improvement value	$740,101	$818,287	$809,762	$675,462	$505,203
+Market improvement value ($/SF)	$175.80	$194.37	$192.30	$160.40	$120.06
+CAD market value	$1,202,458	$1,278,361	$1,586,333	$1,018,962	$935,753
+CAD market value ($/SF)	$285.62	$303.65	$376.71	$241.98	$222.37
+ADJUSTMENTS
+Land value adj.		+$2,283	−$158,633	+$101,896	+$31,807
+Improvement adj. — size		$0	−$88	−$88	+$176
+Age/condition adj.		−$26,846	−$23,794	−$6,113	+$2,808
+Additional (pools, garages, misc.)		$0	$0	$0	$0
+TOTALS
+Total net adjustment		−$24,563	−$182,515	+$95,695	+$34,791
+Total net adjustment ($/SF)		−$5.83	−$43.34	+$22.72	+$8.27
+DERIVATION
+CAD market value		$1,278,361	$1,586,333	$1,018,962	$935,753
+Total net adjustments		−$24,563	−$182,515	+$95,695	+$34,791
+Adjusted property value		$1,253,798	$1,403,818	$1,114,657	$970,544
+% difference from comp CAD market value		-1.9%	-11.5%	+9.4%	+3.7%
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF — based on Subject SF		$297.81	$333.45	$264.76	$230.53
+Median adjusted value of comps	$1,184,228
+Median adjusted value ($/SF — based on Subject SF)	$281.29
+4. Analysis
+
+For each of the 4 comparables in Section 3, the CAD's noticed market value is adjusted for size, age/condition, land value, and additional features (pools, garages, misc.) to produce an indicated value for the subject. The median of those 4 indicated values is the requested ask.
+
+Median adjusted property value (4 comparables): $1,184,228
+Implied $/SF on subject footprint: $281/sqft
+Subject's living area: 4,210 sqft
+Subject's current notice: $1,202,458
+Difference: $18,230 (1.52% above the comparable median)
+5. Adjustment Methodology
+
+Adjustments shown in Section 3 are based on analysis and interpretation of market factors as to how they impact the individual property values. Each comparable's CAD-noticed value is reviewed against the subject for size, age and condition, land, and other property-specific features, and a net adjustment is applied to bring the comparable onto equal footing with the subject before the requested value is derived.
+
+Non-appraisal disclaimer: This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and the property owner's interpretation of market factors. The requested market value reflects the property owner's good-faith opinion of value; it does not represent a market-value opinion for any purpose other than this protest. (Placeholder text — pending Mike's final wording.)
+
+Travis Central Appraisal District · Tax Year 2026 · Account 522132 · Page 1 of 1

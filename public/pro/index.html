@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+  <meta property="og:title" content="TaxDrop One" />
+  <meta property="og:description" content="See how much you could save on your property taxes — then file with confidence." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://one.taxdrop.com/logos/taxdrop-one-og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://one.taxdrop.com/logos/taxdrop-one-og.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="/pro/" />
+  <title>TaxDrop One — Best Reduction Method</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: 'Hanken Grotesk', system-ui, sans-serif;
+      background: #eef4f0; color: #18241f;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    }
+    ::selection { background: #cdeada; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseDot { 0%, 100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    button { font-family: inherit; }
+    /* Google Places autocomplete dropdown — match the Pro look */
+    .pac-container { z-index: 9999; border-radius: 12px; border: 1px solid #e4ebe7; box-shadow: 0 18px 40px -20px rgba(20,60,42,.4); font-family: 'Hanken Grotesk', system-ui, sans-serif; margin-top: 4px; }
+    .pac-item { padding: 8px 12px; font-size: 14px; cursor: pointer; }
+    .pac-item:hover, .pac-item-selected { background: #eef7f1; }
+    .pac-item-query { font-size: 14px; color: #18241f; }
+  </style>
+  <!-- Google Places for the address autocomplete. -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE&libraries=places&loading=async" async defer></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Reuse the Evidence Analyzer engine for CAD-evidence parsing + analysis. -->
+  <script src="/evidence-analyzer/analyzer.js"></script>
+  <script src="/evidence-analyzer/extract.js"></script>
+
+  <script type="text/babel" src="pro.jsx"></script>
+</body>
+</html>

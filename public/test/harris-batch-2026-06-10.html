@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+<meta charset="UTF-8">
+<title>Harris CAD Batch Report Index — Tax Year 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --emerald-dark: #0C593E; --emerald-light: #0B8F52;
+    --mint: #DFFFEA; --charcoal: #1A1A1A;
+    --gray-500: #5C666F; --gray-400: #8A929B; --gray-300: #C9D0D6;
+    --gray-200: #E5E7EB; --gray-100: #F4F6F8;
+    --good-bg: #E8F8EE; --warn-bg: #FFF4D6; --warn-text: #8a6500;
+    --danger-bg: #FFE5E5; --danger-text: #8a2828;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--charcoal); max-width: 1280px; margin: 0 auto;
+    padding: 40px 32px 60px; line-height: 1.55; background: white; font-size: 14px;
+  }
+  .doc-header {
+    border-bottom: 3px solid var(--emerald-dark);
+    padding-bottom: 16px; margin-bottom: 28px;
+  }
+  .doc-header .eyebrow {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--emerald-dark); font-weight: 700; margin-bottom: 4px;
+  }
+  .doc-header h1 {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    font-size: 28px; color: var(--charcoal); margin: 0 0 8px; line-height: 1.2;
+  }
+  .doc-header .meta { color: var(--gray-500); font-size: 13px; }
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin: 0 0 28px;
+  }
+  .stat {
+    background: var(--gray-100); border-radius: 8px; padding: 14px 18px;
+  }
+  .stat .label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--gray-500); font-weight: 600; margin-bottom: 4px;
+  }
+  .stat .value {
+    font-family: 'Space Grotesk', sans-serif; font-size: 22px;
+    font-weight: 700; color: var(--charcoal);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--mint); color: var(--emerald-dark);
+    padding: 9px 10px; text-align: left; font-weight: 700;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--mint);
+  }
+  th.num { text-align: right; }
+  td {
+    padding: 11px 10px; border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  td.muted, .muted { color: var(--gray-400); font-weight: 400; }
+  tr.missing { background: var(--danger-bg); }
+  tr.missing td { color: var(--danger-text); }
+  .badge {
+    display: inline-block; padding: 1px 7px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; margin-left: 4px; vertical-align: middle;
+  }
+  .badge-pool { background: #E8F0FE; color: #1a73e8; }
+  .badge-adj { background: var(--warn-bg); color: var(--warn-text); }
+  .src {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .src-db { background: var(--good-bg); color: var(--emerald-dark); }
+  .src-attom { background: var(--warn-bg); color: var(--warn-text); }
+  .btn {
+    display: inline-block; padding: 5px 10px; border-radius: 6px;
+    background: var(--emerald-dark); color: white; text-decoration: none;
+    font-weight: 600; font-size: 12px; white-space: nowrap;
+  }
+  .btn:hover { background: var(--emerald-light); }
+  .btn-secondary {
+    background: white; color: var(--gray-500); border: 1px solid var(--gray-300);
+    margin-left: 4px;
+  }
+  .btn-secondary:hover { background: var(--gray-100); }
+  .footer {
+    color: var(--gray-500); font-size: 11px; margin-top: 40px;
+    padding-top: 16px; border-top: 1px solid var(--gray-200);
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="eyebrow">Batch Report Index &middot; Tax Year 2026</div>
+  <h1>Harris CAD — Property Appraisal Reports</h1>
+  <div class="meta">17 properties &middot; reports generated against the TaxDrop §41.43(b)(3) engine &middot; click "Our report" to view the dynamic page for each property; "HCAD PDF" opens the HCAD evidence-package PDF.</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="label">Properties</div><div class="value">17</div></div>
+  <div class="stat"><div class="label">In CAD database</div><div class="value">4</div></div>
+  <div class="stat"><div class="label">Via ATTOM fallback</div><div class="value">11</div></div>
+  <div class="stat"><div class="label">Total CAD value</div><div class="value">$13,457,705</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>HCAD acct</th>
+      <th>Property</th>
+      <th class="num">CAD 2026 value</th>
+      <th class="num">Requested value</th>
+      <th class="num">Savings</th>
+      <th>Source</th>
+      <th>Reports</th>
+    </tr>
+  </thead>
+  <tbody>
+
+      <tr>
+        <td>?</td>
+        <td>9105 MEMORIAL DR, Houston, TX 77024 <span class="badge badge-pool">pool</span> </td>
+        <td class="num">$5,369,761</td>
+        <td class="num">$5,040,000</td>
+        <td class="num"><b>−$329,761</b><br><span class="muted">6.1%</span></td>
+        <td><span class="src src-db">DB</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=9105+MEMORIAL+DR%2C+Houston%2C+TX+77024" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1HQsWA0MD4axbZ-VCS3rd-05fV-gqHPU1/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>1305940030005</td>
+        <td>14206 Park Antique Ln, Cypress, TX 77429  <span class="badge badge-adj">adj</span></td>
+        <td class="num">$696,099</td>
+        <td class="num">$696,099</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-db">DB</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=14206+Park+Antique+Ln%2C+Cypress%2C+TX+77429" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/16RZtNTgnJE3xgaGx-EdSDJrHlZ_FKLFO/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>1108170000038</td>
+        <td>20023 Pinehurst Trail Dr, Humble, TX 77346  <span class="badge badge-adj">adj</span></td>
+        <td class="num">$339,987</td>
+        <td class="num">$295,000</td>
+        <td class="num"><b>−$44,987</b><br><span class="muted">13.2%</span></td>
+        <td><span class="src src-db">DB</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=20023+Pinehurst+Trail+Dr%2C+Humble%2C+TX+77346" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1HoSh7nGEtjIRwkc0KLU_qbNLVsPW0peB/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>125909170012</td>
+        <td>20022 ATASCA VILLAS DR, Humble, TX 77346  </td>
+        <td class="num">$256,910</td>
+        <td class="num">$245,000</td>
+        <td class="num"><b>−$11,910</b><br><span class="muted">4.6%</span></td>
+        <td><span class="src src-db">DB</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=20022+ATASCA+VILLAS+DR%2C+Humble%2C+TX+77346" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1mNMQTGVJXgx0sg-TOinmvQMRnxWtlUGZ/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>422548860031</td>
+        <td>306 MAGNOLIA POINT DR, Houston, TX  </td>
+        <td class="num">$1,681,151</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=306+MAGNOLIA+POINT+DR%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1WiGgytp5UwLGMA2SP9U--onNhWpldP5a/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>029514440017</td>
+        <td>306 MAGNOLIA POINT DR, Houston, TX  </td>
+        <td class="num">$1,681,151</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=306+MAGNOLIA+POINT+DR%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1wHWTWit7XCeFTOjzcgkK9q8borFUZ2Y9/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>660565340010</td>
+        <td>2419 GREEN TEE DR, Houston, TX  </td>
+        <td class="num">$579,087</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=2419+GREEN+TEE+DR%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1PzVW3d37SO7m8dZG2_ayB83edEhsNZAY/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>907347640002</td>
+        <td>12123 EDGEWOOD HAVEN DR, Houston, TX  </td>
+        <td class="num">$574,365</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=12123+EDGEWOOD+HAVEN+DR%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1bT0_DLPe8oRYbcyJUy2L79-RpPGDH1kZ/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>975478510034</td>
+        <td>5111 BLESSING DR, Houston, TX  </td>
+        <td class="num">$368,183</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=5111+BLESSING+DR%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1TBni5ChYeG0MckyhzfTm-E3gjkc73lLf/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>366415500019</td>
+        <td>6311 JEFFERSON ST, Houston, TX  </td>
+        <td class="num">$360,589</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=6311+JEFFERSON+ST%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/11ViRqSLpbgtMpKuG6hryXwICwFcfveFL/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>765786290023</td>
+        <td>3102 BRONCO BLUFF CT, Houston, TX  </td>
+        <td class="num">$359,077</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=3102+BRONCO+BLUFF+CT%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1fLNnUkSXWI3zjJr68eoejyRDUCmRMhMc/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>187888670021</td>
+        <td>8434 PEEKSKILL LN, Houston, TX  </td>
+        <td class="num">$328,856</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=8434+PEEKSKILL+LN%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1HbcrWEwBTdXBeQCOSFZJO1bD9XXP2BKq/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>282387830014</td>
+        <td>3102 CANDLE CABIN LN, Houston, TX  </td>
+        <td class="num">$315,873</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=3102+CANDLE+CABIN+LN%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1ntbXWfrhna9TgIvUAMxU3Jo4D6XoCrkw/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>298218390004</td>
+        <td>18414 DINNER CREEK DR, Houston, TX  </td>
+        <td class="num">$290,864</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=18414+DINNER+CREEK+DR%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1lZ6eXaaKYqqs5fm-GU_n375M7fSotrTd/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr>
+        <td>300152200018</td>
+        <td>15470 ARCE ROJO ST, Houston, TX  </td>
+        <td class="num">$255,752</td>
+        <td class="num"><span class="muted">—</span></td>
+        <td class="num"><span class="muted">—</span></td>
+        <td><span class="src src-attom">ATTOM</span></td>
+        <td>
+          <a class="btn" href="https://studio.taxdrop.com/test/evidence-pack-v2?address=15470+ARCE+ROJO+ST%2C+Houston%2C+TX" target="_blank">Our report &rarr;</a>
+          <a class="btn btn-secondary" href="https://drive.google.com/file/d/1VYBiDQcSKFhk0NhkyU6IaSfxSTOKGbQh/view" target="_blank">HCAD PDF</a>
+        </td>
+      </tr>
+      <tr class="missing">
+        <td>472199910016</td>
+        <td>212 ELMEN ST, Houston, TX</td>
+        <td colspan="4" class="muted">Not found in DB or ATTOM &mdash; check address spelling / ZIP</td>
+        <td><a class="btn btn-secondary" href="https://drive.google.com/file/d/1GfOTObszQTISguO4fulZ4LMeLymab62Q/view" target="_blank">HCAD PDF</a></td>
+      </tr>
+      <tr class="missing">
+        <td>679974970044</td>
+        <td>3511 OLDEN CT, Houston, TX</td>
+        <td colspan="4" class="muted">Not found in DB or ATTOM &mdash; check address spelling / ZIP</td>
+        <td><a class="btn btn-secondary" href="https://drive.google.com/file/d/1sK5ddOazJQoTFtOKjXCqHx56tOmSR_OG/view" target="_blank">HCAD PDF</a></td>
+      </tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  Reports rendered live by studio.taxdrop.com/test/evidence-pack-v2 against the TaxDrop production engine. <b>Source = DB</b> means the property was found in our Harris CAD database and the recommended value comes from the production §41.43(b)(3) calculator. <b>Source = ATTOM</b> means the address didn't resolve in our DB (typically because no ZIP was provided or the HCAD ingest doesn't have that street number) and we fell back to ATTOM data — equity comps still render but the engine recommendation is unavailable. <span class="badge badge-pool">pool</span> = subject has a pool; <span class="badge badge-adj">adj</span> = feature adjustments were applied to the comp set per §41.43(b)(3).
+</div>
+
+</body>
+</html>

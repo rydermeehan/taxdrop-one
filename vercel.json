@@ -1,0 +1,29 @@
+{
+  "redirects": [
+    { "source": "/pro", "has": [{ "type": "host", "value": "studio.taxdrop.com" }], "destination": "https://one.taxdrop.com/", "permanent": false },
+    { "source": "/pro/", "has": [{ "type": "host", "value": "studio.taxdrop.com" }], "destination": "https://one.taxdrop.com/", "permanent": false },
+    { "source": "/pro/:path*", "has": [{ "type": "host", "value": "studio.taxdrop.com" }], "destination": "https://one.taxdrop.com/:path*", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/", "has": [{ "type": "host", "value": "one.taxdrop.com" }], "destination": "/v2/index.html" },
+    { "source": "/index.html", "has": [{ "type": "host", "value": "one.taxdrop.com" }], "destination": "/v2/index.html" },
+    { "source": "/:path((?!pro/|v2/|api/|vendor/).*)", "has": [{ "type": "host", "value": "one.taxdrop.com" }], "destination": "/pro/:path" },
+    { "source": "/test", "destination": "/test.html" },
+    { "source": "/batchdata-test", "destination": "/batchdata-test.html" },
+    { "source": "/database-test", "destination": "/database-test.html" },
+    { "source": "/clear-capital-test", "destination": "/clear-capital-test.html" },
+    { "source": "/database-browse", "destination": "/database-browse.html" },
+    { "source": "/database-workspace", "destination": "/database-workspace.html" },
+    { "source": "/database-eu-report", "destination": "/database-eu-report.html" },
+    { "source": "/cad-status", "destination": "/cad-status.html" },
+    { "source": "/report", "destination": "/report.html" },
+    { "source": "/diy", "destination": "/diy.html" },
+    { "source": "/test/evidence-pack-v2", "destination": "/test/evidence-pack-v2.html" },
+    { "source": "/test/evidence-pack-v2-notes", "destination": "/test/evidence-pack-v2-notes.html" },
+    { "source": "/test/evidence-pack-v3", "destination": "/test/evidence-pack-v3.html" },
+    { "source": "/test/harris-batch-2026-06-10", "destination": "/test/harris-batch-2026-06-10.html" },
+    { "source": "/evidence-analyzer", "destination": "/evidence-analyzer/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

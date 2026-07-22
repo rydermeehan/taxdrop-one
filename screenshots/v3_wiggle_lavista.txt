@@ -1,0 +1,101 @@
+Generate Report
+Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics). Try example: 20022 Atasca Villas Dr
+Property Appraisal Report
+Tax Year 2026
+Export PDF
+Export Docx
+Presentation Notes
+1. Subject Property
+Street address
+5749 La Vista Ct, Dallas, TX 75206
+PID #
+00000184960000000
+CAD 2026 noticed land value
+$255,000
+CAD 2026 noticed improvement value
+$223,230
+CAD 2026 noticed market value
+$478,230 ($191/sqft)
+Prior-year noticed market value
+$390,300
++$87,930 (22.53% YoY)
+2. Owner's Requested 2026 Market Value
+2026 CAD NOTICE VALUE
+$478,230
+$190.99/sqft
+REQUESTED MARKET VALUE
+$382,584
+$152.79/sqft · 80.0% of CAD notice
+3. Comparable Property Analysis
+
+4 comparable properties from the same subdivision as the subject, sorted by living-area proximity. All share property classification 13 and school district code DALLAS ISD.
+
+SSubject (5749 La Vista Ct)
+15805 La Vista Ct
+25817 La Vista Ct
+35813 La Vista Ct
+45804 La Vista Ct
+Pin numbers correspond to comparable column numbers in the table below. Map data © Google.
+ 	SUBJECT
+5749 LA VISTA CT	COMP #1
+5805 LA VISTA CT	COMP #2
+5817 LA VISTA CT	COMP #3
+5813 LA VISTA CT	COMP #4
+5804 LA VISTA CT
+Street view	
+	
+	
+	
+	
+
+PID #	00000184960000000	00000184972000000	00000185026000000	00000185014000000	00000184984000000
+Property address	5749 La Vista Ct	5805 La Vista Ct	5817 La Vista Ct	5813 La Vista Ct	5804 La Vista Ct
+Subdivision	Edison Court Addn	Edison Court Addn	Edison Court Addn	Edison Court Addn	Edison Court Addn
+State class	13	13	13	13	13
+Location from subject (miles)	—	0.02 mi	0.05 mi	0.04 mi	0.03 mi
+BUILDING CHARACTERISTICS
+Living area (SF)	2,504	2,504	2,504	2,496	2,400
+Year built	1930	1930	1930	1930	1930
+Effective year built	1930	1930	1930	1930	1930
+Bedrooms	4	4	4	4	4
+2026 MARKET VALUES
+Land value	$255,000	$255,000	$255,000	$260,100	$218,400
+Land $/SF (living area)	$101.84	$101.84	$101.84	$104.21	$91.00
+Improvement value	$223,230	$264,230	$206,010	$267,610	$211,750
+Improvement $/SF	$89.15	$105.52	$82.27	$107.22	$88.23
+CAD market value	$478,230	$519,230	$461,010	$527,710	$430,150
+CAD market $/SF	$190.99	$207.36	$184.11	$211.42	$179.23
+ADJUSTMENTS
+Land value adj.		$0	$0	−$5,100	+$36,600
+Improvement adj. — size		$0	$0	+$388	+$5,038
+Age/condition adj.		$0	$0	$0	$0
+Additional (pools, garages, misc.)		$0	$0	+$10,000	$0
+TOTALS
+Total net adjustment		$0	$0	+$5,288	+$41,638
+Total net adjustment ($/SF)		$0.00	$0.00	+$2.12	+$17.35
+DERIVATION
+CAD market value		$519,230	$461,010	$527,710	$430,150
+Total net adjustments		$0	$0	+$5,288	+$41,638
+Adjusted property value		$519,230	$461,010	$532,998	$471,788
+% difference from comp CAD market value		0.0%	0.0%	+1.0%	+9.7%
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF — based on Subject SF		$207.36	$184.11	$212.86	$188.41
+Median adjusted value of comps	$495,509
+4. Analysis
+
+Year-over-year jump: the subject's noticed value rose 22.5% from $390,300 (2025) to $478,230 (2026). A jump of this magnitude in a single year is itself a §41.43(b)(1) market-value signal supporting a downward adjustment.
+
+The 4 comparables in Section 3, after adjustments, produce a median adjusted value of $495,509 — at or above the subject's noticed value of $478,230. The comp pool does not support a direct unequal-appraisal argument from a single peer under §41.43(b)(3), so the analysis below relies on broader market-factor interpretation rather than a comp-based anchor.
+
+Analysis and interpretation of market factors affecting the subject and the comparable set indicate that the subject's noticed market value is overstated relative to the broader market context in which these properties sit. Taking those market factors into account, the requested value below reflects a measured downward adjustment from the CAD's noticed value.
+
+CAD 2026 noticed market value: $478,230
+Requested market value: $382,584 ($153/sqft)
+Difference: $95,646 (20.00% below the CAD notice)
+5. Adjustment Methodology
+
+Adjustments shown in Section 3 are based on analysis and interpretation of market factors as to how they impact the individual property values. Each comparable's CAD-noticed value is reviewed against the subject for size, age and condition, land, and other property-specific features, and a net adjustment is applied to bring the comparable onto equal footing with the subject before the requested value is derived.
+
+Non-appraisal disclaimer: This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and the property owner's interpretation of market factors. The requested market value reflects the property owner's good-faith opinion of value; it does not represent a market-value opinion for any purpose other than this protest. (Placeholder text — pending Mike's final wording.)
+
+Dallas Central Appraisal District · Tax Year 2026 · Account 00000184960000000 · Page 1 of 1

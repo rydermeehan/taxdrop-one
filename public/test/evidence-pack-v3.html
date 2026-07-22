@@ -1,0 +1,3668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+<meta charset="UTF-8">
+<title>Opinion of Value</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- html-docx-js: converts the live HTML to a real .docx blob. -->
+<script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.min.js"></script>
+<!-- Google Maps Places API for the address autocomplete on the search bar.
+     callback=initAutocomplete fires once the API is loaded, then wires the
+     <input> below into a TX-restricted Place Autocomplete widget. -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE&libraries=places&loading=async&callback=initAutocomplete" async defer></script>
+<style>
+  :root {
+    --emerald-dark: #0C593E;
+    --emerald-light: #0B8F52;
+    --mint: #DFFFEA;
+    --charcoal: #1A1A1A;
+    --gray-500: #5C666F;
+    --gray-400: #8A929B;
+    --gray-300: #C9D0D6;
+    --gray-200: #E5E7EB;
+    --gray-100: #F4F6F8;
+    --good-bg: #E8F8EE;
+    --warn-bg: #FFF4D6;
+    --warn-border: #E5B644;
+    --warn-text: #8a6500;
+    --danger-bg: #FFE5E5;
+    --danger-border: #C73E3E;
+    --danger-text: #8a2828;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    color: var(--charcoal);
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 32px 60px;
+    line-height: 1.6;
+    background: white;
+    font-size: 14px;
+  }
+
+  /* ────────── Search bar (always visible) ────────── */
+  .search-shell {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 0 0 24px;
+  }
+  .search-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .search-row input {
+    flex: 1;
+    min-width: 240px;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    background: white;
+  }
+  .search-row input:focus {
+    outline: none;
+    border-color: var(--emerald-light);
+    box-shadow: 0 0 0 3px rgba(11, 143, 82, 0.15);
+  }
+  .search-row button {
+    padding: 10px 20px;
+    border: none;
+    background: var(--emerald-dark);
+    color: white;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .search-row button:hover { background: var(--emerald-light); }
+  .search-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .search-help {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 8px;
+  }
+  .search-help a { color: var(--emerald-light); text-decoration: none; font-weight: 500; }
+  .search-help a:hover { text-decoration: underline; }
+
+  /* ────────── States ────────── */
+  .state-card {
+    padding: 56px 24px;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    border: 1px dashed var(--gray-300);
+    color: var(--gray-500);
+  }
+  .state-card h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--emerald-dark);
+    font-size: 22px;
+    margin: 0 0 10px;
+  }
+  .state-card .lede { font-size: 14px; max-width: 540px; margin: 0 auto 16px; line-height: 1.55; }
+  .state-card .examples { font-size: 13px; margin-top: 18px; }
+  .state-card.error {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    text-align: left;
+    padding: 24px 28px;
+  }
+  .state-card.error h2 { color: var(--danger-text); }
+  .state-card.error code {
+    background: white;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    border: 4px solid var(--mint);
+    border-top-color: var(--emerald-light);
+    border-radius: 50%;
+    animation: rspin 0.9s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes rspin { to { transform: rotate(360deg); } }
+
+  /* ────────── Report sections ────────── */
+  .doc-header {
+    border-bottom: 3px solid var(--emerald-dark);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .doc-header-text { flex: 1; min-width: 280px; }
+  .export-bar { display: flex; gap: 8px; flex-shrink: 0; padding-top: 4px; }
+  .btn-export {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--emerald-light);
+    background: white;
+    color: var(--emerald-light);
+    border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.1s ease;
+  }
+  .btn-export:hover { background: var(--mint); }
+  .btn-export:active { background: var(--good-bg); }
+  .btn-export.generating { background: var(--mint); }
+  .btn-export svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .btn-export.btn-export-internal {
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+  .btn-export.btn-export-internal:hover { background: var(--warn-bg); }
+
+  .doc-header .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--emerald-dark);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .doc-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--charcoal);
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+  .doc-header .meta { color: var(--gray-500); font-size: 13px; }
+
+  .filing-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 24px;
+    margin-bottom: 32px;
+    font-size: 13px;
+  }
+  .filing-info .label { color: var(--gray-500); font-weight: 500; }
+  .filing-info .value { font-weight: 600; color: var(--charcoal); }
+  .na { color: var(--gray-400); font-weight: 400; font-style: italic; }
+
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--emerald-dark);
+    margin: 36px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  h2 .section-num { color: var(--gray-400); font-weight: 400; margin-right: 8px; }
+
+  /* Section 1 — Subject Property — compact 2-column label/value grid */
+  .subject-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin: 0 0 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--gray-200);
+    font-size: 13px;
+  }
+  .subject-grid .sp-cell {
+    background: white;
+    padding: 9px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .subject-grid .sp-label {
+    color: var(--gray-500);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .subject-grid .sp-value {
+    color: var(--charcoal);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  @media print { .subject-grid { grid-template-columns: 1fr 1fr; } }
+
+  .property-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 12px;
+    font-size: 13px;
+  }
+  .property-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+  .property-table td.label {
+    background: var(--gray-100);
+    color: var(--gray-500);
+    font-weight: 500;
+    width: 240px;
+  }
+  .property-table td.value { font-weight: 600; color: var(--charcoal); }
+
+  .requested-value {
+    background: var(--good-bg);
+    border: 2px solid var(--emerald-light);
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin: 12px 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+  }
+  .requested-value .rv-block { padding: 4px 0; }
+  .requested-value .rv-block.requested { text-align: left; }
+  .requested-value .rv-block.notice { text-align: left; }
+  .requested-value .rv-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .requested-value .rv-block.requested .rv-label { color: var(--emerald-dark); }
+  .requested-value .rv-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gray-500);
+    line-height: 1.1;
+  }
+  .requested-value .rv-block.requested .rv-amount { color: var(--charcoal); font-size: 32px; }
+  .requested-value .rv-psf { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+  .requested-value .rv-arrow {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--emerald-light);
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+  }
+
+  /* ────────── Equity grid ────────── */
+  .equity-grid-wrapper { overflow-x: auto; margin: 12px 0 14px; border: 1px solid var(--gray-300); border-radius: 6px; }
+  table.equity-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin: 0;
+    min-width: 1000px;
+  }
+  table.equity-grid th, table.equity-grid td {
+    border: 1px solid var(--gray-300);
+    padding: 5px 8px;
+    vertical-align: top;
+  }
+  /* Mike's V3 markup (Holsten Hill, 2026-06-17): right-align value columns
+     so the big-dollar values line up across rows. attr-label stays left. */
+  table.equity-grid tbody td:not(.attr-label) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Photo cells re-center inside their column so the image isn't right-edged */
+  table.equity-grid tbody td.photo-cell { text-align: center; }
+  table.equity-grid thead th {
+    background: var(--charcoal);
+    color: white;
+    /* Mike's V3 markup (La Vista, 2026-06-18): right-align headers so the
+       SUBJECT / COMP labels line up with the right-aligned numeric data. */
+    text-align: right;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 8px 6px;
+    border: 1px solid var(--charcoal);
+  }
+  /* First header column (empty cell above attr-label) stays left-aligned */
+  table.equity-grid thead th:first-child { text-align: left; }
+  table.equity-grid thead th.subject-col { background: var(--emerald-dark); border-color: var(--emerald-dark); }
+  table.equity-grid thead th.match-col { background: var(--emerald-light); border-color: var(--emerald-light); }
+  table.equity-grid tbody tr.section-header td {
+    background: var(--gray-200);
+    color: var(--charcoal);
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 8px;
+    /* Mike's V3 markup (La Vista, 2026-06-18): "Make titles Left aligned"
+       — these subsection bars (BUILDING CHARACTERISTICS, 2026 MARKET
+       VALUES, etc.) span all columns and were inheriting the right-align
+       from the value cells rule. Force left. */
+    text-align: left !important;
+  }
+  table.equity-grid tbody td.attr-label {
+    background: var(--gray-100);
+    font-weight: 600;
+    color: var(--gray-500);
+    /* Mike's V3 markup (La Vista, 2026-06-18 round 3): narrow column 1 so
+       it fits on screen and PDF. Labels are abbreviated below to keep
+       single-line wrapping at this tighter width. */
+    width: 180px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  /* Mike's V3 markup (Holsten Hill, 2026-06-17): green-on-green is hard
+     to read. Keep the subject background tint for column identification
+     but use charcoal text — same visual weight, much better contrast. */
+  table.equity-grid tbody td.subject-cell {
+    background: #F0FAF4;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+  table.equity-grid tbody td.match-cell {
+    background: var(--good-bg);
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+  table.equity-grid tbody td.photo-cell {
+    text-align: center;
+    padding: 6px;
+    background: white;
+  }
+  table.equity-grid tbody td.photo-cell.subject-cell { background: #F0FAF4; }
+  table.equity-grid tbody td.photo-cell.match-cell { background: var(--good-bg); }
+  table.equity-grid tbody td.photo-cell img {
+    width: 130px;
+    height: 78px;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
+    border: 1px solid var(--gray-300);
+  }
+  table.equity-grid tbody td.photo-cell .no-photo {
+    width: 130px;
+    height: 78px;
+    background: var(--gray-100);
+    color: var(--gray-400);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid var(--gray-200);
+    margin: 0 auto;
+  }
+  .em-na { color: var(--gray-400); font-style: italic; }
+
+  /* ────────── Location map ────────── */
+  .location-map { text-align: center; margin: 14px 0 22px; }
+  .location-map img {
+    max-width: 720px;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid var(--gray-300);
+    display: block;
+    margin: 0 auto;
+  }
+  .location-map .map-caption {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 14px;
+    line-height: 1.6;
+  }
+  .location-map .map-legend {
+    /* Mike's V3 markup (La Vista, 2026-06-18): "fix overlap" between
+       legend pins and the comma-spaced address tail. More gap + row gap
+       so wrapped lines don't crowd, more breathing room from the map. */
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 18px;
+    row-gap: 6px;
+    justify-content: center;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--gray-500);
+  }
+  .location-map .map-legend > span {
+    white-space: nowrap;
+    /* Ryder 2026-07-21: the pin is a 16px circle inside an 11px text line, so
+       at the default line-height its box overflowed into the caption line
+       below it. Match the line box to the pin. */
+    display: inline-flex;
+    align-items: center;
+    line-height: 18px;
+  }
+  .location-map .map-legend .legend-pin {
+    display: inline-block;
+    flex: 0 0 auto;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    margin-right: 5px;
+  }
+  .location-map .map-legend .pin-subject { background: #2E7D32; }
+  .location-map .map-legend .pin-comp { background: #6A1B9A; }
+  .location-map .map-legend .pin-sales { background: #E65100; }
+  table.equity-grid tfoot td {
+    background: var(--mint);
+    color: var(--emerald-dark);
+    font-weight: 700;
+    padding: 9px 10px;
+    border: 1px solid var(--emerald-light);
+    font-size: 11px;
+  }
+  /* Mike's V3 markup (Holsten Hill, 2026-06-17): "box it either color or
+     lines" — make the Indicator row + footer rows visually prominent so
+     the ARB reviewer's eye lands on them first. */
+  table.equity-grid tbody tr.section-header.section-indicator-based-on-subject-sf td {
+    background: var(--emerald-dark);
+    color: white;
+    border-top: 2px solid var(--emerald-dark);
+  }
+  table.equity-grid tbody tr.section-header.section-indicator-based-on-subject-sf + tr td {
+    border-top: 2px solid var(--emerald-dark);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  table.equity-grid tfoot td:first-child,
+  table.equity-grid tfoot td:nth-child(2) {
+    font-size: 13px;
+    border-top: 2px solid var(--emerald-dark);
+  }
+  table.equity-grid tfoot tr:last-child td {
+    border-bottom: 2px solid var(--emerald-dark);
+  }
+
+  /* ────────── Analysis section ────────── */
+  .analysis-summary {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 12px 0;
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+  .analysis-summary p { margin: 0 0 12px; line-height: 1.65; }
+  .analysis-summary p:last-child { margin-bottom: 0; }
+  /* Mike's V3 markup (La Vista, 2026-06-18 round 2): "fix text overlap
+     issues" — ensure inline annotations (b, br, hr) inside narrative
+     paragraphs don't collide on tight line-heights. */
+  .analysis-summary p + p { margin-top: 0; }
+  .analysis-summary br { line-height: inherit; }
+  .analysis-summary .calc-line {
+    font-family: 'Space Grotesk', sans-serif;
+    background: white;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 10px 0;
+    border: 1px solid var(--gray-200);
+    font-size: 13px;
+  }
+  .analysis-summary .calc-line b { color: var(--emerald-dark); }
+  .analysis-summary .statute-cite {
+    background: var(--gray-100);
+    border-left: 4px solid var(--emerald-dark);
+    padding: 10px 14px;
+    margin: 10px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--gray-500);
+  }
+  /* Section 5 — Adjustment Methodology */
+  .methodology-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 6px;
+    font-size: 12.5px;
+  }
+  .methodology-table th, .methodology-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+  .methodology-table th {
+    background: var(--gray-100);
+    font-weight: 600;
+    color: var(--emerald-dark);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  .methodology-table { table-layout: fixed; }
+  .methodology-table .adj-name { font-weight: 600; width: 18%; }
+  .methodology-table .adj-mag { width: 28%; color: var(--emerald-dark); font-family: 'Space Grotesk', sans-serif; word-wrap: break-word; }
+  .methodology-table .adj-desc { width: 54%; }
+  .methodology-table .adj-inactive .adj-name,
+  .methodology-table .adj-inactive .adj-mag { color: var(--gray-500); }
+  .methodology-table .adj-inactive .adj-mag::after { content: ' — not active'; font-style: italic; color: var(--gray-500); }
+  .methodology-note {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--gray-500);
+    line-height: 1.55;
+  }
+
+  /* Section 6 — Sales comparables (Clear Capital MLS) */
+  .sales-comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 16px;
+    font-size: 12px;
+  }
+  .sales-comp-table th {
+    background: var(--mint);
+    color: var(--emerald-dark);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid var(--mint);
+  }
+  .sales-comp-table th.right, .sales-comp-table td.right { text-align: right; }
+  .sales-comp-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+  }
+  .sales-comp-table td.right { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sales-comp-table tfoot td {
+    background: var(--gray-100);
+    padding: 9px 10px;
+    font-size: 12px;
+    color: var(--gray-500);
+    border-top: 1px solid var(--gray-300);
+  }
+  .sales-comp-table tfoot b { color: var(--charcoal); }
+
+  .footer {
+    color: var(--gray-500);
+    font-size: 10px;
+    margin-top: 32px;
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-200);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .footer .data-source { margin-top: 4px; color: var(--gray-400); font-size: 9.5px; }
+
+  /* Ryder 2026-07-21: the report is handed to ARBs and assessors and must not
+     read as TaxDrop-branded. Chrome/Safari draw the date / document title /
+     source URL / page number into the @page MARGIN box — the only way to
+     suppress them from CSS is to leave no margin box to draw into. Page
+     whitespace is reinstated below via body padding (left/right, applied to
+     every page) plus h2 padding-top (so a section that starts a new page
+     doesn't butt against the sheet edge).
+     Residual caveat: a user who overrides margins to "Default" in the print
+     dialog gets the browser headers back — the dialog's own "Headers and
+     footers" checkbox wins over CSS. */
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
+  @media print {
+    body { padding: 0.5in; max-width: none; font-size: 12px; }
+    .search-shell { display: none !important; }
+    .export-bar { display: none !important; }
+    h2 { page-break-after: avoid; padding-top: 0.3in; }
+    .cover-summary h2:first-child { padding-top: 0; }
+    .footer { padding-bottom: 0.35in; }
+    .location-map img { max-width: 580px; }
+    .location-map .map-legend { font-size: 9px; column-gap: 12px; row-gap: 5px; margin-bottom: 10px; }
+    .location-map .map-legend > span { line-height: 16px; }
+    .location-map .map-legend .legend-pin { min-width: 14px; height: 14px; line-height: 14px; font-size: 9px; }
+    .requested-value, .analysis-summary { page-break-inside: avoid; }
+    /* Mike's V3 markup (La Vista, 2026-06-18): "make the comps table all
+       fit on one page". Tightened padding, font, and label column width
+       for print so the entire equity grid stays on a single page. */
+    .equity-grid-wrapper { overflow-x: visible; page-break-inside: avoid; }
+    table.equity-grid { font-size: 8.5px; min-width: 0; page-break-inside: avoid; }
+    table.equity-grid th, table.equity-grid td { padding: 2px 4px; }
+    table.equity-grid tbody td.attr-label { width: 140px; font-size: 8.5px; }
+    table.equity-grid tbody td.photo-cell { padding: 1px; }
+    table.equity-grid tbody td.photo-cell img,
+    table.equity-grid tbody td.photo-cell .no-photo { width: 80px; height: 48px; }
+    table.equity-grid tbody tr.section-header td { font-size: 8.5px; padding: 2px 6px; }
+    table.equity-grid tfoot td { padding: 4px 6px; font-size: 10px; }
+    /* Editor chrome never prints (belt-and-suspenders; it's also stripped from
+       the saved overlay and removed before an editor-initiated print). */
+    .ed-toolbar, .ed-banner, .ed-ctl { display: none !important; }
+    /* Empty Notes box is stripped from PDF exports (beforeprint flags it). */
+    .notes-block.notes-print-hide { display: none !important; }
+    [contenteditable] { outline: none !important; }
+  }
+
+  /* ── WYSIWYG report editor chrome (agent-only, ?edit=1) ───────────────── */
+  body.ed-on { padding-top: 92px; }           /* clear the fixed toolbar */
+  .ed-toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 16px; background: #0C593E; color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: 13px;
+  }
+  .ed-toolbar .ed-title { font-weight: 700; margin-right: 6px; }
+  .ed-toolbar button {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.12);
+    color: #fff; padding: 7px 13px;
+  }
+  .ed-toolbar button.primary { background: #C4FF64; color: #0C593E; border-color: #C4FF64; }
+  .ed-toolbar button:disabled { opacity: .5; cursor: default; }
+  .ed-toolbar .ed-status { margin-left: auto; font-size: 12px; opacity: .9; }
+  .ed-banner {
+    background: #FFF8E1; border: 1px solid #F0E2BB; color: #7a5a20;
+    border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; font-size: 12.5px; line-height: 1.6;
+  }
+  /* Editable regions get a soft affordance; delete controls a red pill. */
+  body.ed-on #state-report [contenteditable="true"]:hover { outline: 1px dashed #0B8F52; outline-offset: 2px; }
+  body.ed-on #state-report [contenteditable="true"]:focus { outline: 2px solid #0B8F52; outline-offset: 2px; }
+  .ed-ctl {
+    cursor: pointer; user-select: none; display: inline-flex; align-items: center;
+    justify-content: center; font-weight: 700; line-height: 1;
+  }
+  .ed-ctl.ed-col, .ed-ctl.ed-row {
+    width: 16px; height: 16px; border-radius: 50%; font-size: 12px;
+    background: #fdecea; color: #B42318; border: 1px solid #f3c0ba; margin-left: 6px;
+  }
+  .ed-ctl.ed-sec {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-left: 8px;
+    background: #fdecea; color: #B42318; border: 1px solid #f3c0ba; vertical-align: middle;
+  }
+  .ed-ctl:hover { background: #B42318; color: #fff; }
+  /* Notes box: hidden when empty outside the editor (customer view); in the
+     editor it always shows with a placeholder so the agent can add notes. */
+  body:not(.ed-on) .notes-block.notes-empty { display: none; }
+  body.ed-on .notes-body:empty::before { content: 'Add notes (optional)\2026'; color: var(--gray-400); pointer-events: none; }
+</style>
+</head>
+<body>
+
+<!-- Search bar — always visible (hidden during print) -->
+<div class="search-shell" id="search-shell">
+  <div class="search-row">
+    <input type="text" id="addr-input" placeholder="Enter a Texas address (e.g. 20022 Atasca Villas Dr, Humble, TX 77346)"
+           autocomplete="off" />
+    <button onclick="submitSearch()" id="btn-search">Generate Report</button>
+  </div>
+  <div class="search-help">
+    Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics).
+    <a href="#" onclick="loadExample(event)">Try example: 20022 Atasca Villas Dr</a>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div class="state-card" id="state-empty">
+  <h2>Equity Analysis Generator</h2>
+  <div class="lede">Enter a Texas property address above to generate a property-owner evidence submission for an unequal-appraisal protest.</div>
+  <div class="examples">
+    Examples: <a href="#" onclick="loadAddress('20022 Atasca Villas Dr, Humble, TX 77346')">Harris</a>
+    &middot; <a href="#" onclick="loadAddress('14451 Andrea Way Ln, Houston, TX 77083')">Fort Bend</a>
+    &middot; <a href="#" onclick="loadAddress('9843 Promontory Dr, Frisco, TX 75034')">Collin</a>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div class="state-card" id="state-loading" hidden>
+  <div class="spinner"></div>
+  <div>Loading subject and comparable properties&hellip;</div>
+</div>
+
+<!-- Error state -->
+<div class="state-card error" id="state-error" hidden>
+  <h2>Lookup failed</h2>
+  <div id="error-detail"></div>
+</div>
+
+<!-- Report state — populated by renderReport() -->
+<div id="state-report" hidden></div>
+
+<script>
+  // ────────── Constants ──────────
+  const ENGINE = 'https://savings-engine-database.vercel.app';
+  const MAPS_KEY = 'AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE';
+  const STREETVIEW_KEY = 'AIzaSyBtd8bzCW_lY6pd4NMYLIFDeU6vpuNYUFA';
+
+  // ────────── Helpers ──────────
+  function $(id) { return document.getElementById(id); }
+  function fmtMoney(n) {
+    if (n == null) return '—';
+    return '$' + Math.round(Number(n)).toLocaleString();
+  }
+  function fmtPct(n) {
+    if (n == null) return '—';
+    return (n * 100).toFixed(2) + '%';
+  }
+  function fmtNum(n, dec = 0) {
+    if (n == null) return '—';
+    return Number(n).toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  // Single canonical PSF formatter — "$219/sqft" (rounded to nearest dollar,
+  // includes the $ sign, slash-format). Anywhere PSF is displayed should go
+  // through this so the format stays consistent across all sections.
+  function fmtPsf(n) {
+    if (n == null) return '';
+    return '$' + Math.round(Number(n)).toLocaleString() + '/sqft';
+  }
+  // fmtPsfBare: same value, no /sqft suffix. Mike's V3 feedback (Holsten
+  // Hill markup, 2026-06-17): when the row label already says "($/SF)",
+  // the cell shouldn't also say "/sqft". Show 2 decimals for $/SF precision.
+  function fmtPsfBare(n) {
+    if (n == null) return '';
+    return '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtAccount(parcelId, county) {
+    // Harris uses XXX-XXX-XXX-XXXX dashed format. Others vary; emit raw.
+    if (!parcelId) return '—';
+    if (county === 'harris' && parcelId.length === 13) {
+      return parcelId.slice(0, 3) + '-' + parcelId.slice(3, 6) + '-' + parcelId.slice(6, 9) + '-' + parcelId.slice(9);
+    }
+    return parcelId;
+  }
+  function titleCase(s) {
+    if (!s) return '';
+    return s.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase());
+  }
+  function or(v, fallback) {
+    if (v === null || v === undefined || v === '') return fallback;
+    return v;
+  }
+  // hasVal: true if v carries usable data. Treat NaN like null so computed
+  // values like NaN/sqft don't slip into "—" displays.
+  function hasVal(v) {
+    if (v === null || v === undefined || v === '') return false;
+    if (typeof v === 'number' && Number.isNaN(v)) return false;
+    return true;
+  }
+  // Conditional row helpers — render the row/div only if the value is known.
+  // The user explicitly asked us NOT to render placeholders for unknown
+  // fields, so callers should rely on these instead of inline fallbacks.
+  function kvRow(label, v, fmt) {
+    if (!hasVal(v)) return '';
+    const display = fmt ? fmt(v) : v;
+    return `<tr><td class="label">${label}</td><td class="value">${display}</td></tr>`;
+  }
+  function kvDiv(label, v, fmt) {
+    if (!hasVal(v)) return '';
+    const display = fmt ? fmt(v) : v;
+    return `<div><span class="label">${label}</span> <span class="value">${display}</span></div>`;
+  }
+  function isoToLongDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  function encodeAddr(a) { return encodeURIComponent(a); }
+
+  // Reverse-comp ordering: API best_match_comp_index is the index into the
+  // returned comps[] array. The grid renders comps in their natural order
+  // (closest sqft first), so we just decorate that index.
+  function buildSubjectAddrForMaps(subject) {
+    const parts = [subject.full_address, subject.site_zip].filter(Boolean);
+    return parts.join(', ') + ', TX';
+  }
+  function buildCompAddrForMaps(comp, subject) {
+    // Comp's full_address has "STREET, CITY ZIP"; append ", TX" for unambiguous geocode.
+    return (comp.full_address || comp.site_address) + ', TX';
+  }
+
+  // ────────── Google Places autocomplete ──────────
+  let autocomplete = null;
+  // Global callback referenced in the Maps loader script tag.
+  window.initAutocomplete = function() {
+    const input = $('addr-input');
+    if (!input || !window.google || !google.maps || !google.maps.places) return;
+    autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' },
+      fields: ['formatted_address', 'address_components'],
+    });
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place && place.formatted_address) {
+        // Strip the country suffix ", USA" so it doesn't confuse the engine's
+        // address parser.
+        const addr = place.formatted_address.replace(/,\s*USA$/, '');
+        $('addr-input').value = addr;
+        submitSearch();
+      }
+    });
+  };
+
+  // ────────── State management ──────────
+  const STATES = ['empty', 'loading', 'error', 'report'];
+  function showState(s) {
+    STATES.forEach(name => {
+      const el = $('state-' + name);
+      if (el) el.hidden = (name !== s);
+    });
+  }
+
+  function loadExample(e) {
+    if (e) e.preventDefault();
+    loadAddress('20022 Atasca Villas Dr, Humble, TX 77346');
+  }
+  function loadAddress(addr) {
+    $('addr-input').value = addr;
+    submitSearch();
+  }
+
+  // ────────── fetch with explicit timeout + retry ──────────
+  // Default browser fetch has no timeout, but in practice Safari can drop
+  // a slow request as "Failed to fetch" if the page handler holds it open
+  // too long. Combined with Vercel cold-start latency (5-10s on first hit),
+  // this surfaces to users as random "Failed to fetch" errors that go away
+  // on reload. Wrap the call in an AbortController-driven timeout and retry
+  // once on transient network failures (TypeError = network-level, not HTTP).
+  async function fetchWithRetry(url, opts, { attempts = 2, timeoutMs = 30000 } = {}) {
+    let lastErr = null;
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const resp = await fetch(url, { ...opts, signal: ctrl.signal });
+        clearTimeout(timer);
+        return resp;
+      } catch (err) {
+        clearTimeout(timer);
+        lastErr = err;
+        // Only retry on network-level failures (TypeError, AbortError). A
+        // non-network exception means something else is wrong; surface it.
+        const retryable = err.name === 'AbortError' || err.name === 'TypeError'
+          || (err.message || '').toLowerCase().includes('failed to fetch')
+          || (err.message || '').toLowerCase().includes('network');
+        if (!retryable || attempt === attempts) throw err;
+        // Brief backoff before retry to let the cold-start finish
+        await new Promise(r => setTimeout(r, 1200));
+      }
+    }
+    throw lastErr;
+  }
+
+  // The engine has known duplicate rows where a prior-year record and the
+  // current-year record share an address. ZIP-less queries resolve to the
+  // stale row; ZIP-included queries resolve to the canonical current row.
+  // Force ZIP on every lookup and refuse to render anything older than
+  // CURRENT_TAX_YEAR. (2026-06-22 — Mike: "why did this use 2025 data?")
+  const CURRENT_TAX_YEAR = 2026;
+  async function ensureAddressZip(addr) {
+    const raw = String(addr || '').trim();
+    if (!raw) return raw;
+    if (/\b\d{5}(-\d{4})?\b/.test(raw)) return raw;
+    const ready = await _waitForGoogleMaps(3000);
+    if (!ready) return raw;
+    return new Promise(resolve => {
+      new google.maps.Geocoder().geocode(
+        { address: raw, componentRestrictions: { country: 'us' } },
+        (results, status) => {
+          if (status === 'OK' && results && results[0] && results[0].formatted_address) {
+            resolve(results[0].formatted_address);
+          } else {
+            resolve(raw);
+          }
+        }
+      );
+    });
+  }
+
+  // Non-blocking stale-year notice for agent edit mode. Reuses the .ed-banner
+  // class, which is already hidden in @media print (line ~659), so it shows
+  // on-screen for the reviewing agent but never lands in an exported PDF.
+  function showStaleBanner(ty) {
+    const root = $('state-report');
+    if (!root || root.querySelector('.stale-note')) return;
+    const b = document.createElement('div');
+    b.className = 'ed-banner stale-note';
+    b.setAttribute('contenteditable', 'false');
+    b.style.cssText = 'background:#fff4d6;border-color:#e8c766;color:#7a5b00;font-weight:600;';
+    b.textContent = '⚠︎ The engine returned ' + ty + ' data for this property (a known duplicate-row issue), not '
+      + CURRENT_TAX_YEAR + '. Review the figures before you export.';
+    root.insertBefore(b, root.firstChild);
+  }
+
+  // ────────── Search + fetch ──────────
+  async function submitSearch() {
+    const addr = ($('addr-input').value || '').trim();
+    if (!addr) {
+      $('addr-input').focus();
+      return;
+    }
+    // Update URL for shareable links (no reload)
+    const url = new URL(window.location.href);
+    url.searchParams.set('address', addr);
+    window.history.replaceState({}, '', url.toString());
+    // Provisional title; renderReport() overwrites it with the final
+    // `{Address}-Value-Evidence` export filename once the subject loads.
+    document.title = titleCase(addr.split(',')[0].trim()).replace(/[^A-Za-z0-9]+/g, '_') + '-Value-Evidence';
+
+    showState('loading');
+    try {
+      // Force the ZIP into the lookup so we don't hit the stale dupe.
+      const lookupAddress = await ensureAddressZip(addr);
+      // Route through the same-origin CAD proxy: it injects the API key
+      // server-side, so the page works with zero setup and sidesteps browser
+      // cross-origin blocking (extensions, privacy shields, network filters).
+      const resp = await fetchWithRetry('/api/cad-proxy?path=/api/evidence-pack/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: lookupAddress }),
+      }, { attempts: 2, timeoutMs: 30000 });
+
+      if (!resp.ok) {
+        let err;
+        try { err = await resp.json(); } catch (_) { err = { message: resp.statusText }; }
+        if (resp.status === 404) {
+          $('error-detail').innerHTML =
+            '<p><b>Address not found in property records.</b></p>' +
+            '<p>Tried: <code>' + (err.detail?.address_tried || addr) + '</code></p>' +
+            '<p style="margin-top:14px;">Possible reasons:</p>' +
+            '<ul style="margin:8px 0 0 20px;font-size:13px;">' +
+            '<li>The address is outside the 44 TX counties TaxDrop currently ingests</li>' +
+            '<li>The CAD database doesn\'t have this parcel yet (most CADs publish 2026 rolls in April-May)</li>' +
+            '<li>Address spelling differs from the CAD\'s record (try without unit number, or use the autocomplete suggestion)</li>' +
+            '</ul>';
+        } else {
+          $('error-detail').innerHTML =
+            '<p><b>Engine returned HTTP ' + resp.status + '.</b></p>' +
+            '<p>Message: <code>' + (err.detail?.message || err.detail || err.message || resp.statusText) + '</code></p>';
+        }
+        showState('error');
+        return;
+      }
+
+      const data = await resp.json();
+      // Reject stale-year records — but ONLY on the CAD-database path. With the
+      // ZIP forced above, the canonical current-year DB row should always win;
+      // an older DB row is the duplicate-dupe bug, not "no current data yet".
+      // This guard is DB-ONLY on purpose: when the engine falls back to ATTOM
+      // (data_source === 'ATTOM'), the prior-year row is simply the freshest
+      // assessment ATTOM has for that parcel (Tarrant/800 Saxon Trail and every
+      // other ATTOM-served county) — gating it fabricates a "stale-record"
+      // error and dead-ends the lookup (the 2026-06-24 regression).
+      const ty = Number(data && data.subject && data.subject.tax_year);
+      const isAttom = data && data.data_source === 'ATTOM';
+      const staleYear = (!isAttom && ty && ty < CURRENT_TAX_YEAR) ? ty : 0;
+      // Agent edit mode (?edit=1) is a trusted power-user surface: a stale
+      // duplicate-row year must NOT dead-end the lookup — the agent needs the
+      // report rendered so they can review and hand-correct it before exporting.
+      // So in edit mode we render anyway and drop a non-blocking amber banner;
+      // the customer-facing path (no edit=1) keeps the hard block below.
+      const _editMode = /^(1|true)$/.test(new URLSearchParams(window.location.search).get('edit') || '');
+      if (staleYear && !_editMode) {
+        $('error-detail').innerHTML =
+          '<p><b>Engine returned stale ' + ty + ' data for this property.</b></p>' +
+          '<p>We have ' + CURRENT_TAX_YEAR + ' data on file. This is a known stale-record ' +
+          'issue (duplicate row in the engine). Please report this address so we can dedupe it.</p>';
+        showState('error');
+        return;
+      }
+      renderReport(data);
+      showState('report');
+      if (staleYear && _editMode) showStaleBanner(staleYear);
+    } catch (e) {
+      const msg = (e.message || String(e)).toLowerCase();
+      const isNetwork = msg.includes('failed to fetch') || msg.includes('network') || msg.includes('abort');
+      if (isNetwork) {
+        $('error-detail').innerHTML =
+          '<p><b>Network error reaching the TaxDrop engine.</b></p>' +
+          '<p>Message: <code>' + (e.message || String(e)) + '</code></p>' +
+          '<p style="margin-top:14px;">Common causes:</p>' +
+          '<ul style="margin:8px 0 0 20px;font-size:13px;">' +
+          '<li>Vercel cold start &mdash; the engine function was asleep and didn\'t wake up in time. <a href="#" onclick="submitSearch();return false;" style="color:var(--emerald-light);font-weight:600;">Click here to retry</a> (it will be warm now).</li>' +
+          '<li>Browser extension or VPN blocking the request to <code>savings-engine-database.vercel.app</code>.</li>' +
+          '<li>Transient Vercel platform issue &mdash; check the engine directly: <code>curl https://savings-engine-database.vercel.app/api/health</code></li>' +
+          '</ul>';
+      } else {
+        $('error-detail').innerHTML = '<p><b>Rendering error.</b></p><p>Message: <code>' + (e.message || String(e)) + '</code></p>';
+      }
+      showState('error');
+    }
+  }
+
+  // ────────── Comp-match classifier (used by methodology gate + Section 4) ──────────
+  // Scores a comp against the subject across 4 strong dimensions:
+  //   1. living area — strict match → +1, within 5% → +1 (no list entry)
+  //   2. subdivision — strict match → +1
+  //   3. year built — strict match → +1, within 3 yr → +1 (no list entry)
+  //   4. state class — strict match → +1
+  // strongScore = sum (0–4). best_match methodology requires strongScore >= 4.
+  // History: 116 Rose Ln Hackberry (2026-06-03) surfaced a comp 15 mi away in
+  // Argyle with different subdivision + sqft delta of 12.5% as "directly
+  // comparable on every attribute" — broke CAD-credibility. (2026-06-03 audit.)
+  function classifyComp(s, c) {
+    const identical = [];
+    const differing = [];
+    let strongScore = 0;
+
+    if (s.living_sqft && c.living_sqft) {
+      const delta = Math.abs(s.living_sqft - c.living_sqft) / s.living_sqft;
+      if (s.living_sqft === c.living_sqft) {
+        identical.push({ label: 'living area', val: fmtNum(s.living_sqft) + ' sqft' });
+        strongScore += 1;
+      } else if (delta <= 0.05) {
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'living area', sVal: fmtNum(s.living_sqft) + ' sqft', cVal: fmtNum(c.living_sqft) + ' sqft' });
+      }
+    }
+    if (s.subdivision && c.subdivision) {
+      if (s.subdivision === c.subdivision) {
+        identical.push({ label: 'subdivision', val: titleCase(s.subdivision) });
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'subdivision', sVal: titleCase(s.subdivision), cVal: titleCase(c.subdivision) });
+      }
+    }
+    if (s.year_built && c.year_built) {
+      const delta = Math.abs(s.year_built - c.year_built);
+      if (s.year_built === c.year_built) {
+        identical.push({ label: 'year built', val: s.year_built });
+        strongScore += 1;
+      } else if (delta <= 3) {
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'year built', sVal: s.year_built, cVal: c.year_built });
+      }
+    }
+    if (s.state_class && c.state_class) {
+      if (s.state_class === c.state_class) {
+        identical.push({ label: 'property classification', val: s.state_class });
+        strongScore += 1;
+      } else {
+        differing.push({ label: 'classification', sVal: s.state_class, cVal: c.state_class });
+      }
+    }
+    return { identical, differing, strongScore };
+  }
+
+  // Build "Street address" display for Section 1. The DB full_address column
+  // packs "STREET, CITY ZIP" (no comma between city and zip, no state). Some
+  // ingests pack ZIP+4 too: "DALLAS 752463010" (5-digit zip + 4-digit ext).
+  // Strip whichever variant is trailing before appending the canonical
+  // ", TX <zip>". (2026-06-03: surfaced by 4624 Junius St → "Dallas 752463010".)
+  function formatStreetAddress(s) {
+    let addr = titleCase(s.full_address || '').trim();
+    const zip = String(s.site_zip || '').trim().replace(/[^\d]/g, '');
+    if (zip && addr) {
+      // Match: optional space/comma + zip + optional zip+4 ext (with or
+      // without hyphen) at end of string.
+      const trailingZipRe = new RegExp('[\\s,]+' + zip + '(-?\\d{4})?$');
+      addr = addr.replace(trailingZipRe, '');
+    }
+    if (zip) addr += ', TX ' + zip;
+    return addr;
+  }
+
+  // ────────── Per-comp adjustment breakdown ──────────
+  // Mirrors calculator_shared.adjust_comp_psf so each line in the Section 3
+  // table reconciles back to the engine's recommendation. The engine applies
+  // GLA → Age (both multiplicative), then Land (subtractive), then Features
+  // (additive flat-$), then caps the total swing at ±30% of raw PSF.
+  //
+  // Mike's consultant feedback (Bay Hollow audit, 2026-06-02): the prior
+  // brief only showed the flat-$ feature adjustment — Size/Age/Land happened
+  // invisibly inside the engine, so the displayed Adjusted PSF didn't
+  // reconcile to the engine's recommended_value. CAD reviewers can't trust
+  // a number they can't verify. This helper exposes every adjustment line
+  // so the table reconciles.
+  function computeAdjBreakdown(s, c) {
+    const compSqft = c.living_sqft || 0;
+    const compVal = c.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const rawPsf = (compSqft > 0 && compVal > 0) ? (compVal / compSqft) : 0;
+    if (!rawPsf || !compSqft || !subjSqft) {
+      return { rawPsf, sizeAdjPsf: 0, ageAdjPsf: 0, landAdjPsf: 0,
+               featureAdjPsf: 0, totalAdjPsf: 0, finalPsf: rawPsf,
+               diffPct: 0, capApplied: false };
+    }
+
+    let running = rawPsf;
+
+    // 1. GLA size adjustment — Mike's V4 formula (2026-06-18):
+    //    size_adj_$ = (median comp improvement $/SF / 2) × (subject SF − comp SF)
+    //    Sign convention: smaller comp → POSITIVE (add to comp value),
+    //    larger comp → NEGATIVE. This is the inverse of multiplicative
+    //    PSF adjustment because we're normalizing comp VALUE to subject's
+    //    footprint, not normalizing comp PSF.
+    //
+    //    The baseline rate (median improvement $/SF / 2) is computed once
+    //    in renderReport from the filtered comp pool and stashed on the
+    //    subject object as _v3_size_baseline_psf. Falls back to the legacy
+    //    multiplicative path with flipped sign when the baseline is
+    //    unavailable (e.g., comps lack improvement_value).
+    let sizeAdjPsf = 0;
+    const sizeBaselinePsf = s._v3_size_baseline_psf || 0;
+    if (sizeBaselinePsf > 0 && compSqft > 0) {
+      const sizeAdjDollars = (sizeBaselinePsf / 2) * (subjSqft - compSqft);
+      sizeAdjPsf = sizeAdjDollars / compSqft;
+      running += sizeAdjPsf;
+    } else {
+      // Legacy fallback (sign-flipped to match the new convention).
+      const sizeDiffPct = (compSqft - subjSqft) / subjSqft;
+      const glaAdj = sizeDiffPct * 0.10;
+      sizeAdjPsf = -running * glaAdj;     // flipped sign
+      running += sizeAdjPsf;              // additive instead of multiplicative
+    }
+
+    // 2. Age adjustment — Mike's V4 formula (Slack, 2026-06-18):
+    //    age_adj_$/sf = median_imp_psf × 0.35% × (year_diff)
+    //    where year_diff drives the sign. Mike's literal Slack said
+    //    "(subject age - comp age)" which mathematically equals
+    //    (comp_year - subj_year). However his Bay Hollow V4 grid showed
+    //    NEWER comps adjusting NEGATIVE (Comp built 1996 vs subj 1992
+    //    yielded -$42,329) — the appraiser-correct direction (strip value
+    //    from a newer/better comp to match subject's older condition).
+    //    The literal Slack formula gives the wrong sign vs the V4 grid.
+    //    Going with the V4 grid sign: year_diff = subj_year − comp_year
+    //    (newer comp → negative, older comp → positive).
+    //
+    //    Renovation outliers (effective-year delta >25 yr) are filtered at
+    //    comp selection upstream, so no per-comp cap needed here.
+    const sYear = s.effective_year_built || s.year_built || 0;
+    const cYear = c.effective_year_built || c.year_built || 0;
+    let ageAdjPsf = 0;
+    if (sizeBaselinePsf > 0 && sYear > 0 && cYear > 0) {
+      const yearDiff = sYear - cYear;
+      ageAdjPsf = sizeBaselinePsf * 0.0035 * yearDiff;
+      running += ageAdjPsf;
+    } else if (sYear > 0 && cYear > 0) {
+      // Legacy multiplicative fallback (15-yr year-delta cap, 0.3%/yr)
+      // when baseline PSF isn't available (e.g., no comp improvement_value).
+      let yearDiff = cYear - sYear;
+      yearDiff = Math.max(-15, Math.min(15, yearDiff));
+      const ageAdj = -yearDiff * 0.003;
+      ageAdjPsf = running * ageAdj;
+      running *= (1 + ageAdj);
+    }
+
+    // 3. Land value adjustment — subtractive, capped at ±10% of raw comp PSF.
+    let landAdjPsf = 0;
+    if (c.land_value && s.land_value && compSqft > 0) {
+      const landDiffPerSqft = (c.land_value - s.land_value) / compSqft;
+      const maxLandAdj = rawPsf * 0.10;
+      const capped = Math.max(-maxLandAdj, Math.min(maxLandAdj, landDiffPerSqft));
+      landAdjPsf = -capped;
+      running -= capped;
+    }
+
+    // 4. Feature adjustments — flat-$ pool/garage/fireplace already
+    //    computed by api/index.py and attached to c.adjustment_total.
+    const featureAdjPsf = compSqft > 0 ? (c.adjustment_total || 0) / compSqft : 0;
+    running += featureAdjPsf;
+
+    // 5. Single-comp 30% cap — enforced last so total swing stays defensible.
+    const maxSwing = rawPsf * 0.30;
+    const preCapPsf = running;
+    const cappedPsf = Math.max(rawPsf - maxSwing, Math.min(rawPsf + maxSwing, running));
+    const capApplied = Math.abs(cappedPsf - preCapPsf) > 0.5;
+
+    const totalAdjPsf = cappedPsf - rawPsf;
+    const diffPct = rawPsf > 0 ? (totalAdjPsf / rawPsf) * 100 : 0;
+
+    return {
+      rawPsf, sizeAdjPsf, ageAdjPsf, landAdjPsf, featureAdjPsf,
+      totalAdjPsf, finalPsf: cappedPsf, diffPct, capApplied,
+    };
+  }
+
+  // ────────── Report renderer ──────────
+  // SECURITY (stored-XSS defense): renderReport() interpolates string fields
+  // from `data` (addresses, county/parcel names, etc.) into template literals
+  // that are assigned to innerHTML further down. On the ?review=1 path that
+  // object is a browser-computed draft that /api/intake persists VERBATIM, so a
+  // hostile customer could smuggle markup into a string field and have it fire
+  // in a reviewer's authenticated session. escapeDeep() HTML-escapes every
+  // string value before rendering; numbers/booleans/structure are preserved, so
+  // all downstream math and formatting are unaffected.
+  function escapeHtml(v) {
+    return String(v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function escapeDeep(obj) {
+    if (obj == null || typeof obj === 'number' || typeof obj === 'boolean') return obj;
+    if (typeof obj === 'string') return escapeHtml(obj);
+    if (Array.isArray(obj)) return obj.map(escapeDeep);
+    if (typeof obj === 'object') {
+      const out = {};
+      for (const k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) out[k] = escapeDeep(obj[k]);
+      return out;
+    }
+    return obj;
+  }
+
+  function renderReport(data, opts) {
+    // `curated` = this draft was reviewed by a human agent in /review (opened
+    // with ?review=1). When true, the agent's checked comp set is authoritative
+    // and the automated comp culls below are skipped — see the guard before the
+    // filter block. Live, un-reviewed lookups pass curated=false and get the
+    // full automatic filtering.
+    const curated = !!(opts && opts.curated);
+    const s = data.subject;
+    let comps = data.comps || [];
+    const _origComps = comps.slice();  // preserve for exclusion accounting
+    const _origBest = comps[data.best_match_comp_index || 0] || null;
+    // Reviewer's customer-facing note for the cover Notes box (from
+    // overrides.reportNotes, attached to `our` server-side by applyOverrides).
+    // escapeDeep has already HTML-escaped it on the reviewed path; absent on
+    // live lookups. Distinct from the agent-only internal notes, which never
+    // reach the pack.
+    const reportNotes = (data.reportNotes == null ? '' : String(data.reportNotes)).trim();
+
+    // Filename = `{Address}-Value-Evidence.pdf` (Ryder, 2026-07-21). The
+    // report is delivered to ARBs and assessors and must not read as
+    // TaxDrop-branded, so the old "TD-{PID}-" prefix is gone. Address is
+    // title-cased (CAD data is uppercase) and spaces become underscores:
+    // "6101 LAKE SHORE DR" -> "6101_Lake_Shore_Dr-Value-Evidence.pdf".
+    try {
+      const rawAddr = (s.full_address || s.site_address || '').split(',')[0].trim();
+      const safeAddr = titleCase(rawAddr).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      document.title = safeAddr ? `${safeAddr}-Value-Evidence` : 'Value-Evidence';
+    } catch (_) { /* title update is cosmetic; never let it block rendering */ }
+
+    // ── v3 comp filtering (2026-06-17): renovation outlier + statistical
+    // outlier. Catches Comp #1 cases like 5749 La Vista Ct where DCAD shows
+    // year_built=1930 but effective_year_built=2000 — a full gut renovation
+    // the CAD captured in improvement_value (2x subject's). Our age cap
+    // (±15 yr → max ±4.5%) can't compensate, so the comp pulls the median
+    // up. Drop it from the pool instead. Mirrors but inverts the existing
+    // [[taxdrop_renovated_subject_blindspot]] memory pin.
+    const REN_DELTA_YR = 25;   // exclude when comp eff-year > subject eff + 25
+    const OUTLIER_PCT  = 0.30; // exclude when adj value > 30% above median of rest
+    const subjEffYear = s.effective_year_built || s.year_built || 0;
+    const excludedRenovation = [];
+    const excludedOutlier = [];
+
+    // compDistance — miles from the subject: prefer the engine's own
+    // `distance_mi` (no geocode, always present on real comps), else haversine
+    // from lat/lng, else null when neither is available. Used by both the hard
+    // floor (always) and the soft progressive cap (curated-skippable).
+    const _subjLatH = parseFloat(s.latitude), _subjLonH = parseFloat(s.longitude);
+    const compDistance = (c) => {
+      if (c.distance_mi != null && isFinite(Number(c.distance_mi))) return Number(c.distance_mi);
+      const cLat = parseFloat(c.latitude), cLon = parseFloat(c.longitude);
+      if (isFinite(_subjLatH) && isFinite(_subjLonH) && isFinite(cLat) && isFinite(cLon))
+        return _haversineMiles({ lat: _subjLatH, lng: _subjLonH }, { lat: cLat, lng: cLon });
+      return null;
+    };
+
+    // ── HARD far-distance floor (Ryder 2026-07-21) — ALWAYS runs, even on a
+    // curated/reviewed report. A comp >15 mi from the subject is categorically
+    // indefensible at ARB; no agent curation makes a 41-mile comp valid, so this
+    // floor sits OUTSIDE the !curated guard below. The softer, judgment-call
+    // culls (renovation, statistical outlier, cap-7/odd) stay agent-
+    // discretionary. Comps of unknown distance are kept (can't prove they're
+    // far). This also keeps the location map tight — a far comp can't blow the
+    // auto-fit viewport out to a multi-state view because it never reaches it.
+    const FAR_FLOOR_MI = 15;
+    comps = comps.filter(c => { const d = compDistance(c); return d == null || d <= FAR_FLOOR_MI; });
+
+    // Ryder 2026-07-21: on a REVIEWED draft (?review=1) a human agent has
+    // already curated the comp set in /review, and /api/report?applied=1 has
+    // dropped everything they unchecked — so `comps` here already IS their
+    // final checked set. Re-running these four automated culls would ship a
+    // DIFFERENT set than the boxes the agent saw ("agent picks 4, county gets
+    // 3"). Skip them when curated; they run only on live, un-reviewed lookups.
+    // The /review console now shows per-comp distance so the human can make the
+    // same call the distance cap used to make automatically.
+    if (!curated) {
+    if (subjEffYear > 0) {
+      comps = comps.filter(c => {
+        const cEff = c.effective_year_built || c.year_built || 0;
+        if (!cEff) return true;
+        if ((cEff - subjEffYear) > REN_DELTA_YR) {
+          excludedRenovation.push({ comp: c, cEff, subjEff: subjEffYear });
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Statistical outlier — backstop for cases the renovation filter misses
+    // (CAD didn't publish effective_year, grade upgrade not in our data, etc).
+    // Only fires when ≥3 comps remain so the median is stable.
+    if (comps.length >= 3) {
+      const indicatedVals = comps.map(c => {
+        const cv = c.total_market || 0;
+        const cs = c.living_sqft || 0;
+        if (!cv || !cs) return null;
+        return Math.round(cv + computeAdjBreakdown(s, c).totalAdjPsf * cs);
+      });
+      const validSorted = indicatedVals.filter(v => v != null && v > 0).sort((a, b) => a - b);
+      if (validSorted.length >= 3) {
+        const n = validSorted.length;
+        const med = n % 2 === 1
+          ? validSorted[Math.floor(n / 2)]
+          : (validSorted[n / 2 - 1] + validSorted[n / 2]) / 2;
+        const cutoff = med * (1 + OUTLIER_PCT);
+        comps = comps.filter((c, i) => {
+          const v = indicatedVals[i];
+          if (v != null && v > cutoff) {
+            excludedOutlier.push({ comp: c, indicated: v, cutoff: Math.round(cutoff), medianOfRest: Math.round(med) });
+            return false;
+          }
+          return true;
+        });
+      }
+    }
+
+    // ── Distance cap (Ryder, 2026-07-21) ──────────────────────────────────
+    // Mike's Lake Shore markup: "No comps this far away." Comp #1 sat 41.2 mi
+    // from the subject — indefensible at hearing regardless of how well it fit
+    // the size/vintage windows, and it blew the location map out to a
+    // four-state view. Distance was previously a tiebreaker only (see the
+    // applyEngineFilters note further down); it is now a hard filter here.
+    //
+    // Progressive widening, same shape as COMP_TIERS: take the tightest radius
+    // that still leaves COMP_MIN_KEEP comps. Comps with unknown distance are
+    // always kept — we can't prove they're far, and dropping them would gut the
+    // pool in counties whose rolls omit coordinates. Anything past the hard
+    // floor (15 mi) is already gone above, so no far-comp backstop is needed.
+    const DISTANCE_TIERS_MI = [1, 3, 5, 10];
+    if (comps.length) {
+      const withDist = comps.map(c => ({ comp: c, d: compDistance(c) }));
+      for (const radius of DISTANCE_TIERS_MI) {
+        const kept = withDist.filter(x => x.d == null || x.d <= radius);
+        if (kept.length >= COMP_MIN_KEEP) { comps = kept.map(x => x.comp); break; }
+      }
+    }
+
+    // Cap at 7 comps (Ryder 2026-07-21: keep 5–7 available, ideally 7, so the
+    // agent has room to add/remove in the editor). The old rule also dropped a
+    // comp to force an ODD count — removed, since it threw away a usable comp
+    // (6→5) that the agent may want; an even count is fine.
+    if (comps.length > 7) comps = comps.slice(0, 7);
+    } // end if (!curated) — reviewed drafts render the agent's exact comp set
+
+    // Reindex bestIdx after filtering — if the original best comp survived,
+    // find its new index; otherwise fall back to 0.
+    let bestIdx = 0;
+    if (_origBest && comps.includes(_origBest)) {
+      bestIdx = comps.indexOf(_origBest);
+    }
+    const best = comps[bestIdx] || null;
+    const psf = data.psf_analysis || {};
+
+    // Median improvement $/SF baseline for Mike's V4 size adjustment formula
+    // (2026-06-18): size_adj_$ = (median imp psf / 2) × (subject SF − comp SF).
+    // Computed from the FILTERED comp pool so renovation outliers don't pull
+    // the baseline up. Stashed on the subject object so computeAdjBreakdown
+    // can pick it up without changing every call site's signature.
+    const _impPsfs = comps
+      .map(c => {
+        const iv = c.improvement_value || 0;
+        const sf = c.living_sqft || 0;
+        return (iv > 0 && sf > 0) ? iv / sf : 0;
+      })
+      .filter(v => v > 0)
+      .sort((a, b) => a - b);
+    if (_impPsfs.length) {
+      const n = _impPsfs.length;
+      s._v3_size_baseline_psf = n % 2 === 1
+        ? _impPsfs[Math.floor(n / 2)]
+        : (_impPsfs[n / 2 - 1] + _impPsfs[n / 2]) / 2;
+    }
+
+    const subjAddrMaps = buildSubjectAddrForMaps(s);
+    const subjAddrDisplay = titleCase(s.full_address || '') + (s.site_zip ? '' : '');
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const subjPsf = subjSqft ? (subjVal / subjSqft) : 0;
+    const subjPrior = s.prior_total_market || 0;
+    const yoyChange = subjPrior ? (subjVal - subjPrior) / subjPrior : null;
+
+    // ── Methodology selection ──
+    // Primary path: use the engine's recommended_value when /api/evidence-
+    // pack/lookup ran calculate_savings() server-side. This guarantees the
+    // brief matches the customer-facing recommendation produced by
+    // /api/lookup (same defensibility guards: recent-sale FLOOR, close-3
+    // unsupportive, renovated-subject NO_CASE, PSF-range filter, etc.).
+    //
+    // Fallback path: when the engine field is missing (older API, calculator
+    // exception, vacant land subject), fall back to the client-side
+    // strongScore + PSF floor methodology added 2026-06-03.
+    const engine = data.engine || null;
+    const bestMatch = best ? classifyComp(s, best) : { strongScore: 0, identical: [], differing: [] };
+    const bestMatchVal = psf.best_match_value || (best ? best.total_market : 0);
+    const medianVal = psf.median_value;
+    const lowestComp = psf.lowest_comp_value;
+    let requestedVal = null;
+    let methodology = null;
+
+    // ── V3 methodology: CAD-style median-of-adjusted-property-values ──
+    // Mike's V4 grid (2026-06-17): compute the indicated value per comp as
+    //   compCadValue + (totalAdjPsf × compSqft)
+    // — the CAD's own derivation. Median across comps is the requested ask.
+    // No best_match / lowest_psf branches; no "lowest below subject" gating.
+    // If median is at-or-above subject, fall back to no_case (we won't ask
+    // for an increase). This mirrors how the newer CAD evidence packets
+    // (Travis sample 522740) anchor their final value opinion.
+    const _v3Indicated = (comps || [])
+      .map(c => {
+        const compVal = c.total_market || 0;
+        const compSf = c.living_sqft || 0;
+        if (!compVal || !compSf) return 0;
+        const b = computeAdjBreakdown(s, c);
+        return Math.round(compVal + b.totalAdjPsf * compSf);
+      })
+      .filter(v => v > 0)
+      .sort((a, b) => a - b);
+    let v3MedianIndicated = null;
+    if (_v3Indicated.length) {
+      const n = _v3Indicated.length;
+      v3MedianIndicated = n % 2 === 1
+        ? _v3Indicated[Math.floor(n / 2)]
+        : Math.round((_v3Indicated[n / 2 - 1] + _v3Indicated[n / 2]) / 2);
+    }
+
+    // Also keep the v2 full-breakdown PSF stats for the table footer display
+    // (median adjusted $/SF row). These are derived but not used as anchors.
+    const _fullAdjPsfs = (comps || [])
+      .map(c => computeAdjBreakdown(s, c).finalPsf)
+      .filter(v => v > 0)
+      .sort((a, b) => a - b);
+    let fullAdjMedianValue = null;
+    let fullAdjLowestValue = null;
+    if (_fullAdjPsfs.length && subjSqft) {
+      const n = _fullAdjPsfs.length;
+      const fullMedianPsf = n % 2 === 1
+        ? _fullAdjPsfs[Math.floor(n / 2)]
+        : (_fullAdjPsfs[n / 2 - 1] + _fullAdjPsfs[n / 2]) / 2;
+      fullAdjMedianValue = Math.round(fullMedianPsf * subjSqft);
+      fullAdjLowestValue = Math.round(_fullAdjPsfs[0] * subjSqft);
+    }
+
+    // _v3Indicated is sorted ascending. Mike's 2026-06-17 note on the
+    // Holsten Hill annotated brief: anchoring on the absolute lowest is too
+    // aggressive ("pushes it too much, some ARB won't do it"). Switch to the
+    // 2nd-lowest below-subject value — still single-comp, more defensible.
+    // If only ONE comp is below subject, fall back to that single value
+    // (we can't 2nd-lowest what doesn't exist).
+    const _v3BelowSubject = _v3Indicated.filter(v => v < subjVal);
+    const _lowestV3Below = _v3BelowSubject.length >= 2
+      ? _v3BelowSubject[1]                       // 2nd lowest below subject
+      : (_v3BelowSubject[0] || null);            // only one below → use it
+    // YoY jump signal — when subject jumped ≥15% vs prior year, the size of
+    // the increase is itself a defensibility argument under §41.43(b)(1)
+    // (market value), independent of the unequal-appraisal claim. Used to
+    // enrich Section 4 narrative when the lowest_fallback branch fires.
+    const _yoyJumpPct = (subjPrior > 0 && subjVal > 0) ? (subjVal - subjPrior) / subjPrior : 0;
+    const _yoyJumpHigh = _yoyJumpPct >= 0.15;
+
+    // Mike's V3 directive (La Vista review, 2026-06-18 — round 4 + 5):
+    //   "only use the 2nd lowest comp request if the adjusted median
+    //    value is not at least a 3% reduction"
+    //
+    //   - If adjusted median provides ≥3% reduction: anchor on median.
+    //   - Else if at least one comp is below subject: anchor on
+    //     2nd-lowest below-subject comp (lowest_fallback).
+    //   - Else: no_case (walk away). The previous "subject × 0.80" wiggle-
+    //     room fallback was retired 2026-06-18 round 5 — Mike judged it
+    //     indefensible to ask 20% off subject's notice without comp support.
+    const MEDIAN_REDUCTION_THRESHOLD = 0.03;
+    const medianReductionPct = (v3MedianIndicated && subjVal)
+      ? (subjVal - v3MedianIndicated) / subjVal
+      : 0;
+
+    if (v3MedianIndicated && medianReductionPct >= MEDIAN_REDUCTION_THRESHOLD) {
+      requestedVal = v3MedianIndicated;
+      methodology = 'median';
+    } else if (_lowestV3Below) {
+      requestedVal = _lowestV3Below;
+      methodology = 'lowest_fallback';
+    } else {
+      // No defensible comp-based ask. Walk away — Section 2 shows the
+      // no_case banner and Section 4 is omitted.
+      requestedVal = null;
+      methodology = 'no_case';
+    }
+    const reduction = requestedVal ? (subjVal - requestedVal) : 0;
+    const reductionPct = requestedVal && subjVal ? (reduction / subjVal) : 0;
+
+    // ── Sales-comparison approach (Clear Capital MLS closed sales) ──────────
+    // Ryder 2026-07-21: sales/market data is a competing MODEL approach. Sales
+    // comps are baked into the draft at intake (data.sales_comps, from the
+    // engine's /api/clear-capital/lookup) — never re-fetched live, so a reviewed
+    // report's opinion can't drift. We take the lowest-PSF closed sales, derive
+    // a sales-indicated value (median sale $/sqft × subject sqft), and let it
+    // COMPETE with the equity value: the lowest DEFENSIBLE approach becomes the
+    // opinion of value. Both approaches render their own table.
+    const salesComps = (Array.isArray(data.sales_comps) ? data.sales_comps : [])
+      .map(c => {
+        const price = Number(c.sale_price) || 0;
+        const sf = Number(c.living_sqft || c.sqft) || 0;
+        const closed = price > 0 && (c.sale_date || c.sale_dt) && (c.event_type === 'Sale' || !c.event_type);
+        return (closed && sf) ? Object.assign({}, c, { _price: price, _sf: sf, _psf: price / sf }) : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a._psf - b._psf)
+      .slice(0, 7);   // 7 lowest-PSF closed sales — mirrors the equity strategy
+
+    let salesMedPsf = null, salesIndicated = null, salesVal = null;
+    if (salesComps.length >= 3 && subjSqft) {
+      const psfs = salesComps.map(c => c._psf).sort((a, b) => a - b);
+      const n = psfs.length;
+      salesMedPsf = n % 2 === 1 ? psfs[Math.floor(n / 2)] : (psfs[n / 2 - 1] + psfs[n / 2]) / 2;
+      salesIndicated = Math.round(salesMedPsf * subjSqft);
+      const redPct = subjVal ? (subjVal - salesIndicated) / subjVal : 0;
+      if (salesIndicated < subjVal && redPct >= MEDIAN_REDUCTION_THRESHOLD) salesVal = salesIndicated;
+    }
+
+    // Reconcile the opinion of value = lowest DEFENSIBLE value across developed
+    // approaches. `requestedVal`/`methodology` above stay the EQUITY result
+    // (Section 4 narrates equity); the cover + Section 2 use the reconciled
+    // opinion. Equity is defensible unless methodology==='no_case'.
+    const equityVal = (methodology !== 'no_case') ? requestedVal : null;
+    const _defensible = [];
+    if (equityVal) _defensible.push({ key: 'equity', value: equityVal });
+    if (salesVal) _defensible.push({ key: 'sales', value: salesVal });
+    _defensible.sort((a, b) => a.value - b.value);
+    const opinionKey = _defensible.length ? _defensible[0].key : null;
+    const opinionVal = _defensible.length ? _defensible[0].value : null;
+    const opinionNoCase = !opinionVal;
+    const opinionReduction = opinionVal ? (subjVal - opinionVal) : 0;
+    const opinionReductionPct = opinionVal && subjVal ? (opinionReduction / subjVal) : 0;
+
+    // CAD-packet render mode (data_source:'CAD', ?source=cad). The packet is the
+    // county's own fully-worked analysis: c.value is each comp's FINAL indicated
+    // value and the packet states its own medians. So we do NOT re-run the pack's
+    // size adjustment — the opinion of value is the packet's median (lower
+    // defensible of sales vs equity below the subject), and the comp grid shows
+    // the indicated values as-is (Sections 3/4/5/6 branch on this below). These
+    // resolved aliases are what Sections 1, 2 and the summary read; on the engine
+    // path they equal the existing consts, so engine reports are unchanged.
+    const preAdjusted = !!(data && data.preAdjusted);
+    let opinionKeyR = opinionKey, opinionValR = opinionVal, opinionNoCaseR = opinionNoCase;
+    if (preAdjusted) {
+      const meds = [];
+      if (data.cadEquityMedian) meds.push({ key: 'equity', value: Number(data.cadEquityMedian) });
+      if (data.cadSalesMedian)  meds.push({ key: 'sales',  value: Number(data.cadSalesMedian) });
+      const below = meds.filter(m => m.value && subjVal && m.value < subjVal).sort((a, b) => a.value - b.value);
+      opinionKeyR = below.length ? below[0].key : null;
+      opinionValR = below.length ? below[0].value : null;
+      opinionNoCaseR = !opinionValR;
+    }
+
+    // For the "Indicated value by approach" block: show every DEVELOPED approach
+    // with its indicated value (even if not the lowest / not defensible), and
+    // mark the opinion. Equity's indicated value is its median (or the anchored
+    // requestedVal); sales' is salesIndicated.
+    const equityIndicatedShow = (methodology !== 'no_case') ? requestedVal : (v3MedianIndicated || null);
+    const _shownApproaches = [];
+    if (equityIndicatedShow) _shownApproaches.push({ key: 'equity', label: 'Equity &mdash; unequal appraisal', value: equityIndicatedShow });
+    if (salesIndicated) _shownApproaches.push({ key: 'sales', label: 'Sales comparison (market)', value: salesIndicated });
+
+    // Emit the freshly-computed opinion to the /review console (parent frame) so
+    // its scorecard shows EXACTLY what this report shows — the pack is the single
+    // source of truth for comp→value math, so the two never drift as an agent
+    // toggles comps live. `approach` + both indicated values let the scorecard
+    // explain WHY the number stops moving: the delivered opinion is the lowest
+    // DEFENSIBLE of {equity, sales}, and the sales value is fixed at intake — so
+    // once sales is the floor, editing equity comps can't lower it. Same-origin
+    // only. (2026-07-21 — Ryder: comp removal must update the scorecard.)
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'td-report-values',
+          notice: subjVal,
+          opinion: opinionVal,
+          noCase: opinionNoCase,
+          approach: opinionKey,               // 'equity' | 'sales' | null — the binding approach
+          equity: equityIndicatedShow || null, // moves as comps change
+          sales: salesIndicated || null,       // fixed at intake
+        }, window.location.origin);
+      }
+    } catch (_) { /* cross-frame post is best-effort; never block rendering */ }
+
+    // ── Section A: doc header (with export buttons) ──
+    const headerHtml = `
+      <div class="doc-header">
+        <div class="doc-header-text">
+          <!-- David (consultant) 2026-06-25: "This isn't an appraisal report,
+               it's an opinion of value." Renamed from "Property Appraisal
+               Report". Subtitle now carries the property address (pertinent
+               info up top) instead of just the tax year, which the title
+               already states. -->
+          <h1>${s.tax_year || 2026} Opinion of Value</h1>
+          <div class="meta">${formatStreetAddress(s)}</div>
+        </div>
+        <div class="export-bar">
+          <button class="btn-export" onclick="exportPDF()" id="btn-export-pdf" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Export PDF</span>
+          </button>
+          <button class="btn-export" onclick="exportDocx()" id="btn-export-docx" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span id="btn-docx-text">Export Docx</span>
+          </button>
+          <button class="btn-export btn-export-internal" onclick="openPresentationNotes()" type="button" title="Internal hearing-prep notes (only available for the 20022 Atasca Villas example today)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/><polyline points="9 7 12 4 15 7"/><line x1="12" y1="4" x2="12" y2="16"/></svg>
+            <span>Presentation Notes</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // ── Filing info block ──
+    const cadName = ({
+      harris: 'Harris Central Appraisal District',
+      bexar: 'Bexar Appraisal District',
+      travis: 'Travis Central Appraisal District',
+      dallas: 'Dallas Central Appraisal District',
+      tarrant: 'Tarrant Appraisal District',
+      collin: 'Collin Central Appraisal District',
+      denton: 'Denton Central Appraisal District',
+      fortbend: 'Fort Bend Central Appraisal District',
+      galveston: 'Galveston Central Appraisal District',
+      montgomery: 'Montgomery Central Appraisal District',
+    })[s.county] || (s.county ? titleCase(s.county) + ' Central Appraisal District' : null);
+    // Ryder 2026-07-21: when the payload carries no county the old fallback
+    // rendered a headless " Central Appraisal District" on the cover and in
+    // the footer. Emit null instead so the row/footer segment is omitted.
+
+    // Top-of-page filing-info block removed 2026-06-03 — it duplicated
+    // Section 1 (Subject Property). Notice date was the only unique field;
+    // add it back to section1Pairs below if it's needed in the report.
+
+    // ── Section 1: Subject Property ──
+    // Build composite values up front so we can hide rows whose components
+    // are all unknown rather than emitting a placeholder string.
+    const yearBuiltVal = s.year_built
+      ? (s.year_built + (s.effective_year_built && s.effective_year_built !== s.year_built ? ' / ' + s.effective_year_built + ' effective' : ''))
+      : null;
+    const landSizeVal = s.lot_sqft
+      ? (fmtNum(s.lot_sqft) + ' sqft' + (s.land_use_code ? ' (land use code ' + s.land_use_code + ')' : ''))
+      : null;
+    const storyVal = (s.story_height || s.building_count)
+      ? [s.story_height && (s.story_height + ' story'),
+         s.building_count && (s.building_count + ' building' + (s.building_count > 1 ? 's' : '') + ' on parcel')]
+         .filter(Boolean).join(' · ')
+      : null;
+    const bedBathVal = (s.bedroom_count || s.bathroom_count)
+      ? [s.bedroom_count && (s.bedroom_count + ' bedrooms'),
+         s.bathroom_count && (s.bathroom_count + ' full baths' + (s.half_bath_count ? ' + ' + s.half_bath_count + ' half' : '')),
+         s.total_rooms && ('(' + s.total_rooms + ' total rooms)'),
+         s.fireplace_count && (s.fireplace_count + ' fireplace' + (s.fireplace_count > 1 ? 's' : ''))]
+         .filter(Boolean).join(' / ').replace('/ (', '(').replace(') / ', ', ')
+      : null;
+    const gradeVal = (s.grade || s.physical_condition)
+      ? [s.grade && ('Grade ' + s.grade),
+         s.physical_condition && ('Physical Condition ' + s.physical_condition)]
+         .filter(Boolean).join(' · ')
+      : null;
+    const constructionVal = (s.exterior_wall || s.heating_cooling || s.foundation_type)
+      ? [s.exterior_wall && (s.exterior_wall + ' exterior'),
+         s.heating_cooling,
+         s.foundation_type && (s.foundation_type + ' foundation')]
+         .filter(Boolean).join(' · ')
+      : null;
+
+    // Section 1 renders as a 2-column grid of label/value pairs to stay
+    // compact. Building characteristics (subdivision, year built, living
+    // area, story height, beds/baths, grade, construction) live in the
+    // Section 3 comparable-property table — repeating them up top added
+    // noise without informing the §41.43(b)(3) argument. (2026-06-03.)
+    const section1Pairs = [
+      ['Street address', formatStreetAddress(s)],
+      // Mike's V3 markup (Holsten Hill, 2026-06-17): "I think it could be
+      // helpful to also show PID#" — the consultant's vocabulary is PID,
+      // not CAD account number. Same value, clearer label.
+      ['PID #', fmtAccount(s.parcel_id, s.county)],
+      ['Land size', landSizeVal],
+      ['CAD ' + (s.tax_year || 2026) + ' noticed land value', s.land_value ? fmtMoney(s.land_value) : null],
+      ['CAD ' + (s.tax_year || 2026) + ' noticed improvement value', s.improvement_value ? fmtMoney(s.improvement_value) : null],
+      ['CAD ' + (s.tax_year || 2026) + ' noticed market value', subjVal ? ('<b>' + fmtMoney(subjVal) + '</b>' + (subjSqft ? ' (' + fmtPsf(subjPsf) + ')' : '')) : null],
+      // Opinion of value moved into Section 1 (Ryder, 2026-07-22) — it lands in
+      // the grid cell next to the noticed market value. Dropped by the hasVal
+      // filter below when there's no supported reduction.
+      ['Opinion of value', (!opinionNoCaseR && opinionValR)
+        ? ('<b>' + fmtMoney(opinionValR) + '</b>' + (subjSqft ? ' (' + fmtPsf(opinionValR / subjSqft) + ')' : ''))
+        : null],
+      // Mike's V3 markup (La Vista, 2026-06-18): show YoY change directly
+      // UNDER the prior-year notice in the same cell, rather than as a
+      // separate grid item that lands in the left column on its own row.
+      // Only surface when the assessment INCREASED — a decrease is already
+      // a CAD-side reduction and displaying it on a protest brief invites
+      // the obvious "you already got a reduction" rebuttal.
+      ['Prior-year noticed market value', (subjPrior && subjVal - subjPrior > 0)
+        ? `${fmtMoney(subjPrior)}<br><span style="font-size:12px;color:var(--gray-500);font-weight:500;">+${fmtMoney(subjVal - subjPrior)} (${(yoyChange * 100).toFixed(2)}% YoY)</span>`
+        : null],
+    ].filter(([_, v]) => hasVal(v));
+    const subjectGridCells = section1Pairs
+      .map(([k, v]) => `<div class="sp-cell"><div class="sp-label">${k}</div><div class="sp-value">${v}</div></div>`)
+      .join('');
+    // Subject photo via Street View (Mike's Atasca markup, 2026-06-17:
+    // "MAYBE ADD PIC OF SUBJECT TALK ABOUT"). Falls back gracefully when
+    // no imagery is available for the subject's coordinates.
+    const subjPhotoAddr = (s.full_address || s.site_address || '') + (s.site_zip ? ', ' + s.site_zip : '') + ', TX';
+    const subjPhotoUrl = `https://maps.googleapis.com/maps/api/streetview?size=640x320&location=${encodeAddr(subjPhotoAddr)}&return_error_code=true&key=${STREETVIEW_KEY}`;
+    // David (consultant) 2026-06-25: "If a property photo is available, I like
+    // including it, but I would place it below the property details." Photo now
+    // renders AFTER the subject-grid (it used to sit above it).
+    const section1Html = `
+      <h2><span class="section-num">1.</span> Subject Property</h2>
+      <div class="subject-grid">${subjectGridCells}</div>
+      <div class="subject-photo" style="margin:14px auto 16px;text-align:center;">
+        <img src="${subjPhotoUrl}" alt="Subject street view"
+             style="width:100%;max-width:640px;height:auto;border-radius:6px;display:block;margin:0 auto;"
+             onerror="this.parentElement.style.display='none'">
+      </div>
+    `;
+
+    // ── Section 2: Requested Market Value ──
+    // Layout: 2026 Notice Value (left, neutral) → Requested Market Value
+    // (right, emphasized in emerald). Reduction $ + percent moved out of
+    // this section per design — they appear in Section 5 Summary instead.
+    // Section 2 uses the reconciled OPINION (lowest defensible of equity vs
+    // sales), not just the equity value — the customer's ask is the opinion.
+    let section2Html;
+    if (opinionNoCaseR) {
+      section2Html = `
+        <h2><span class="section-num">2.</span> Owner's Requested ${s.tax_year || 2026} Market Value</h2>
+        <div class="state-card" style="text-align:left;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);padding:18px 22px;margin:12px 0;">
+          <b>No reduction defensible from the available evidence.</b>
+          Neither the unequal-appraisal comparables nor the market sales yield an indicated value below the subject's noticed value of ${fmtMoney(subjVal)} by a defensible margin.
+        </div>
+      `;
+    } else {
+      section2Html = `
+        <h2><span class="section-num">2.</span> Owner's Requested ${s.tax_year || 2026} Market Value</h2>
+        <div class="requested-value">
+          <div class="rv-block notice">
+            <div class="rv-label">${s.tax_year || 2026} CAD Notice Value</div>
+            <div class="rv-amount">${fmtMoney(subjVal)}</div>
+            <div class="rv-psf">${fmtPsfBare(subjPsf)}/sqft</div>
+          </div>
+          <div class="rv-block requested">
+            <div class="rv-label">Requested Market Value</div>
+            <div class="rv-amount">${fmtMoney(opinionValR)}</div>
+            <div class="rv-psf">${subjSqft ? fmtPsfBare(opinionValR / subjSqft) + '/sqft' : ''}${opinionKeyR === 'sales' ? ' &middot; sales comparison' : ''}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ── Section 3: Comparable Property Analysis (location map + equity grid) ──
+    // Marker placement: prefer per-property lat/lng (exact) over address
+    // geocoding. Static Maps mis-resolves comp addresses to the wrong match
+    // across town (a different "Palmer Dr" / "Hudson Sail Cir"), which scattered
+    // this map 20 miles wide even though every comp is within half a mile. BUT
+    // the DB sometimes stores only a subdivision CENTROID shared by every comp —
+    // those would all stack on one pin — so only switch to lat/lng when the
+    // comps carry at least two DISTINCT coordinates; otherwise fall back to
+    // addresses. (Ryder 2026-07-21.)
+    // Read coords under either key: CAD/equity comps carry latitude/longitude;
+    // Clear Capital sales comps carry lat/lng (see api/index.py clear_capital_lookup
+    // → "lat"/"lng"). Without this, sales pins never found their coords and fell
+    // back to ambiguous address geocoding. (Ryder 2026-07-22.)
+    const _lat = (o) => parseFloat(o && (o.latitude != null ? o.latitude : o.lat));
+    const _lng = (o) => parseFloat(o && (o.longitude != null ? o.longitude : o.lng));
+    const _subjLa = _lat(s), _subjLo = _lng(s);
+    const _compCoordKey = (c) => { const la = _lat(c), lo = _lng(c); return (isFinite(la) && isFinite(lo)) ? la.toFixed(5) + ',' + lo.toFixed(5) : null; };
+    // A coordinate is usable only if finite AND near the subject. A stray 0,0 or
+    // a mis-stored coord must never reach the viewport math or a marker — that's
+    // what dragged the frame out to a multi-state view. ~1° ≈ 55–69 mi, well
+    // past the 15-mi comp floor, so real comps always pass.
+    const _saneCoord = (la, lo) => isFinite(la) && isFinite(lo) &&
+      (!isFinite(_subjLa) || !isFinite(_subjLo) || (Math.abs(la - _subjLa) < 1 && Math.abs(lo - _subjLo) < 1));
+    // Trust lat/lng only when the comps carry ≥2 DISTINCT sane coords (else the
+    // DB may hold one shared subdivision centroid that would stack every pin).
+    const _distinctCompCoords = new Set([...comps, ...salesComps].map(_compCoordKey).filter(Boolean)).size;
+    const _useLatLng = _distinctCompCoords > 1;
+    // Fully-qualify a comp address for geocoding: prefer a field that already
+    // carries a city/state/ZIP; if it's street-only, borrow the subject's
+    // city/state/ZIP. A bare "6017 Lakeside Dr, TX" resolves to the wrong street
+    // across the state and was what scattered the map. (Ryder 2026-07-21.)
+    const _subjLocale = (() => { const fa = String(s.full_address || ''); const i = fa.indexOf(','); return i > -1 ? fa.slice(i + 1).trim() : 'TX'; })();
+    const qualifyAddr = (o) => {
+      const raw = String(o.full_address || o.address || o.site_address || '').trim();
+      if (!raw) return _subjLocale;
+      if (/,/.test(raw) && /\b(TX|Texas)\b|\b\d{5}\b/.test(raw)) return raw;   // already has city + state/ZIP
+      return raw + ', ' + _subjLocale;                                        // street-only → borrow subject locale
+    };
+    const markerFor = (o) => {
+      const la = _lat(o), lo = _lng(o);
+      if (_useLatLng && _saneCoord(la, lo)) return la + ',' + lo;   // exact coords (comma is URL-safe here)
+      return encodeAddr(qualifyAddr(o));                            // qualified geocode fallback
+    };
+    // The map follows the approach(es) actually used: equity comparables plot as
+    // purple pins (E# in the legend), sales comparables as orange pins (S#). When
+    // both approaches are developed, both sets show. Google Static Maps labels
+    // are a single character, so the pin shows the number and color encodes the
+    // approach; the legend spells out E#/S#. (Ryder 2026-07-21.)
+    const mapMarkers = [
+      `markers=color:green%7Clabel:S%7C${markerFor(s)}`,
+      ...comps.map((c, i) => `markers=color:purple%7Clabel:${i + 1}%7C${markerFor(c)}`),
+      ...salesComps.map((c, i) => `markers=color:orange%7Clabel:${i + 1}%7C${markerFor(c)}`),
+    ].join('&');
+    // Hybrid maptype = satellite + road labels (Mike's Bay Hollow request: aerial
+    // shows pools / lake views / large lots). Frame with an EXPLICIT center+zoom
+    // derived only from SANE coords (subject + comps with trustworthy lat/lng),
+    // NOT Google's marker auto-fit: an address-geocoded comp that resolves
+    // off-target then clips at the edge instead of blowing the whole map out to a
+    // multi-state view (the "too zoomed / comps way too far" bug). Auto-fit is
+    // used only as a fallback when we have no sane coords at all. (Ryder 2026-07-21.)
+    const _goodPts = [];
+    if (_saneCoord(_subjLa, _subjLo)) _goodPts.push([_subjLa, _subjLo]);
+    [...comps, ...salesComps].forEach(c => { const la = _lat(c), lo = _lng(c); if (_saneCoord(la, lo)) _goodPts.push([la, lo]); });
+    let viewParam = '';
+    if (_goodPts.length) {
+      const lats = _goodPts.map(p => p[0]), los = _goodPts.map(p => p[1]);
+      let minLa = Math.min(...lats), maxLa = Math.max(...lats), minLo = Math.min(...los), maxLo = Math.max(...los);
+      const cLa = (minLa + maxLa) / 2, cLo = (minLo + maxLo) / 2;
+      const padLa = Math.max((maxLa - minLa) * 0.35, 0.004), padLo = Math.max((maxLo - minLo) * 0.35, 0.004);
+      minLa -= padLa; maxLa += padLa; minLo -= padLo; maxLo += padLo;
+      const WORLD = 256, MAPW = 720, MAPH = 360;
+      const _latRad = (lat) => { const sn = Math.sin(lat * Math.PI / 180); const r = Math.log((1 + sn) / (1 - sn)) / 2; return Math.max(Math.min(r, Math.PI), -Math.PI) / 2; };
+      const latFrac = Math.abs(_latRad(maxLa) - _latRad(minLa)) / Math.PI;
+      let lngDiff = maxLo - minLo; if (lngDiff < 0) lngDiff += 360;
+      const lngFrac = lngDiff / 360;
+      const latZoom = Math.floor(Math.log2(MAPH / WORLD / Math.max(latFrac, 1e-9)));
+      const lngZoom = Math.floor(Math.log2(MAPW / WORLD / Math.max(lngFrac, 1e-9)));
+      let zoom = Math.min(latZoom, lngZoom, 16);
+      if (!isFinite(zoom)) zoom = 14;
+      zoom = Math.max(10, Math.min(16, zoom));   // never past metro level, never absurdly tight
+      viewParam = `&center=${cLa.toFixed(6)},${cLo.toFixed(6)}&zoom=${zoom}`;
+    }
+    const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=720x360&scale=2&maptype=hybrid` +
+      `&${mapMarkers}${viewParam}&key=${MAPS_KEY}`;
+    const mapLegend = [
+      `<span><span class="legend-pin pin-subject">S</span>Subject (${titleCase(s.site_address || '')})</span>`,
+      ...comps.map((c, i) => `<span><span class="legend-pin pin-comp">E${i + 1}</span>${titleCase(c.site_address || '')}</span>`),
+      ...salesComps.map((c, i) => `<span><span class="legend-pin pin-sales">S${i + 1}</span>${titleCase(c.site_address || c.address || '')}</span>`),
+    ].join('\n');
+
+    const ingestionDate = s.notice_date ? isoToLongDate(s.notice_date) : '';
+
+    // Section 3 intro must reflect the ACTUAL comp set. The old text
+    // hardcoded "from the same subdivision" even when 0 of 5 comps matched
+    // (e.g. 116 Rose Ln Hackberry — all 5 comps in different subdivisions).
+    const inSubdivision = s.subdivision
+      ? comps.filter(c => c.subdivision && c.subdivision === s.subdivision).length
+      : 0;
+    let comparablesIntro;
+    if (comps.length > 0 && inSubdivision === comps.length) {
+      comparablesIntro = `${comps.length} comparable properties from the same subdivision as the subject, sorted by living-area proximity.`;
+    } else if (inSubdivision >= Math.max(3, Math.ceil(comps.length / 2))) {
+      comparablesIntro = `${comps.length} comparable properties &mdash; ${inSubdivision} from the same subdivision as the subject, the remainder from the closest available peers in the same county &mdash; sorted by living-area proximity.`;
+    } else if (inSubdivision > 0) {
+      comparablesIntro = `${comps.length} comparable properties from the surrounding submarket (${inSubdivision} from the subject's subdivision, ${comps.length - inSubdivision} from the closest available peers in the same county), sorted by living-area proximity.`;
+    } else {
+      comparablesIntro = `${comps.length} comparable properties from the same county and property classification (no in-subdivision peers were available), sorted by living-area proximity.`;
+    }
+    const classText = s.state_class
+      ? `All share property classification ${s.state_class}`
+      : 'All share the subject\'s property classification';
+    const schoolText = s.school_district
+      ? ' and school district code ' + s.school_district
+      : ' and the same school district';
+
+    // Mike's V3 markup (La Vista, 2026-06-18): "We don't need to show this
+    // -- this is our own comps so we don't need to explain why we remove
+    // one." The exclusion callout previously surfaced the renovation /
+    // outlier filter reasoning. Stripped now — internal filter logic stays
+    // silent in the brief.
+
+    // David (consultant) 2026-06-25: "The Comparable Property Analysis should
+    // clearly identify whether it is an Equity Analysis or a Sales Analysis."
+    // This grid is built entirely from CAD-noticed values (not MLS/recorded
+    // sales), so it is an equity / unequal-appraisal analysis under
+    // an equity / unequal-appraisal analysis. Labeled with a badge under the
+    // section header.
+    //
+    // Ryder 2026-07-21: no statute citation in the badge, and the explainer
+    // paragraph underneath is gone entirely. The ARB and the assessor already
+    // know what an equity analysis is and where noticed values come from —
+    // explaining it reads as amateur and pads the brief.
+    // CAD-packet mode: the packet already carries each comp's FINAL indicated
+    // value, so we present those directly (no re-adjustment) with the packet's
+    // median as the reconciled opinion. Columns collapse to what the extractor
+    // captures — living area, sale price, net adjustment, indicated value.
+    function buildCadSection3() {
+      const list = (data.comps || []).filter(c => Number(c.indicated) > 0);
+      const anySale = list.some(c => Number(c.sale_price) > 0);
+      const anyAdj = list.some(c => c.net_adjustment != null && Number(c.net_adjustment) !== 0);
+      const th = 'style="padding:6px 8px;text-align:right;font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--gray-300);"';
+      const thL = th.replace('text-align:right', 'text-align:left');
+      const td = 'style="padding:6px 8px;text-align:right;font-size:12px;border-bottom:1px solid var(--gray-200);"';
+      const tdL = td.replace('text-align:right', 'text-align:left');
+      const head =
+        `<th ${thL}>Comparable</th><th ${th}>Living area</th>` +
+        (anySale ? `<th ${th}>Sale price</th>` : '') +
+        (anyAdj ? `<th ${th}>Net adj.</th>` : '') +
+        `<th ${th}>Indicated value</th>`;
+      const rows = list.map((c, i) => {
+        const addr = titleCase(String(c.address || ('Comparable ' + (i + 1))));
+        return `<tr>` +
+          `<td ${tdL}>${addr}</td>` +
+          `<td ${td}>${c.living_sqft ? fmtNum(c.living_sqft) + ' sqft' : '&mdash;'}</td>` +
+          (anySale ? `<td ${td}>${Number(c.sale_price) > 0 ? fmtMoney(c.sale_price) : '&mdash;'}</td>` : '') +
+          (anyAdj ? `<td ${td}>${c.net_adjustment != null ? fmtMoney(c.net_adjustment) : '&mdash;'}</td>` : '') +
+          `<td ${td}><b>${fmtMoney(c.indicated)}</b></td>` +
+        `</tr>`;
+      }).join('');
+      const colSpan = 1 + (anySale ? 1 : 0) + (anyAdj ? 1 : 0);
+      const medianRow = opinionValR
+        ? `<tr><td ${tdL} colspan="${colSpan + 1}"><b>Median indicated value (opinion of value)</b></td><td ${td}><b>${fmtMoney(opinionValR)}</b></td></tr>`
+        : '';
+      return `
+        <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
+        <div style="display:inline-block;background:var(--mint);color:var(--emerald-dark);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid var(--emerald-light);margin:0 0 14px;">
+          Equity Analysis &middot; Unequal Appraisal
+        </div>
+        <div class="location-map">
+          <img src="${mapUrl}" alt="Property location map" onerror="this.style.display='none';this.nextElementSibling.style.display='none';">
+          <div class="map-caption"><div class="map-legend">${mapLegend}</div></div>
+        </div>
+        <table class="property-table" style="width:100%;border-collapse:collapse;margin-top:8px;">
+          <thead><tr>${head}</tr></thead>
+          <tbody>${rows}${medianRow}</tbody>
+        </table>
+        <p class="methodology-note" style="margin-top:12px;">Indicated values are the appraisal district&rsquo;s own adjusted figures from the ${s.tax_year || 2026} evidence packet for this property; the opinion of value is their median.</p>
+      `;
+    }
+    const section3Html = preAdjusted ? buildCadSection3() : `
+      <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
+      <div style="display:inline-block;background:var(--mint);color:var(--emerald-dark);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid var(--emerald-light);margin:0 0 14px;">
+        Equity Analysis &middot; Unequal Appraisal
+      </div>
+
+      <div class="location-map">
+        <img src="${mapUrl}" alt="Property location map" onerror="this.style.display='none';this.nextElementSibling.style.display='none';">
+        <div class="map-caption">
+          <div class="map-legend">${mapLegend}</div>
+          <div style="margin-top:6px;">Purple pins (E#) are equity comparables; orange pins (S#) are sales comparables. Pin numbers correspond to the row/column numbers in the analysis tables. Map data &copy; Google.</div>
+        </div>
+      </div>
+
+      ${renderEquityGrid(s, comps, bestIdx, psf)}
+    `;
+
+    // ── Section 4: Analysis (two-methodology framing) ──
+    // CAD-packet mode: the district already did the adjustment work, so we don't
+    // narrate the engine's size/land method — we state the median-of-indicated
+    // conclusion and keep the non-appraisal disclaimer.
+    const section4Html = preAdjusted ? `
+      <h2><span class="section-num">4.</span> Analysis</h2>
+      <div class="analysis-summary" style="margin-top:14px;">
+        <p>${opinionNoCaseR
+          ? `The appraisal district&rsquo;s ${s.tax_year || 2026} evidence packet does not develop a median indicated value below the subject&rsquo;s noticed value of ${fmtMoney(subjVal)}.`
+          : `The appraisal district&rsquo;s ${s.tax_year || 2026} evidence packet develops an indicated value for the subject from each comparable, already adjusted for size, condition, and land. The median of those indicated values &mdash; <b>${fmtMoney(opinionValR)}</b> &mdash; is the requested value: ${fmtMoney(subjVal - opinionValR)} below the subject&rsquo;s noticed value of ${fmtMoney(subjVal)}.`}</p>
+        <p class="methodology-note" style="margin-top:12px;">Non-appraisal disclaimer: this report is not a USPAP-compliant appraisal. It is prepared solely to support a property tax protest under Texas Property Tax Code &sect;41.43, using the appraisal district&rsquo;s own published evidence for this property.</p>
+      </div>
+    ` : renderAnalysisSection(s, best, methodology, psf, reduction, reductionPct, requestedVal, comps, engine);
+
+    // ── Section 5: Adjustment Methodology ──
+    // Documents how the engine normalizes each comp's $/sqft to the subject
+    // before taking the equity median. Kept identical to the Python engine
+    // (calculator_shared.adjust_comp_psf) — when those constants change,
+    // update both. The pool/garage row is marked county-gated because
+    // POOL_GARAGE_ROLLOUT_COUNTIES is {"collin"} as of 2026-06-10; the
+    // engine silently skips it for other counties.
+    const section5Html = preAdjusted ? '' : renderMethodologySection(s, comps);
+
+    // ── Section 6: Sales Comparison Analysis (Clear Capital MLS closed sales) ──
+    // Ryder 2026-07-21: revived as a competing market approach. Renders from the
+    // draft's baked-in sales_comps (never re-fetched). When it produces the
+    // lowest defensible value it becomes the opinion of value (reconciled on the
+    // cover); otherwise it stands as supporting evidence. Row-per-comp table
+    // (market sales read more naturally that way than the transposed equity
+    // grid). ATTOM Section 7 stays retired — Clear Capital is the sole sales
+    // source now.
+    const section6Html = (() => {
+      if (preAdjusted) return '';   // CAD packet comps are already the grid in Section 3
+      if (!salesComps.length) return '';
+      const th = 'style="padding:6px 8px;text-align:right;font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--gray-300);"';
+      const thL = th.replace('text-align:right', 'text-align:left');
+      const td = 'style="padding:6px 8px;text-align:right;font-size:12px;border-bottom:1px solid var(--gray-200);"';
+      const tdL = td.replace('text-align:right', 'text-align:left');
+      const rows = salesComps.map((c, i) => {
+        const addr = titleCase(c.address || c.site_address || c.full_address || ('Sale ' + (i + 1)));
+        const saleDate = (() => { const raw = c.sale_date || c.sale_dt || ''; try { return isoToLongDate(raw) || String(raw); } catch (_) { return String(raw); } })();
+        const dist = (c.distance_mi != null && isFinite(Number(c.distance_mi))) ? Number(c.distance_mi).toFixed(2) + ' mi' : '—';
+        return `<tr>
+          <td ${tdL}>${addr}</td>
+          <td ${td}>${saleDate}</td>
+          <td ${td}>${fmtMoney(c._price)}</td>
+          <td ${td}>${fmtNum(c._sf)}</td>
+          <td ${td}><b>${fmtPsf(c._psf)}</b></td>
+          <td ${td}>${c.year_built || '—'}</td>
+          <td ${td}>${dist}</td>
+        </tr>`;
+      }).join('');
+      const isOpinion = opinionKey === 'sales';
+      const salesLine = salesIndicated
+        ? `<div class="calc-line">
+             Median sale $/sqft (${salesComps.length} closed sales): <b>${fmtPsf(salesMedPsf)}</b><br>
+             Subject's living area: ${fmtNum(subjSqft)} sqft<br>
+             Sales-indicated market value: <b>${fmtMoney(salesIndicated)}</b>${subjSqft ? ' (' + fmtPsf(salesIndicated / subjSqft) + ')' : ''}<br>
+             Subject's current notice: ${fmtMoney(subjVal)}<br>
+             ${salesIndicated < subjVal
+               ? 'Indicated reduction: <b>' + fmtMoney(subjVal - salesIndicated) + '</b> (' + (((subjVal - salesIndicated) / subjVal) * 100).toFixed(2) + '% of current notice)'
+               : 'The sales-indicated value is at or above the subject&rsquo;s notice, so this approach does not support a reduction.'}
+           </div>`
+        : `<p class="methodology-note">Fewer than three qualifying closed sales were available, so a sales-indicated value was not developed.</p>`;
+      return `
+        <h2><span class="section-num">6.</span> Sales Comparison Analysis</h2>
+        <div style="display:inline-block;background:var(--sky-blue,#C6F0FF);color:#0b4a63;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid #9bd8ee;margin:0 0 12px;">
+          Market Approach &middot; Closed Sales${isOpinion ? ' &middot; Opinion of Value' : ''}
+        </div>
+        <div class="equity-grid-wrapper" style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;min-width:560px;">
+            <thead><tr>
+              <th ${thL}>Sale address</th><th ${th}>Sale date</th><th ${th}>Sale price</th>
+              <th ${th}>Living area (SF)</th><th ${th}>$/SF</th><th ${th}>Year built</th><th ${th}>Distance</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="analysis-summary" style="margin-top:14px;">
+          ${salesLine}
+          <p class="methodology-note" style="margin-top:12px;">Closed MLS sales from Clear Capital, filtered to the ${salesComps.length} lowest $/sqft transactions in the subject&rsquo;s size and vintage range. Market sales support a §41.43(b)(1) market-value argument; they are shown alongside the unequal-appraisal (equity) analysis, and the opinion of value reflects the lower defensible of the two approaches.</p>
+        </div>
+      `;
+    })();
+
+    // ── Summary block + agent notes (replaces the old cover page) ──
+    // The redundant cover/summary page was removed (Ryder, 2026-07-22); its
+    // useful pieces moved into Sections 1–2: the opinion of value into the
+    // Section 1 subject grid, and these two blocks after Section 2 — an auto-
+    // generated opinion summary, then the agent notes box (only when notes were
+    // actually added; the old cover always printed an empty box).
+    const sumRedAmt = (!opinionNoCaseR && subjVal && opinionValR != null) ? (subjVal - opinionValR) : 0;
+    const sumRedPct = (sumRedAmt > 0 && subjVal) ? (sumRedAmt / subjVal * 100) : 0;
+    const summaryHtml = `
+      <div class="opinion-summary" style="margin:14px 0 20px;padding:14px 18px;border-left:3px solid var(--emerald-dark);background:#f2fbf6;font-size:13.5px;line-height:1.7;color:#1A1A1A;">
+        ${opinionNoCaseR
+          ? `The comparable evidence does not support a reduction below the subject&rsquo;s noticed value of <b>${fmtMoney(subjVal)}</b> this cycle.`
+          : `The subject is noticed at <b>${fmtMoney(subjVal)}</b>. The comparable evidence supports an opinion of value of <b>${fmtMoney(opinionValR)}</b>&mdash;a reduction of <b>${fmtMoney(sumRedAmt)}</b> (${sumRedPct.toFixed(1)}% below the noticed value).`}
+      </div>
+    `;
+    // Notes: ALWAYS rendered so the agent has an editable box in the WYSIWYG
+    // editor. It's hidden when empty outside the editor (customer view, CSS) and
+    // stripped from exports when empty (beforeprint for PDF; clone-strip for
+    // DOCX). The .notes-empty class is kept in sync as the agent types
+    // (initReportEditor input handler).
+    const notesHtml = `
+      <div class="notes-block${reportNotes ? '' : ' notes-empty'}" style="margin:0 0 20px;">
+        <div class="notes-label" style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Notes</div>
+        <div class="notes-body" style="border:1px solid var(--gray-300);border-radius:6px;padding:16px 18px;min-height:56px;font-size:13px;line-height:1.85;color:#1A1A1A;white-space:pre-wrap;">${reportNotes}</div>
+      </div>`;
+
+    // ── Footer ──
+    const footerHtml = `
+      <div class="footer">
+        ${[cadName, `Tax Year ${s.tax_year || 2026}`, `Account ${fmtAccount(s.parcel_id, s.county)}`]
+          .filter(Boolean).join(' &middot; ')}
+      </div>
+    `;
+
+    $('state-report').innerHTML = headerHtml + section1Html + section2Html + summaryHtml + notesHtml + section3Html + section4Html + section5Html + section6Html + footerHtml;
+
+    // Strip an empty Notes box from PDF exports (window.print). Bound once; uses
+    // live textContent so it's correct whether or not the agent typed notes.
+    // DOCX handles this in exportDocx (clone strip); customer on-screen via CSS.
+    if (!window.__notesPrintBound) {
+      window.addEventListener('beforeprint', () => {
+        document.querySelectorAll('.notes-block').forEach((b) => {
+          const body = b.querySelector('.notes-body');
+          b.classList.toggle('notes-print-hide', !(body && body.textContent.trim()));
+        });
+      });
+      window.addEventListener('afterprint', () => {
+        document.querySelectorAll('.notes-block').forEach((b) => b.classList.remove('notes-print-hide'));
+      });
+      window.__notesPrintBound = true;
+    }
+
+    // WYSIWYG overlay (Ryder 2026-07-21): when an agent has hand-edited this
+    // report in the on-page editor, the saved HTML snapshot REPLACES the freshly
+    // rendered sections — that edited version is the deliverable, for both the
+    // agent preview and the customer's copy. The overlay is authored only by a
+    // sup-gated agent (the save endpoint is sup-only), so it's trusted HTML and
+    // injected raw. When an overlay is applied we skip distance enrichment — it
+    // would overwrite the agent's frozen cells.
+    const overlayHtml = opts && typeof opts.overlayHtml === 'string' ? opts.overlayHtml : '';
+    if (overlayHtml) {
+      $('state-report').innerHTML = overlayHtml;
+    } else {
+      // Kick off async distance enrichment for the equity grid. DB only
+      // stores subdivision-centroid lat/lng so we have to geocode each
+      // comp's actual address through Google Maps to get per-property
+      // distances. Runs after the main render so the page isn't blocked
+      // on a multi-comp geocode round-trip.
+      enrichCompDistances(s, comps).catch(err => console.warn('[distance] enrichment failed:', err));
+    }
+
+    // Auto-export hook: when TaxDrop One embeds this page in a hidden
+    // iframe with ?export=pdf|docx, fire the matching export ONCE all
+    // images finish loading. Mike's 2026-06-19 follow-up: "the images
+    // aren't pulling into the PDF" — root cause was the 1.2s blanket
+    // timeout fired before Google Static Map + 6 Street View images
+    // finished loading, so they printed blank.
+    try {
+      const exportMode = (new URLSearchParams(window.location.search).get('export') || '').toLowerCase();
+      if (exportMode === 'pdf' || exportMode === 'docx') {
+        const imgs = Array.from(document.images || []);
+        const waitImages = Promise.all(imgs.map(img => {
+          if (img.complete && img.naturalHeight > 0) return Promise.resolve();
+          return new Promise(resolve => {
+            img.addEventListener('load',  resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });  // resolve on error too — don't block on broken images
+          });
+        }));
+        const safetyFallback = new Promise(resolve => setTimeout(resolve, 8000));
+        Promise.race([waitImages, safetyFallback]).then(() => {
+          // Tiny extra delay so layout settles after late images appear
+          setTimeout(() => {
+            if (exportMode === 'pdf') exportPDF();
+            else exportDocx();
+            // When opened in a popup by TaxDrop One, close the window after
+            // the print dialog is dismissed. window.print() is blocking, so
+            // this line runs once the user confirms or cancels.
+            // (2026-06-22 popup-window export.)
+            setTimeout(() => { try { window.close(); } catch (_) {} }, 800);
+          }, 300);
+        });
+      }
+    } catch (_) { /* no-op */ }
+
+    // Agent edit mode (address path): /test/evidence-pack-v3?address=…&edit=1
+    // turns the freshly-analyzed report into the in-place WYSIWYG editor with no
+    // jti. Save is hidden (nothing to persist to); Export reads the live DOM.
+    // Review mode initializes the editor via renderFromStored with a real jti,
+    // so it is excluded here; export mode wins if both edit=1 and export are set.
+    try {
+      const _p = new URLSearchParams(window.location.search);
+      const _wantEdit = /^(1|true)$/.test(_p.get('edit') || '');
+      const _isReview = _p.get('review') === '1' || _p.get('review') === 'true';
+      const _exp = (_p.get('export') || '').toLowerCase();
+      const _isExport = _exp === 'pdf' || _exp === 'docx';
+      if (_wantEdit && !_isReview && !_isExport) initReportEditor(null);
+    } catch (_) { /* no-op */ }
+  }
+
+  // ────────── Distance enrichment (Google Maps geocoder, client-side) ──────────
+  // DB lat/lng is subdivision-centroid only (every parcel in the same nbhd
+  // shares 33.1186, -96.6773 etc.). Geocode the actual street addresses via
+  // the already-loaded Google Maps JS API, compute Haversine distance from
+  // subject to each comp, and populate the Distance row in the equity grid.
+  // Cached per (address) for the session so the same lookups aren't repeated.
+  const _geocodeCache = new Map();
+
+  function _haversineMiles(a, b) {
+    const toRad = d => d * Math.PI / 180;
+    const R = 3959;  // Earth radius in miles
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const x = Math.sin(dLat / 2) ** 2
+            + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+
+  function _geocodeOnce(geocoder, address) {
+    if (_geocodeCache.has(address)) return Promise.resolve(_geocodeCache.get(address));
+    return new Promise(resolve => {
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const loc = results[0].geometry.location;
+          const coords = { lat: loc.lat(), lng: loc.lng() };
+          _geocodeCache.set(address, coords);
+          resolve(coords);
+        } else {
+          _geocodeCache.set(address, null);
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  // Maps JS API is loaded `loading=async` for the autocomplete + static map,
+  // so google.maps.Geocoder may not be ready yet when renderReport() finishes.
+  // Wait up to 6s for it to attach.
+  function _waitForGoogleMaps(timeoutMs = 6000) {
+    return new Promise(resolve => {
+      const start = Date.now();
+      const tick = () => {
+        if (window.google && google.maps && google.maps.Geocoder) return resolve(true);
+        if (Date.now() - start >= timeoutMs) return resolve(false);
+        setTimeout(tick, 100);
+      };
+      tick();
+    });
+  }
+
+  // Append a state qualifier ("Allen, TX") so single-street comp addresses
+  // ("716 Birdie Dr") geocode against the right city instead of the global
+  // first match for that street name.
+  function _qualifyAddress(addr, subjectAddr) {
+    const clean = String(addr || '').replace(/,\s*$/, '').trim();
+    if (!clean) return clean;
+    if (clean.indexOf(',') !== -1) return clean;
+    const firstComma = (subjectAddr || '').indexOf(',');
+    if (firstComma === -1) return clean;
+    const locality = subjectAddr.slice(firstComma + 1).trim();
+    return locality ? clean + ', ' + locality : clean;
+  }
+
+  async function enrichCompDistances(subject, comps) {
+    const ready = await _waitForGoogleMaps();
+    if (!ready) {
+      console.warn('[distance] Google Maps Geocoder never loaded');
+      return;
+    }
+    const subjectAddr = (subject.full_address || subject.site_address || '');
+    const subjectQual = subjectAddr.includes(',')
+      ? subjectAddr
+      : (subjectAddr + (subject.site_city ? ', ' + subject.site_city : '') + ', TX' + (subject.site_zip ? ' ' + subject.site_zip : ''));
+
+    const geocoder = new google.maps.Geocoder();
+    const subjCoords = await _geocodeOnce(geocoder, subjectQual);
+    if (!subjCoords) {
+      console.warn('[distance] subject geocode failed for', subjectQual);
+      return;
+    }
+
+    // Row is always visible now (sync lat/lng path runs in the template).
+    // Only OVERRIDE cells whose Google geocode succeeds — never blank a cell
+    // that the sync path already filled, since Google failures on edge-case
+    // addresses shouldn't erase the lat/lng-derived value.
+    await Promise.all(comps.map(async (c, i) => {
+      const compAddr = _qualifyAddress(c.site_address || c.full_address || '', subjectQual);
+      const coords = await _geocodeOnce(geocoder, compAddr);
+      if (!coords) return;
+      const cell = $('dist-comp-' + i);
+      if (!cell) return;
+      const miles = _haversineMiles(subjCoords, coords);
+      const formatted = miles < 1 ? miles.toFixed(2) + ' mi' : miles.toFixed(1) + ' mi';
+      cell.textContent = formatted;
+    }));
+  }
+
+  // ────────── Engine-style comp filtering (shared by Section 6 + 7) ──────────
+  // Matches the TX savings calculator's defensibility windows:
+  //   - SIZE: 60-150% of subject sqft (COMP_SIZE_MIN/MAX_RATIO in
+  //     calculator_shared.py)
+  //   - YEAR: ±35 years of subject year_built (vintage gap beyond that
+  //     makes CAD-class peer comparison indefensible — surfaced by 903 S
+  //     Young Rockport audit, see calculator_shared.py comment)
+  //   - Sort by PSF ASC → pick the 7 LOWEST (matches the "7 lowest" comp
+  //     strategy referenced in calculator_tx.py:7).
+  //
+  // We deliberately keep individual comp distance-from-subject as a
+  // tiebreaker only — distance is a freshness/relevance signal, not a
+  // defensibility one. A 0.3 mi comp inside the size+year window at a
+  // lower PSF wins over a 0.05 mi same-block comp at a higher PSF for the
+  // owner's §41.43(b)(1) argument.
+  const COMP_SIZE_MIN_RATIO = 0.60;
+  const COMP_SIZE_MAX_RATIO = 1.50;
+  const COMP_YEAR_WINDOW = 35;
+  const COMP_KEEP_LOWEST = 7;
+
+  // Progressive widening tiers — mirrors the engine's COMP_YEAR_TIERS
+  // fallback pattern. Start with the engine-strict window; if we can't find
+  // enough defensible comps, relax year (the §41.43(b)(1) market-value
+  // argument is about recent neighborhood sales, not same-vintage
+  // construction — urban infill makes a 1930 subject sit next to 2010
+  // rebuilds, and excluding those misses the actual market). Drop size last
+  // since size is the more important defensibility signal.
+  const COMP_MIN_KEEP = 3;
+  const COMP_TIERS = [
+    { name: 'tight',    size: true,  year: true  },  // engine-strict
+    { name: 'no-year',  size: true,  year: false },  // drop year filter
+    { name: 'any',      size: false, year: false },  // drop both
+  ];
+
+  function applyEngineFilters(comps, subject, options = {}) {
+    const subjSqft = subject.living_sqft || 0;
+    const subjYear = subject.year_built || null;
+    const minSqft = subjSqft ? subjSqft * COMP_SIZE_MIN_RATIO : 0;
+    const maxSqft = subjSqft ? subjSqft * COMP_SIZE_MAX_RATIO : Infinity;
+    const minYear = subjYear ? subjYear - COMP_YEAR_WINDOW : null;
+    const maxYear = subjYear ? subjYear + COMP_YEAR_WINDOW : null;
+    const psfFn = options.psfFn || (c => c.psf);
+    const sqftFn = options.sqftFn || (c => c.living_sqft);
+    const yearFn = options.yearFn || (c => c.year_built);
+
+    // Strip rows missing PSF up front — they can never be ranked.
+    const withPsf = [];
+    let dropped_no_psf = 0;
+    for (const c of comps) {
+      const p = psfFn(c);
+      if (p == null || p <= 0) { dropped_no_psf++; continue; }
+      withPsf.push(c);
+    }
+
+    // Walk the tier list. Stop at the first tier that yields >= MIN_KEEP
+    // acceptable comps. Always report which tier was used + how many comps
+    // failed each filter so the consultant can see the relaxation.
+    let chosenTier = COMP_TIERS[COMP_TIERS.length - 1];
+    let accepted = [];
+    const counts = {
+      input: comps.length,
+      dropped_no_psf,
+      dropped_sqft: 0,
+      dropped_year: 0,
+    };
+    for (const tier of COMP_TIERS) {
+      const localDropSqft = [];
+      const localDropYear = [];
+      const ok = [];
+      for (const c of withPsf) {
+        const sqft = sqftFn(c);
+        const yr = yearFn(c);
+        if (tier.size && subjSqft && sqft && (sqft < minSqft || sqft > maxSqft)) {
+          localDropSqft.push(c); continue;
+        }
+        if (tier.year && minYear != null && maxYear != null && yr && (yr < minYear || yr > maxYear)) {
+          localDropYear.push(c); continue;
+        }
+        ok.push(c);
+      }
+      if (ok.length >= COMP_MIN_KEEP || tier === COMP_TIERS[COMP_TIERS.length - 1]) {
+        chosenTier = tier;
+        accepted = ok;
+        counts.dropped_sqft = localDropSqft.length;
+        counts.dropped_year = localDropYear.length;
+        break;
+      }
+    }
+
+    accepted.sort((a, b) => {
+      const dp = psfFn(a) - psfFn(b);
+      if (dp !== 0) return dp;
+      return (a.distance_mi || 99) - (b.distance_mi || 99);
+    });
+    const kept = accepted.slice(0, COMP_KEEP_LOWEST);
+    return { kept, counts, accepted_count: accepted.length, tier: chosenTier.name };
+  }
+
+  // Build a small explainer caption summarizing what was filtered out so the
+  // consultant can see why a comp the user expected isn't shown — and which
+  // tier of progressive widening had to be used.
+  function filterCaption(filterResult, subject) {
+    const c = filterResult.counts;
+    const tier = filterResult.tier;
+    const parts = [`${filterResult.kept.length} of ${c.input} returned (lowest PSF first)`];
+    const tierLabel = tier === 'tight'   ? 'engine-strict (size 60-150%, year &plusmn;35)'
+                    : tier === 'no-year' ? 'size 60-150% only &mdash; year window relaxed (insufficient same-vintage comps in this neighborhood)'
+                    : 'all comps &mdash; size + year windows both relaxed (no defensible peers in either window)';
+    parts.push(`filter tier: ${tierLabel}`);
+    const dropped = [];
+    if (c.dropped_sqft) dropped.push(`${c.dropped_sqft} for size`);
+    if (c.dropped_year) dropped.push(`${c.dropped_year} for year built`);
+    if (c.dropped_no_psf) dropped.push(`${c.dropped_no_psf} missing PSF`);
+    if (dropped.length) parts.push(`dropped ${dropped.join(', ')}`);
+    return parts.join(' &middot; ');
+  }
+
+  // ────────── Section 6: Sales Comparables (async) ──────────
+  // Calls /api/clear-capital/lookup with the subject's address, renders a
+  // compact table of returned MLS sales. Best-effort: silently hides the
+  // section if the upstream is unavailable or returns no sales.
+  async function fetchSalesComps(s) {
+    const placeholder = $('cc-sales-state');
+    const wrap = $('sec6-wrap');
+    if (!placeholder) return;
+    const hide = () => { if (wrap) wrap.remove(); };
+    // Clear Capital's address parser wants "STREET, CITY, ST ZIP" exactly.
+    // Our full_address column packs "STREET, CITY ZIP" (no state, ZIP smashed
+    // with city for HCAD-format CADs), which fails the upstream regex and
+    // returns 400. Reconstruct cleanly from the individual columns.
+    const street = (s.site_address || '').replace(/\s+/g, ' ').trim();
+    const city = (s.site_city || '').trim();
+    const zip = ((s.site_zip || '').match(/^\d{5}/) || [''])[0]; // strip 9-digit ZIP+4 down to 5
+    const fullAddr = [street, city, 'TX ' + zip].filter(Boolean).join(', ').trim();
+    if (!street || !city || !zip) {
+      hide();
+      return;
+    }
+    try {
+      const resp = await fetchWithRetry('/api/cad-proxy?path=/api/clear-capital/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: fullAddr }),
+      }, { attempts: 2, timeoutMs: 30000 });
+      if (!resp.ok) {
+        hide();
+        return;
+      }
+      const data = await resp.json();
+      // Step 1: keep only CLOSED sales (event_type === 'Sale'). Active /
+      // cancelled / expired listings are aspirational asking prices, not
+      // transactions — they don't support a §41.43(b)(1) market-value
+      // argument. We used to show them tagged; with engine-style filtering
+      // they're omitted entirely since they distort the lowest-PSF pick.
+      const all = (data.comps || []).filter(
+        c => c.sale_price && c.sale_date && (c.event_type === 'Sale' || !c.event_type)
+      );
+      // Step 2: apply engine filters (size + year windows, sort by PSF
+      // ASC, take 7 lowest acceptable).
+      const filtered = applyEngineFilters(all, s, {
+        psfFn: c => c.psf || (c.sale_price && c.living_sqft ? c.sale_price / c.living_sqft : null),
+      });
+      if (!filtered.kept.length) {
+        hide();
+        return;
+      }
+      placeholder.outerHTML = renderSalesCompTable(s, filtered.kept, data, filtered);
+    } catch (err) {
+      hide();
+    }
+  }
+
+  // ────────── Section 7: ATTOM closed-sales (async) ──────────
+  // Same flow as Section 6 but hits /api/attom-sales/lookup. ATTOM coverage
+  // is county-recorder data, so all entries are closed sales (no listing
+  // statuses). We don't apply the SOLD/ACTIVE badge here — every row is
+  // by definition a recorded sale.
+  async function fetchAttomSales(s) {
+    const placeholder = $('attom-sales-state');
+    const wrap = $('sec7-wrap');
+    if (!placeholder) return;
+    const hide = () => { if (wrap) wrap.remove(); };
+    const street = (s.site_address || '').replace(/\s+/g, ' ').trim();
+    const city = (s.site_city || '').trim();
+    const zip = ((s.site_zip || '').match(/^\d{5}/) || [''])[0];
+    const fullAddr = [street, city, 'TX ' + zip].filter(Boolean).join(', ').trim();
+    if (!street || !city || !zip) {
+      hide();
+      return;
+    }
+    try {
+      const resp = await fetchWithRetry('/api/cad-proxy?path=/api/attom-sales/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: fullAddr }),
+      }, { attempts: 2, timeoutMs: 30000 });
+      if (!resp.ok) {
+        let detail = '';
+        try { const e = await resp.json(); detail = e.detail?.message || e.detail || e.message || ''; } catch (_) {}
+        hide();
+        return;
+      }
+      const data = await resp.json();
+      const filtered = applyEngineFilters(data.sales || [], s, {
+        psfFn: c => c.psf,
+      });
+      if (!filtered.kept.length) {
+        hide();
+        return;
+      }
+      placeholder.outerHTML = renderAttomSalesTable(s, filtered.kept, data, filtered);
+    } catch (err) {
+      hide();
+    }
+  }
+
+  function renderAttomSalesTable(s, sales, attomData, filterResult) {
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const subjPsf = subjSqft ? (subjVal / subjSqft) : 0;
+    const psfs = sales.map(c => c.psf).filter(v => v);
+    let medianPsf = null, meanPsf = null;
+    if (psfs.length) {
+      const sorted = psfs.slice().sort((a, b) => a - b);
+      medianPsf = sorted.length % 2 === 1 ? sorted[(sorted.length - 1) / 2]
+        : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+      meanPsf = psfs.reduce((a, b) => a + b, 0) / psfs.length;
+    }
+    const psfDeltaCell = (compPsf) => {
+      if (!compPsf || !subjPsf) return '';
+      const delta = compPsf - subjPsf;
+      const pct = (delta / subjPsf) * 100;
+      const color = delta < 0 ? 'var(--emerald-dark)' : (delta > 0 ? 'var(--warn-text)' : 'var(--gray-500)');
+      const sign = delta < 0 ? '−' : (delta > 0 ? '+' : '');
+      return `<span style="color:${color};font-weight:600;">${sign}${fmtNum(Math.abs(pct), 1)}%</span>`;
+    };
+    const rows = sales.map((c, i) => {
+      const distance = c.distance_mi != null ? c.distance_mi.toFixed(2) + ' mi' : '';
+      const sold = c.sale_date ? new Date(c.sale_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${titleCase(c.address || '')}</td>
+          <td>${distance}</td>
+          <td>${sold}</td>
+          <td>${c.sale_trans_type || ''}</td>
+          <td class="right">${c.sale_price ? fmtMoney(c.sale_price) : ''}</td>
+          <td class="right">${c.living_sqft ? fmtNum(c.living_sqft) : ''}</td>
+          <td class="right">${fmtPsf(c.psf)}</td>
+          <td class="right">${psfDeltaCell(c.psf)}</td>
+          <td class="right">${c.year_built || ''}</td>
+          <td class="right">${c.beds != null ? c.beds : ''}</td>
+          <td class="right">${c.baths != null ? c.baths : ''}</td>
+        </tr>
+      `;
+    }).join('');
+    const captionText = filterResult ? filterCaption(filterResult, s) : `${sales.length} returned`;
+    return `
+      <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
+        Closed sales from ATTOM (county recorder / assessor data), filtered to engine-defensible peers. ATTOM and Clear Capital pull from different sources &mdash; comparing both helps confirm which sales are genuinely comparable. ${captionText}.
+      </p>
+      <table class="sales-comp-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Address</th><th>Distance</th><th>Sold</th><th>Type</th>
+            <th class="right">Sale price</th><th class="right">Living sqft</th>
+            <th class="right">$/sqft</th><th class="right">vs subj PSF</th>
+            <th class="right">Year built</th>
+            <th class="right">Beds</th><th class="right">Baths</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        ${medianPsf != null ? `
+        <tfoot>
+          <tr>
+            <td colspan="8" style="text-align:right;">Subject PSF: <b>${subjSqft ? fmtPsf(subjPsf) : '—'}</b> &middot; Filtered-pool median PSF: <b>${fmtPsf(medianPsf)}</b> &middot; Mean PSF: <b>${fmtPsf(meanPsf)}</b></td>
+            <td colspan="4" style="text-align:right;">${sales.length} of ${attomData.sales_count} returned</td>
+          </tr>
+          ${subjSqft && medianPsf ? `
+          <tr>
+            <td colspan="12" style="text-align:right;color:var(--emerald-dark);">
+              Median-PSF value indication: <b>${fmtMoney(medianPsf * subjSqft)}</b>
+              ${medianPsf * subjSqft < subjVal ? ` &mdash; ${fmtMoney(subjVal - medianPsf * subjSqft)} below current notice` : ''}
+            </td>
+          </tr>` : ''}
+        </tfoot>` : ''}
+      </table>
+    `;
+  }
+
+  function renderSalesCompTable(s, comps, ccData, filterResult) {
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const subjPsf = subjSqft ? (subjVal / subjSqft) : 0;
+    const psfs = comps.map(c => c.psf || (c.sale_price && c.living_sqft ? c.sale_price / c.living_sqft : null)).filter(v => v);
+    let medianPsf = null, meanPsf = null;
+    if (psfs.length) {
+      const sorted = psfs.slice().sort((a, b) => a - b);
+      medianPsf = sorted.length % 2 === 1 ? sorted[(sorted.length - 1) / 2]
+        : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+      meanPsf = psfs.reduce((a, b) => a + b, 0) / psfs.length;
+    }
+    // Each row shows the PSF delta vs subject. Lower (negative) = better
+    // owner argument under §41.43(b)(1). Coloring is emerald for below,
+    // amber for above — same convention as Section 4 best-match cells.
+    const psfDeltaCell = (compPsf) => {
+      if (!compPsf || !subjPsf) return '';
+      const delta = compPsf - subjPsf;
+      const pct = (delta / subjPsf) * 100;
+      const color = delta < 0 ? 'var(--emerald-dark)' : (delta > 0 ? 'var(--warn-text)' : 'var(--gray-500)');
+      const sign = delta < 0 ? '−' : (delta > 0 ? '+' : '');
+      return `<span style="color:${color};font-weight:600;">${sign}${fmtNum(Math.abs(pct), 1)}%</span>`;
+    };
+    const rows = comps.map((c, i) => {
+      const distance = c.distance_mi != null ? c.distance_mi.toFixed(2) + ' mi' : '';
+      const sold = c.sale_date ? new Date(c.sale_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+      const psf = c.psf || (c.sale_price && c.living_sqft ? c.sale_price / c.living_sqft : null);
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${titleCase(c.address || '')}</td>
+          <td>${distance}</td>
+          <td>${sold}</td>
+          <td class="right">${c.sale_price ? fmtMoney(c.sale_price) : ''}</td>
+          <td class="right">${c.living_sqft ? fmtNum(c.living_sqft) : ''}</td>
+          <td class="right">${fmtPsf(psf)}</td>
+          <td class="right">${psfDeltaCell(psf)}</td>
+          <td class="right">${c.year_built || ''}</td>
+          <td class="right">${c.beds != null ? c.beds : ''}</td>
+          <td class="right">${c.baths != null ? c.baths : ''}</td>
+        </tr>
+      `;
+    }).join('');
+    const ccAvm = (ccData.clear_capital_avm || {}).value;
+    const captionText = filterResult ? filterCaption(filterResult, s) : `${comps.length} closest closed sales`;
+    return `
+      <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
+        Closed MLS sales from Clear Capital RealTimeCMA, filtered to engine-defensible peers (same size+vintage window the TaxDrop §41.43 calculator uses). ${captionText}.
+      </p>
+      <table class="sales-comp-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Address</th><th>Distance</th><th>Sold</th>
+            <th class="right">Sale price</th><th class="right">Living sqft</th>
+            <th class="right">$/sqft</th><th class="right">vs subj PSF</th>
+            <th class="right">Year built</th>
+            <th class="right">Beds</th><th class="right">Baths</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        ${medianPsf != null ? `
+        <tfoot>
+          <tr>
+            <td colspan="7" style="text-align:right;">Subject PSF: <b>${subjSqft ? fmtPsf(subjPsf) : '—'}</b> &middot; Filtered-pool median PSF: <b>${fmtPsf(medianPsf)}</b> &middot; Mean PSF: <b>${fmtPsf(meanPsf)}</b></td>
+            <td colspan="4" style="text-align:right;">${ccAvm ? 'Clear Capital AVM: <b>' + fmtMoney(ccAvm) + '</b>' : ''}</td>
+          </tr>
+          ${subjSqft && medianPsf ? `
+          <tr>
+            <td colspan="11" style="text-align:right;color:var(--emerald-dark);">
+              Median-PSF value indication: <b>${fmtMoney(medianPsf * subjSqft)}</b>
+              ${medianPsf * subjSqft < subjVal ? ` &mdash; ${fmtMoney(subjVal - medianPsf * subjSqft)} below current notice` : ''}
+            </td>
+          </tr>` : ''}
+        </tfoot>` : ''}
+      </table>
+    `;
+  }
+
+  // ────────── Equity grid renderer ──────────
+  function renderEquityGrid(s, comps, bestIdx, psf) {
+    function attrRow(label, getter, formatter) {
+      const sVal = getter(s);
+      const compVals = comps.map(c => getter(c));
+      // Hide row entirely when no property (subject + comps) has data for it.
+      if (!hasVal(sVal) && !compVals.some(hasVal)) return '';
+      const cellHtml = (v, cls) => {
+        const display = hasVal(v) ? (formatter ? formatter(v) : v) : '';
+        return `<td class="${cls}">${display}</td>`;
+      };
+      const subjDisplay = hasVal(sVal) ? (formatter ? formatter(sVal) : sVal) : '';
+      const cells = compVals.map((v, i) => cellHtml(v, (i === bestIdx) ? 'match-cell' : '')).join('');
+      return `<tr><td class="attr-label">${label}</td><td class="subject-cell">${subjDisplay}</td>${cells}</tr>`;
+    }
+    // section() emits a section header followed by only the non-empty attr
+    // rows. If all rows are empty (every property in the set has nulls for
+    // every attr in the group), the entire group — header included — is
+    // omitted so the grid doesn't show an empty subsection.
+    function section(headerLabel, attrRowResults, extraClass) {
+      const nonEmpty = attrRowResults.filter(r => r);
+      if (nonEmpty.length === 0) return '';
+      // Slugify the header label so CSS can target individual sections
+      // (e.g., the Indicator block needs emphasized styling per Mike's
+      // Holsten Hill markup, 2026-06-17). extraClass lets the caller pin
+      // an explicit class for a section that doesn't slugify cleanly.
+      const slug = (extraClass || headerLabel)
+        .toString().toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 40);
+      return `<tr class="section-header section-${slug}"><td colspan="${comps.length + 2}">${headerLabel}</td></tr>` + nonEmpty.join('');
+    }
+
+    const headers = ['Subject', ...comps.map((_, i) => `Comp #${i + 1}`)];
+    const headerNames = [s, ...comps].map(p => titleCase((p.site_address || p.full_address || '').split(',')[0] || ''));
+    const headerCells = headers.map((h, i) => {
+      let cls = '';
+      if (i === 0) cls = 'subject-col';
+      else if (i - 1 === bestIdx) cls = 'match-col';
+      return `<th class="${cls}">${h}<br><span style="font-weight:400;font-size:10px;">${headerNames[i]}</span></th>`;
+    }).join('');
+
+    // Photo row (streetview thumbnails)
+    const photoCells = [s, ...comps].map((p, i) => {
+      const cls = (i === 0) ? 'subject-cell' : (i - 1 === bestIdx ? 'match-cell' : '');
+      const addr = (p.full_address || p.site_address || '') + ', TX';
+      const svUrl = `https://maps.googleapis.com/maps/api/streetview?size=400x240&location=${encodeAddr(addr)}&return_error_code=true&key=${STREETVIEW_KEY}`;
+      return `<td class="photo-cell ${cls}"><img src="${svUrl}" alt="Street view" onerror="this.outerHTML='&lt;div class=\\&quot;no-photo\\&quot;&gt;No imagery&lt;/div&gt;'"></td>`;
+    }).join('');
+
+    // PSF row + analysis
+    const psfMedian = psf.median_psf;
+    const psfMean = psf.mean_psf;
+    const psfLow = psf.lowest_comp_psf;
+    const hasAnyAdjustments = (comps || []).some(c => c.adjustment_total);
+
+    // Median / mean / lowest of the FULL per-comp breakdown (size+age+land+
+    // features, not just the engine-returned feature-only median). These are
+    // the numbers a CAD reviewer can reconcile from the table — and they're
+    // what the engine's recommended_value is anchored to internally.
+    const fullAdjPsfs = (comps || [])
+      .map(c => computeAdjBreakdown(s, c).finalPsf)
+      .filter(v => v > 0)
+      .sort((a, b) => a - b);
+    let psfMedianAdj = null, psfMeanAdj = null, psfLowAdj = null;
+    let medianAdjValue = null;
+    if (fullAdjPsfs.length) {
+      const n = fullAdjPsfs.length;
+      psfMedianAdj = n % 2 === 1
+        ? fullAdjPsfs[Math.floor(n / 2)]
+        : (fullAdjPsfs[n / 2 - 1] + fullAdjPsfs[n / 2]) / 2;
+      psfMeanAdj = fullAdjPsfs.reduce((a, b) => a + b, 0) / n;
+      psfLowAdj = fullAdjPsfs[0];
+      if (s.living_sqft) {
+        medianAdjValue = Math.round(psfMedianAdj * s.living_sqft);
+      }
+    }
+
+    return `
+      <div class="equity-grid-wrapper">
+      <table class="equity-grid">
+        <thead><tr><th style="width:220px;text-align:left;">&nbsp;</th>${headerCells}</tr></thead>
+        <tbody>
+          <tr><td class="attr-label">Street view</td>${photoCells}</tr>
+          ${attrRow('PID #', p => fmtAccount(p.parcel_id, p.county))}
+          ${attrRow('Property address', p => titleCase(p.site_address || ''))}
+          ${attrRow('Subdivision', p => p.subdivision, titleCase)}
+          ${attrRow('State class', p => p.state_class)}
+          ${(() => {
+            // Distance row — sync compute from stored lat/lng. Mike's V4 grid
+            // places it after State class (not before Subdivision); his Atasca
+            // markup (2026-06-17) also says "If not same would delete, if
+            // possible to do" — hide the row entirely when every comp is
+            // within 0.05 mi of the subject. At that proximity the values are
+            // noise and add no signal beyond what the address row already shows.
+            const distances = comps.map(c => {
+              const sLat = parseFloat(s.latitude);
+              const sLon = parseFloat(s.longitude);
+              const cLat = parseFloat(c.latitude);
+              const cLon = parseFloat(c.longitude);
+              if (!isFinite(sLat) || !isFinite(sLon) || !isFinite(cLat) || !isFinite(cLon)) return null;
+              return _haversineMiles({lat: sLat, lng: sLon}, {lat: cLat, lng: cLon});
+            });
+            const allClose = distances.every(d => d != null && d < 0.05);
+            if (allClose) return '';
+            return `
+          <tr id="distance-row">
+            <td class="attr-label">Distance from subject</td>
+            <td class="subject-cell">&mdash;</td>
+            ${comps.map((c, i) => {
+              const d = distances[i];
+              const initial = d == null ? '' : (d < 1 ? d.toFixed(2) + ' mi' : d.toFixed(1) + ' mi');
+              return `<td class="${i === bestIdx ? 'match-cell' : ''}" id="dist-comp-${i}">${initial}</td>`;
+            }).join('')}
+          </tr>`;
+          })()}
+          ${section('Building characteristics', [
+            attrRow('Living area (SF)', p => p.living_sqft, v => fmtNum(v)),
+            attrRow('Year built', p => p.year_built),
+            // Effective year built — only renders when at least one property
+            // in the set publishes it AND it differs from year_built somewhere.
+            // Catches renovation outliers like 5821 La Vista Ct (eff 2000 vs
+            // built 1930) before they pull the median up. The renovation
+            // filter above drops comps with eff-delta >25 yr; this row makes
+            // the exclusion logic self-documenting for the ARB reviewer.
+            attrRow('Effective year built', p => p.effective_year_built),
+            // David (consultant) 2026-06-25: "The number of bedrooms generally
+            // isn't an important comparison point." Bedrooms row removed.
+          ])}
+          ${section((s.tax_year || 2026) + ' Market Values', [
+            attrRow('Land value', p => p.land_value, fmtMoney),
+            attrRow('Land $/SF',
+              p => (p.living_sqft && p.land_value) ? p.land_value / p.living_sqft : null,
+              fmtPsfBare),
+            attrRow('Improvement value', p => p.improvement_value, fmtMoney),
+            attrRow('Improvement $/SF',
+              p => (p.living_sqft && p.improvement_value) ? p.improvement_value / p.living_sqft : null,
+              fmtPsfBare),
+            attrRow('CAD market value', p => p.total_market, fmtMoney),
+            attrRow('CAD market $/SF',
+              p => (p.living_sqft && p.total_market) ? p.total_market / p.living_sqft : null,
+              fmtPsfBare),
+          ])}
+          ${section('Adjustments', [
+            attrRow('Land value adj.',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).landAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Size adj.',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).sizeAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Age/condition adj.',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).ageAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Additional (pool/garage/etc)',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).featureAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+          ])}
+          ${section('Totals', [
+            attrRow('Total net adjustment',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).totalAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Total net adjustment ($/SF)',
+              p => p === s ? null : computeAdjBreakdown(s, p).totalAdjPsf,
+              v => v === 0 ? '$0.00' : (v > 0 ? `+${fmtPsfBare(v)}` : `−${fmtPsfBare(Math.abs(v))}`)),
+          ])}
+          ${section('Derivation', [
+            // CAD market value repeats so the derivation reads top-to-bottom
+            // like the CAD's own evidence packet: (CAD value) + (total adj) =
+            // (adjusted property value).
+            attrRow('CAD market value', p => p === s ? null : p.total_market, fmtMoney),
+            attrRow('Total net adjustments',
+              p => p === s ? null : Math.round(computeAdjBreakdown(s, p).totalAdjPsf * (p.living_sqft || 0)),
+              v => v === 0 ? '$0' : (v > 0 ? `+${fmtMoney(v)}` : `−${fmtMoney(Math.abs(v))}`)),
+            attrRow('Adjusted property value',
+              p => {
+                if (p === s) return null;
+                const compVal = p.total_market || 0;
+                const compSf = p.living_sqft || 0;
+                if (!compVal || !compSf) return null;
+                const totalAdjDollars = Math.round(computeAdjBreakdown(s, p).totalAdjPsf * compSf);
+                return compVal + totalAdjDollars;
+              },
+              fmtMoney),
+            attrRow('% diff vs comp CAD',
+              p => {
+                if (p === s) return null;
+                const compVal = p.total_market || 0;
+                const compSf = p.living_sqft || 0;
+                if (!compVal || !compSf) return null;
+                const totalAdjDollars = computeAdjBreakdown(s, p).totalAdjPsf * compSf;
+                return (totalAdjDollars / compVal) * 100;
+              },
+              v => v === 0 ? '0.0%' : (v > 0 ? `+${v.toFixed(1)}%` : `${v.toFixed(1)}%`)),
+          ])}
+          ${section('Indicator (Subject SF basis)', [
+            attrRow('Adjusted $/SF (Subject SF)',
+              p => {
+                if (p === s) return null;
+                const compVal = p.total_market || 0;
+                const compSf = p.living_sqft || 0;
+                const ss = s.living_sqft || 0;
+                if (!compVal || !compSf || !ss) return null;
+                const totalAdjDollars = computeAdjBreakdown(s, p).totalAdjPsf * compSf;
+                return (compVal + totalAdjDollars) / ss;
+              },
+              fmtPsfBare),
+          ])}
+        </tbody>
+        <tfoot>
+          ${(() => {
+            // V4 footer: median of adjusted property values (dollars) and the
+            // same number divided by subject SF for the $/SF view. Computed
+            // here so the footer matches Mike's V4 grid row-for-row.
+            const indVals = (comps || [])
+              .map(c => {
+                const compVal = c.total_market || 0;
+                const compSf = c.living_sqft || 0;
+                if (!compVal || !compSf) return 0;
+                const b = computeAdjBreakdown(s, c);
+                return Math.round(compVal + b.totalAdjPsf * compSf);
+              })
+              .filter(v => v > 0)
+              .sort((a, b) => a - b);
+            if (!indVals.length) return '';
+            const n = indVals.length;
+            const med = n % 2 === 1
+              ? indVals[Math.floor(n / 2)]
+              : Math.round((indVals[n / 2 - 1] + indVals[n / 2]) / 2);
+            const subjSf = s.living_sqft || 0;
+            const medPsf = subjSf ? med / subjSf : null;
+            // Mike's V3 markup (La Vista, 2026-06-18): "Remove this" — drop
+            // the $/SF median footer row, keep only the dollar median.
+            return `
+              <tr>
+                <td colspan="2"><b>Median adjusted value of comps</b></td>
+                <td colspan="${comps.length}" style="text-align:right;"><b>${fmtMoney(med)}</b></td>
+              </tr>
+            `;
+          })()}
+        </tfoot>
+      </table>
+      </div>
+    `;
+  }
+
+  // ────────── Analysis section renderer ──────────
+  // Methodologies in priority order:
+  //   - 'engine'     : recommended_value from server-side calculate_savings()
+  //   - 'best_match' : single-comp anchor (strongScore >= 4 required)
+  //   - 'median'     : median-PSF baseline
+  //   - 'lowest_psf' : floored ask at lowest comp PSF
+  //   - 'no_case'    : no defensible reduction
+  function renderAnalysisSection(s, best, methodology, psf, reduction, reductionPct, requestedVal, comps, engine) {
+    const subjVal = s.total_market || 0;
+    const subjSqft = s.living_sqft || 0;
+    const compsCount = (comps && comps.length) || 5;
+
+    if (methodology === 'no_case') {
+      // Section 4 is omitted entirely on no_case. Section 2 already shows
+      // the warning banner ("No reduction defensible from the comparable
+      // set"), so a §41.43(b)(3) analysis block would be redundant — and
+      // putting an "analysis" header in front of an ARB on a property we
+      // are not asking to reduce just invites the panel to engage with
+      // numbers we are not defending.
+      return '';
+    }
+
+    // Engine methodology — defensibility audit (2026-06-10) found the prior
+    // version cited a baseline_psf from calculate_savings()'s broader 7-comp
+    // pool that didn't match the 5 comps the ARB actually sees in Section 3.
+    // Asks could fall BELOW the visible median × sqft, leaving the ARB with
+    // no way to verify the math from the table in front of them.
+    //
+    // Per §41.43(b)(3): "the appraised value... is equal to or less than the
+    // median appraised value of a reasonable number of comparable properties
+    // appropriately adjusted." The statutory floor is the median of the comp
+    // set the ARB sees — not a different pool. So derive everything from
+    // psf_analysis (the displayed 5-comp stats) using whichever PSF math the
+    // owner / consultant adopts:
+    //   - median:        statute-defined safe floor (default)
+    //   - median_adjusted: same, after feature adjustments applied
+    //   - lowest_comp:   aggressive but still tied to a single visible row
+    //
+    // The engine's own recommended_value is ignored here — its broader pool
+    // would either need to be displayed (defensible but bigger table) or set
+    // aside (which is what we now do).
+    if ((methodology === 'engine' || methodology === 'engine_floored') && engine) {
+      const hasAdjustments = (comps || []).some(c => c.adjustment_total);
+      // Prefer adjusted median when any comp had a feature adjustment;
+      // otherwise fall back to raw median.
+      const useAdjusted = hasAdjustments && psf.median_adjusted_psf != null;
+      const baselinePsf = useAdjusted ? psf.median_adjusted_psf : psf.median_psf;
+      const baselineValue = useAdjusted ? psf.median_adjusted_value : psf.median_value;
+      const askValue = baselineValue;  // statute-aligned: median of visible comps × subject sqft
+      const recPsf = subjSqft && askValue ? (askValue / subjSqft) : null;
+      const source = useAdjusted
+        ? 'median of comparable properties in Section 3 after feature adjustments'
+        : 'median of comparable properties in Section 3';
+      const lowCompPsfFmt = psf.lowest_comp_psf ? fmtPsf(psf.lowest_comp_psf) : '—';
+      // Recompute reduction / pct since we replaced askValue.
+      const reductionLocal = subjVal - (askValue || 0);
+      const reductionPctLocal = subjVal && askValue ? (reductionLocal / subjVal) : 0;
+
+      // Feature adjustments — surface what was applied across the comp set,
+      // and (when adjustments shift the baseline) report the post-adjustment
+      // indicated value. The §41.43(b)(3) statute requires comps to be
+      // 'appropriately adjusted' — showing the math addresses that directly.
+      const adjusted = comps.filter(c => c.adjustment_total);
+      let adjustmentsHtml = '';
+      if (adjusted.length) {
+        // Collapse adjustments to the distinct features applied + dollar
+        // totals. e.g. "5 of 5 comparables adjusted +$25,000 each for Pool".
+        const byFeature = {};
+        adjusted.forEach(c => (c.adjustments || []).forEach(b => {
+          const key = b.feature.replace(/\s*\([^)]+\)/, '');  // strip "(+1 car)" qualifier for grouping
+          (byFeature[key] = byFeature[key] || []).push({ comp: c, bit: b });
+        }));
+        const summary = Object.entries(byFeature).map(([feat, list]) => {
+          const amts = list.map(x => x.bit.amount);
+          const allSame = amts.every(a => a === amts[0]);
+          const sign = amts[0] >= 0 ? '+' : '−';
+          const amtStr = allSame ? sign + fmtMoney(Math.abs(amts[0])) : 'mixed $ amounts';
+          const subjHas = list[0].bit.subject_has;
+          const compsHave = list[0].bit.comp_has;
+          const direction = (typeof subjHas === 'boolean')
+            ? (subjHas && !compsHave
+                ? `subject has ${feat.toLowerCase()}, comps don't &mdash; comp values adjusted up to match subject parity`
+                : `comps have ${feat.toLowerCase()}, subject doesn't &mdash; comp values adjusted down to remove ${feat.toLowerCase()} premium`)
+            : `subject and comps differ on ${feat.toLowerCase()} count`;
+          return `<li><b>${feat}</b>: ${list.length} of ${comps.length} comparables adjusted ${amtStr} (${direction})</li>`;
+        }).join('');
+        const adjPsf = psf.median_adjusted_psf;
+        const adjValue = psf.median_adjusted_value;
+        adjustmentsHtml = `
+          <p style="margin-top:14px;"><b>Feature adjustments applied:</b></p>
+          <ul style="margin:6px 0 14px;padding-left:20px;font-size:13px;">${summary}</ul>
+          ${adjPsf ? `
+          <p>After adjustments, the median comparable PSF moves from <b>${fmtPsf(baselinePsf)}</b> to <b>${fmtPsf(adjPsf)}</b>${adjValue ? `, indicating an adjusted market value of <b>${fmtMoney(adjValue)}</b>` : ''}. Adjustment values are TX-default flat-$ figures (pool $25K, garage $10K/space) consistent with published HCAD and DCAD methodology.</p>
+          ` : ''}`;
+      }
+
+      return `
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          <p>The ${compsCount} comparables in Section 3 are the peers used for this analysis; their <b>${useAdjusted ? 'adjusted ' : ''}median noticed value per square foot</b> is the baseline for the requested value.</p>
+
+          <div class="calc-line">
+            ${useAdjusted ? 'Adjusted median PSF' : 'Median PSF'} of comparables in Section 3: <b>${baselinePsf ? fmtPsf(baselinePsf) : '—'}</b><br>
+            Subject's living area: ${fmtNum(subjSqft)} sqft<br>
+            Indicated market value (${useAdjusted ? 'adjusted ' : ''}median PSF &times; subject sqft): <b>${fmtMoney(askValue)}</b>${recPsf ? ' (' + fmtPsf(recPsf) + ')' : ''}<br>
+            Subject's current notice: ${fmtMoney(subjVal)}<br>
+            Reduction: <b>${fmtMoney(reductionLocal)}</b> (${(reductionPctLocal * 100).toFixed(2)}% of current notice)
+          </div>
+
+          <p style="font-size:13px;color:var(--gray-500);margin-top:14px;">
+            <b>Defensibility note:</b> the requested value is derived directly from the ${useAdjusted ? 'adjusted ' : ''}median PSF of the ${compsCount} comparables shown in Section 3 above &mdash; not from a separate or broader comp pool. The ARB can verify the baseline by computing the median of the "${useAdjusted ? 'Adjusted PSF' : 'Noticed value per sqft'}" row in the Section 3 table.
+          </p>
+          ${adjustmentsHtml}
+        </div>
+      `;
+    }
+
+    // best_match methodology — single-comp argument. Only reached when
+    // classifyComp(s, best).strongScore >= 4 (gated upstream). The text now
+    // says "matches" not "identical on every attribute" so a CAD reviewer
+    // can't refute us with attrs we silently omitted. (2026-06-03.)
+    if (methodology === 'best_match') {
+      const m = classifyComp(s, best);
+      const strongMatches = m.identical.map(a =>
+        `<li><b>Identical ${a.label}</b> &mdash; ${a.val}</li>`
+      );
+      // Append non-strong identical attrs (grade, condition, etc.) for
+      // transparency. These weren't part of the strongScore gate.
+      const extraAttrs = [];
+      const tryAttr = (label, sVal, cVal, fmt) => {
+        if (sVal != null && cVal != null && sVal === cVal) {
+          extraAttrs.push(`<li><b>Identical ${label}</b> &mdash; ${fmt ? fmt(sVal) : sVal}</li>`);
+        }
+      };
+      tryAttr('effective year built', s.effective_year_built, best.effective_year_built);
+      tryAttr('grade', s.grade, best.grade);
+      tryAttr('physical condition', s.physical_condition, best.physical_condition);
+      tryAttr('exterior wall', s.exterior_wall, best.exterior_wall);
+      tryAttr('heating / cooling', s.heating_cooling, best.heating_cooling);
+      tryAttr('foundation type', s.foundation_type, best.foundation_type);
+      tryAttr('bedroom count', s.bedroom_count, best.bedroom_count);
+      tryAttr('story height', s.story_height, best.story_height);
+      tryAttr('land use code', s.land_use_code, best.land_use_code);
+
+      const allMatches = strongMatches.concat(extraAttrs);
+
+      return `
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          <p>The most directly comparable property is <b>${titleCase(best.site_address || '')}</b> (CAD account ${fmtAccount(best.parcel_id, best.county)}). The subject and the comparable match across the major physical dimensions ${cadShortName(s.county)} publishes:</p>
+          <ul style="margin:8px 0 14px;padding-left:24px;">
+            ${allMatches.join('\n')}
+          </ul>
+          <p>${cadShortName(s.county)}'s ${s.tax_year || 2026} notice for the comparable establishes its market value at <b>${fmtMoney(best.total_market)}</b>. Two properties matching across these physical dimensions should be appraised at equal market values.</p>
+
+          <div class="calc-line">
+            Comparable noticed market value: <b>${fmtMoney(best.total_market)}</b><br>
+            Subject's current notice: ${fmtMoney(subjVal)}<br>
+            Difference: <b>${fmtMoney(reduction)}</b> (${(reductionPct * 100).toFixed(2)}% above the most directly comparable property)
+          </div>
+        </div>
+      `;
+    }
+
+    // Helper: derive the implied $/sqft from the requested dollar amount.
+    // For median and lowest_psf branches we always cite requestedVal as the
+    // source of truth and derive PSF from it, so the narrative reconciles
+    // to Section 3's "Adjusted $/sqft" row exactly.
+    const impliedPsf = (requestedVal && subjSqft) ? (requestedVal / subjSqft) : 0;
+
+    // median methodology — V4 / CAD-style framing (Mike, 2026-06-17).
+    // Per-comp indicated value = comp's CAD market value + total dollar
+    // adjustments. Median across comps is the requested ask. Mirrors the
+    // newer CAD evidence-packet derivation (Travis sample 522740).
+    if (methodology === 'median') {
+      return `
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          <p>For each of the ${compsCount} comparables in Section 3, the CAD's noticed market value is adjusted for size, age/condition, land value, and additional features (pools, garages, misc.) to produce an indicated value for the subject. The median of those ${compsCount} indicated values is the requested ask.</p>
+
+          <div class="calc-line">
+            Median adjusted property value (${compsCount} comparables): <b>${fmtMoney(requestedVal)}</b><br>
+            Implied ${impliedPsf > 0 ? '$/SF on subject footprint: <b>' + fmtPsf(impliedPsf) + '</b><br>' : ''}
+            Subject's living area: ${fmtNum(subjSqft)} sqft<br>
+            Subject's current notice: ${fmtMoney(subjVal)}<br>
+            Difference: <b>${fmtMoney(reduction)}</b> (${(reductionPct * 100).toFixed(2)}% above the comparable median)
+          </div>
+        </div>
+      `;
+    }
+
+    // lowest_fallback methodology — median ≥ subject but at least one
+    // adjusted comp is below. Anchor on the lowest below-subject comp as a
+    // single-comp unequal-appraisal argument. When YoY jump is ≥15%, lead
+    // with the YoY signal (§41.43(b)(1) market-value framing) before the
+    // single-comp evidence; otherwise lead with the unequal-appraisal claim.
+    if (methodology === 'lowest_fallback') {
+      const subjPrior = s.prior_total_market || 0;
+      const yoyPct = (subjPrior > 0) ? (subjVal - subjPrior) / subjPrior : 0;
+      const yoyHigh = yoyPct >= 0.15;
+      const belowCount = (comps || []).filter(c => {
+        const cv = c.total_market || 0;
+        const cs = c.living_sqft || 0;
+        if (!cv || !cs) return false;
+        const ind = cv + (computeAdjBreakdown(s, c).totalAdjPsf * cs);
+        return ind < subjVal;
+      }).length;
+      const anchorLabel = belowCount >= 2
+        ? '2nd-lowest below-subject adjusted comparable'
+        : 'lowest below-subject adjusted comparable';
+
+      // Compute the displayed adjusted median for narrative context.
+      const _indVals = (comps || []).map(c => {
+        const cv = c.total_market || 0;
+        const cs = c.living_sqft || 0;
+        if (!cv || !cs) return 0;
+        return Math.round(cv + computeAdjBreakdown(s, c).totalAdjPsf * cs);
+      }).filter(v => v > 0).sort((a, b) => a - b);
+      let medOfComps = 0;
+      if (_indVals.length) {
+        const n = _indVals.length;
+        medOfComps = n % 2 === 1 ? _indVals[Math.floor(n/2)] : Math.round((_indVals[n/2 - 1] + _indVals[n/2]) / 2);
+      }
+      const medianRedPct = subjVal ? ((subjVal - medOfComps) / subjVal) * 100 : 0;
+
+      // Mike's 2026-06-18 round 4: lowest_fallback now fires either when
+      // median is at-or-above subject OR when median offers <3% reduction.
+      // The framing depends on which case we're in.
+      const medianAboveSubject = medOfComps >= subjVal;
+      const medianContextSentence = medianAboveSubject
+        ? `&mdash; at or above the subject's noticed value of ${fmtMoney(subjVal)}.`
+        : `&mdash; only ${medianRedPct.toFixed(2)}% below the subject's noticed value of ${fmtMoney(subjVal)}, below the 3% threshold needed to anchor on the median.`;
+
+      const yoyParagraph = yoyHigh ? `
+        <p><b>Year-over-year jump:</b> the subject's noticed value rose ${(yoyPct * 100).toFixed(1)}% from ${fmtMoney(subjPrior)} (${s.tax_year ? s.tax_year - 1 : 2025}) to ${fmtMoney(subjVal)} (${s.tax_year || 2026}). A jump of this magnitude in a single year is itself a market-value signal, independent of the unequal-appraisal argument below.</p>
+      ` : '';
+
+      return `
+        <h2><span class="section-num">4.</span> Analysis</h2>
+        <div class="analysis-summary">
+          ${yoyParagraph}
+          <p>The ${compsCount} comparables in Section 3, after size, age, land, and feature adjustments, produce a median adjusted value of ${fmtMoney(medOfComps)} ${medianContextSentence} <b>${belowCount} of ${compsCount}</b> adjusted comparables fall below the subject, supporting a single-comp unequal-appraisal argument.</p>
+
+          <p>The ${anchorLabel} carries an adjusted property value of <b>${fmtMoney(requestedVal)}</b>${impliedPsf > 0 ? ' (' + fmtPsfBare(impliedPsf) + '/sqft on subject footprint)' : ''}. This is the anchor for the requested value &mdash; the absolute lowest is not used in order to keep the ask defensible at ARB.</p>
+
+          <div class="calc-line">
+            Anchor (${anchorLabel}): <b>${fmtMoney(requestedVal)}</b><br>
+            Subject's current notice: ${fmtMoney(subjVal)}<br>
+            Difference: <b>${fmtMoney(reduction)}</b> (${(reductionPct * 100).toFixed(2)}% above the anchor)
+          </div>
+
+          <p style="font-size:13px;color:var(--gray-500);margin-top:14px;">
+            <b>Defensibility note:</b> this is a single-comp argument rather than a median anchor. The ARB panel can verify by reading the "Adjusted property value" row of Section 3 and locating the ${anchorLabel} below the subject's ${fmtMoney(subjVal)} notice.
+          </p>
+        </div>
+      `;
+    }
+
+    // Defensive fall-through: any unrecognized methodology returns empty
+    // (Section 4 is omitted). Should not be reachable given the methodology
+    // selection in renderReport always lands in one of: no_case, median,
+    // lowest_fallback.
+    return '';
+  }
+
+  // ────────── Section 5: Adjustment Methodology ──────────
+  // Documents how the engine normalizes each comparable's $/sqft to the
+  // subject before taking the equity median. Mirrors the math in
+  // calculator_shared.adjust_comp_psf — when those constants change, update
+  // this section. Pool / garage fire per-comp based on data availability:
+  // if a CAD didn't publish the flag for either subject or comp, the
+  // engine silently skips the adjustment. No explicit county gate.
+  function renderMethodologySection(s, comps) {
+    // David (consultant) 2026-06-25: "I like ending the packet with a summary
+    // of the adjustments used in the analysis. If questions come up during a
+    // hearing, it's helpful to have that information readily available... it's
+    // critical that the agent understands exactly how those adjustments are
+    // calculated." This summary lists every adjustment category that was
+    // applied to the comparables, in plain language the agent can defend at
+    // ARB — without re-exposing the internal per-comp formula table Mike
+    // stripped on 2026-06-18. The per-comp dollar figures remain visible in
+    // the Section 3 grid; this is the explainer that backs them.
+    const subjSf = s.living_sqft || 0;
+
+    // Determine which adjustment categories actually fired across the comp
+    // set, and the net dollar effect of each, so the summary only lists what
+    // was used (an agent shouldn't have to defend an adjustment that wasn't
+    // applied).
+    const cats = [
+      { key: 'sizeAdjPsf',    name: 'Size (GLA)',          desc: "Normalizes each comparable's value to the subject's living area of " + (subjSf ? fmtNum(subjSf) + ' sqft' : 'record') + ". Larger comps are adjusted down, smaller comps up, at the CAD's own improvement $/SF rate." },
+      { key: 'ageAdjPsf',     name: 'Age / condition',     desc: "Accounts for year-built (and effective-year) differences between the subject and each comparable." },
+      { key: 'landAdjPsf',    name: 'Land',                desc: "Equalizes each comparable's land value to the subject's so the comparison reflects improvements, not lot pricing." },
+      { key: 'featureAdjPsf', name: 'Additional features', desc: "Flat-dollar add/remove for amenities the CAD records differently (pool, extra garage bays, etc.)." },
+    ];
+    const rows = cats.map(cat => {
+      let net = 0, applied = 0;
+      (comps || []).forEach(c => {
+        const sf = c.living_sqft || 0;
+        if (!sf) return;
+        const adj = Math.round(computeAdjBreakdown(s, c)[cat.key] * sf);
+        if (adj !== 0) { applied++; net += adj; }
+      });
+      if (applied === 0) return '';   // category never fired — omit it
+      const avg = Math.round(net / applied);
+      const avgStr = avg === 0 ? '$0' : (avg > 0 ? '+' + fmtMoney(avg) : '−' + fmtMoney(Math.abs(avg)));
+      return `<tr>
+        <td class="adj-name">${cat.name}</td>
+        <td class="adj-mag">${avgStr} avg <span style="color:var(--gray-500);font-weight:400;font-family:inherit;">(${applied} of ${(comps || []).length} comps)</span></td>
+        <td class="adj-desc">${cat.desc}</td>
+      </tr>`;
+    }).filter(Boolean).join('');
+
+    const tableHtml = rows ? `
+        <table class="methodology-table">
+          <thead><tr><th>Adjustment</th><th>Net effect</th><th>What it accounts for</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="methodology-note">
+          Each adjustment is applied to the appraisal district's own noticed value for the comparable, then the adjusted values are reconciled to the median (Section 3) as the indicated value for the subject. Per-comparable dollar figures appear in the Adjustments and Derivation rows of the Section 3 grid.
+        </p>
+    ` : `
+        <p class="methodology-note" style="margin-top:0;">No size, age, land, or feature adjustments were required &mdash; the comparables are sufficiently alike to the subject that the district's noticed values are compared directly.</p>
+    `;
+
+    return `
+      <h2><span class="section-num">5.</span> Adjustments Summary</h2>
+      <div class="analysis-summary">
+        ${tableHtml}
+        <p class="methodology-note" style="margin-top:14px;padding:12px 14px;background:#FFF8E1;border-left:3px solid #F5B400;border-radius:4px;font-size:12px;color:#5C4400;">
+          <b>Non-appraisal disclaimer:</b> This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice or any applicable State Laws or rules as they may apply to property market value appraisals that may be provided by a Licensed Real Estate Appraiser. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and the Property Owner's or Tax Agent's interpretation and analysis of market factors or information provided by the applicable CAD. The requested market value reflects the Property Owner's or Tax Agent's good-faith opinion of value for use in this protest, and it does not represent a market-value opinion for any purpose other than this property tax value protest.
+        </p>
+      </div>
+    `;
+  }
+
+  function cadShortName(county) {
+    return ({
+      harris: 'HCAD', bexar: 'Bexar Appraisal District',
+      travis: 'TCAD', dallas: 'DCAD', tarrant: 'TAD',
+      collin: 'CCAD', denton: 'DCAD', fortbend: 'FBCAD',
+      galveston: 'GalCAD', montgomery: 'MCAD',
+    })[county] || 'the CAD';
+  }
+
+  // ────────── WYSIWYG report editor (agent-only, ?edit=1) ──────────
+  // Turns the rendered report into an in-place editor: every text region is
+  // contentEditable, and per-column / per-row / per-section delete controls let
+  // the agent remove a bad comp or a whole block. Saving snapshots the cleaned
+  // report HTML to the review's overrides.reportHtml; that overlay then renders
+  // for both the agent preview and the customer's delivered copy. Export reads
+  // the live DOM, so edits flow into PDF/DOCX whether or not they're saved yet.
+  function initReportEditor(jti) {
+    const root = $('state-report');
+    if (!root) return;
+    // Agent (address) mode calls this with jti=null: no stored review row, so
+    // Save is hidden and Revert just reloads. Review mode passes a real jti and
+    // is unchanged.
+    const hasJti = !!jti;
+    // Idempotent: a live comp update re-renders the report and re-inits the
+    // editor. Remove any prior toolbar so they don't stack, and bind the
+    // beforeunload guard only once. (2026-07-21.)
+    document.querySelectorAll('.ed-toolbar').forEach((el) => el.remove());
+    document.body.classList.add('ed-on');
+
+    // 1) Text editing — the whole report is editable. Delete controls below are
+    //    marked contenteditable=false so they aren't caught up in typing.
+    root.setAttribute('contenteditable', 'true');
+    root.setAttribute('spellcheck', 'false');
+
+    // 2) In-report banner (stripped on save + in print).
+    const banner = document.createElement('div');
+    banner.className = 'ed-banner ed-ctl';
+    banner.setAttribute('contenteditable', 'false');
+    banner.innerHTML = hasJti
+      ? '<b>Editing mode.</b> Click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, row, or section. Save when you\'re done — the edited report is what the customer and the ARB receive.'
+      : '<b>Editing mode.</b> Click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, row, or section. Export PDF or DOCX when done — the export reflects your edits.';
+    root.insertBefore(banner, root.firstChild);
+
+    // 3) Delete controls.
+    const mkCtl = (cls, label, title, onClick) => {
+      const b = document.createElement('span');
+      b.className = 'ed-ctl ' + cls;
+      b.setAttribute('contenteditable', 'false');
+      b.title = title;
+      b.textContent = label;
+      b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClick(); if (window.markDirty) window.markDirty(); });
+      return b;
+    };
+
+    // 3a) Comp COLUMN + ROW deletes on the equity grid.
+    root.querySelectorAll('table.equity-grid').forEach((table) => {
+      const headRow = table.tHead && table.tHead.rows[0];
+      if (headRow) {
+        // Column 0 is the attribute-label; column 1 is the subject. Comp columns
+        // start at index 2 — only those get a delete control.
+        for (let ci = 2; ci < headRow.cells.length; ci++) {
+          (function (colIndex) {
+            const th = headRow.cells[colIndex];
+            th.appendChild(mkCtl('ed-col', '✕', 'Delete this comparable column', () => {
+              const cell = headRow.cells[colIndex];
+              const idx = cell.cellIndex;
+              Array.from(table.rows).forEach((r) => { if (idx < r.cells.length) r.deleteCell(idx); });
+            }));
+          })(ci);
+        }
+      }
+      // Row delete on each body row (skip section-header rows).
+      Array.from(table.tBodies).forEach((tb) => {
+        Array.from(tb.rows).forEach((r) => {
+          if (r.classList.contains('section-header')) return;
+          const first = r.cells[0];
+          if (first) first.appendChild(mkCtl('ed-row', '✕', 'Delete this row', () => r.remove()));
+        });
+      });
+    });
+
+    // 3b) SECTION deletes — a control on each <h2> removes that heading and every
+    //     following sibling up to the next <h2> (sections aren't wrapped, so we
+    //     walk siblings). The cover "Summary" h2 is left un-deletable.
+    root.querySelectorAll('h2').forEach((h2) => {
+      if (/summary & opinion of value/i.test(h2.textContent || '')) return;
+      h2.appendChild(mkCtl('ed-sec', 'Delete section', 'Delete this whole section', () => {
+        const kill = [h2];
+        let n = h2.nextElementSibling;
+        while (n && n.tagName !== 'H2') { kill.push(n); n = n.nextElementSibling; }
+        kill.forEach((el) => el.remove());
+      }));
+    });
+
+    // 4) Toolbar. When embedded in the review console (iframe), window.print()
+    // would target the PARENT document, so hide the export buttons here and let
+    // the console's own PDF/DOCX links (which open a clean standalone tab) do the
+    // export. Standalone tab keeps its own export buttons.
+    const embedded = window.self !== window.top;
+    const bar = document.createElement('div');
+    bar.className = 'ed-toolbar';
+    bar.innerHTML =
+      '<span class="ed-title">✎ Editing report</span>' +
+      (hasJti ? '<button class="primary" id="ed-save">Save</button>' : '') +
+      (embedded ? '' : '<button id="ed-pdf">Export PDF</button><button id="ed-docx">Export DOCX</button>') +
+      '<button id="ed-revert">Revert to original</button>' +
+      '<span class="ed-status" id="ed-status">' + (embedded ? 'Save, then use the PDF / DOCX links above to export.' : '') + '</span>';
+    document.body.appendChild(bar);
+
+    const status = () => document.getElementById('ed-status');
+    const setStatus = (t) => { const s = status(); if (s) s.textContent = t; };
+    window.__edDirty = false;
+    window.markDirty = () => { window.__edDirty = true; setStatus('Unsaved changes'); };
+    root.addEventListener('input', () => window.markDirty());
+    // Keep the Notes box's empty marker in sync as the agent types, so the saved
+    // overlay and the customer on-screen view show/hide it correctly.
+    root.addEventListener('input', (e) => {
+      const body = e.target && e.target.closest && e.target.closest('.notes-body');
+      if (!body) return;
+      const blk = body.closest('.notes-block');
+      if (blk) blk.classList.toggle('notes-empty', !body.textContent.trim());
+    });
+    // Bind once — initReportEditor can re-run after a live comp re-render.
+    if (!window.__edBeforeUnloadBound) {
+      window.addEventListener('beforeunload', (e) => { if (window.__edDirty) { e.preventDefault(); e.returnValue = ''; } });
+      window.__edBeforeUnloadBound = true;
+    }
+
+    // Serialize the report with all editor chrome stripped — this is exactly
+    // what will re-render for the customer, so it must be clean HTML.
+    function cleanReportHtml() {
+      const clone = root.cloneNode(true);
+      clone.querySelectorAll('.ed-ctl').forEach((e) => e.remove());
+      clone.querySelectorAll('[contenteditable]').forEach((e) => e.removeAttribute('contenteditable'));
+      clone.querySelectorAll('[spellcheck]').forEach((e) => e.removeAttribute('spellcheck'));
+      return clone.innerHTML;
+    }
+
+    async function saveOverlay() {
+      const btn = document.getElementById('ed-save');
+      btn.disabled = true; setStatus('Saving…');
+      try {
+        // Merge into the CURRENT overrides so structured edits (notice, comps,
+        // notes) aren't clobbered — fetch the raw row, then re-save.
+        const cur = await fetch('/api/report?jti=' + encodeURIComponent(jti), { headers: { Accept: 'application/json' } }).then((r) => r.json()).catch(() => ({}));
+        const overrides = Object.assign({}, (cur && cur.review && cur.review.overrides) || {});
+        overrides.reportHtml = cleanReportHtml();
+        const res = await fetch('/api/review-approve', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jti, save: true, overrides }),
+        });
+        if (!res.ok) throw new Error('save failed (' + res.status + ')');
+        window.__edDirty = false; setStatus('Saved ✓');
+      } catch (e) {
+        setStatus('Save failed — ' + (e.message || e));
+      } finally { btn.disabled = false; }
+    }
+
+    async function revertOverlay() {
+      if (!confirm('Discard all manual edits and revert to the original generated report?')) return;
+      setStatus('Reverting…');
+      try {
+        const cur = await fetch('/api/report?jti=' + encodeURIComponent(jti), { headers: { Accept: 'application/json' } }).then((r) => r.json()).catch(() => ({}));
+        const overrides = Object.assign({}, (cur && cur.review && cur.review.overrides) || {});
+        delete overrides.reportHtml;
+        const res = await fetch('/api/review-approve', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jti, save: true, overrides }),
+        });
+        if (!res.ok) throw new Error('revert failed (' + res.status + ')');
+        window.__edDirty = false;
+        location.reload();
+      } catch (e) { setStatus('Revert failed — ' + (e.message || e)); }
+    }
+
+    // Agent mode: no stored overrides to clear — just reload, which re-analyzes
+    // fresh from the address and drops the in-DOM edits.
+    function revertLocal() {
+      if (!confirm('Discard all manual edits and revert to the original generated report?')) return;
+      window.__edDirty = false;
+      location.reload();
+    }
+
+    const edSave = document.getElementById('ed-save');
+    if (edSave) edSave.addEventListener('click', saveOverlay);
+    const edRevert = document.getElementById('ed-revert');
+    if (edRevert) edRevert.addEventListener('click', hasJti ? revertOverlay : revertLocal);
+    const edPdf = document.getElementById('ed-pdf'); if (edPdf) edPdf.addEventListener('click', () => exportPDF());
+    const edDocx = document.getElementById('ed-docx'); if (edDocx) edDocx.addEventListener('click', () => exportDocx());
+    if (!embedded) setStatus('Ready');
+  }
+
+  // ────────── Export buttons ──────────
+  function exportPDF() { window.print(); }
+
+  function exportDocx() {
+    const btn = $('btn-export-docx');
+    const txt = $('btn-docx-text');
+    const orig = txt.textContent;
+    try {
+      const docClone = document.documentElement.cloneNode(true);
+      ['#search-shell', '#state-empty', '#state-loading', '#state-error', '.export-bar']
+        .forEach(sel => docClone.querySelectorAll(sel).forEach(el => el.remove()));
+      // Drop an empty Notes box from the DOCX (agent added none).
+      docClone.querySelectorAll('.notes-block').forEach((b) => {
+        const body = b.querySelector('.notes-body');
+        if (!(body && body.textContent.trim())) b.remove();
+      });
+      const html = '<!DOCTYPE html><html>' + docClone.innerHTML + '</html>';
+      let blob, ext;
+      if (window.htmlDocx && typeof window.htmlDocx.asBlob === 'function') {
+        blob = window.htmlDocx.asBlob(html); ext = 'docx';
+      } else {
+        const wordHtml = html.replace('<html>',
+          '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">');
+        blob = new Blob(['﻿' + wordHtml], { type: 'application/msword' });
+        ext = 'doc';
+      }
+      // Filename = `{Address}-Value-Evidence.{ext}` (Ryder, 2026-07-21).
+      // Use document.title (which renderReport already sets to the
+      // properly-cased name) so PDF + DOCX filenames match exactly.
+      const cleanTitle = (document.title || '').replace(/[^A-Za-z0-9_\-]+/g, '_')
+        .replace(/_+/g, '_').replace(/^[_\-]|[_\-]$/g, '');
+      const filename = (cleanTitle.endsWith('-Value-Evidence')
+        ? cleanTitle
+        : 'Value-Evidence') + '.' + ext;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      btn.classList.add('generating'); txt.textContent = 'Downloaded ✓';
+      setTimeout(() => { txt.textContent = orig; btn.classList.remove('generating'); }, 2500);
+    } catch (err) {
+      console.error('Docx export failed:', err);
+      txt.textContent = 'Failed';
+      setTimeout(() => { txt.textContent = orig; }, 3000);
+      alert('Docx export failed: ' + err.message);
+    }
+  }
+
+  function openPresentationNotes() {
+    const addr = (new URLSearchParams(window.location.search).get('address') || '').trim();
+    // For now Notes only exists for the 20022 Atasca Villas example.
+    if (!addr || addr.toLowerCase().includes('atasca villas')) {
+      window.open('/test/evidence-pack-v2-notes', '_blank', 'noopener');
+    } else {
+      alert('Presentation Notes are only available for the 20022 Atasca Villas example today. Other addresses generate the customer-facing exhibit only.');
+    }
+  }
+
+  // ────────── Reviewed-report path ──────────
+  // When opened with ?review=1, render from the STORED, approved draft instead
+  // of re-analyzing from the address. This is what makes the delivered PDF/DOCX
+  // reflect the exact evidence that was reviewed (frozen at submission) rather
+  // than a fresh — and possibly drifted — live lookup.
+  //   - Customer (td_link cookie):  GET /api/report        → { status, report }
+  //   - Agent (td_sup cookie + jti): GET /api/report?jti=… → { review }
+  // Both carry the stored engine data at draft.our, which renderReport consumes.
+  // Populated by renderFromStored (review mode) with the unescaped base draft,
+  // the WYSIWYG overlay, and the edit/jti context — so the live-comps handler
+  // below can re-run renderReport against a different kept-comp set.
+  let _live = null;
+
+  // Live comp control from the /review console (parent frame). The console owns
+  // the checkbox state (the agent's kept set), so it posts the exact kept comps
+  // here; we merge them over the base draft and re-render. The pack stays the
+  // authority for the opinion-of-value math and posts the new value back up via
+  // the emit inside renderReport. Same-origin only. (2026-07-21.)
+  window.addEventListener('message', (e) => {
+    if (e.origin !== window.location.origin) return;
+    const m = e.data;
+    if (!m || m.type !== 'td-live-comps' || !_live) return;
+    const forRender = Object.assign({}, _live.base);
+    if (Array.isArray(m.comps)) forRender.comps = m.comps;            // equity comps
+    if (Array.isArray(m.salesComps)) forRender.sales_comps = m.salesComps;  // sales comps
+    delete forRender.reportHtml;
+    renderReport(escapeDeep(forRender), { curated: true, overlayHtml: _live.overlay });
+    showState('report');
+    if (_live.editMode) initReportEditor(_live.jti);
+  });
+
+  // ────────── CAD-packet path (agent handoff) ──────────
+  // /agent hands a report built from the uploaded county packet to the pack via
+  // localStorage when the engine row is stale/missing (?source=cad). Render from
+  // that instead of an address lookup. The data is agent-authored but derived
+  // from an uploaded file, so escape it (like the review path) before it reaches
+  // renderReport's innerHTML sinks. curated:true skips distance enrichment /
+  // far-comp culling that would need coordinates the CAD comps don't carry.
+  function showPacketBanner() {
+    const root = $('state-report');
+    if (!root || root.querySelector('.packet-note')) return;
+    const b = document.createElement('div');
+    b.className = 'ed-banner packet-note';   // .ed-banner ⇒ hidden in @media print
+    b.setAttribute('contenteditable', 'false');
+    b.style.cssText = 'background:#e7f4ec;border-color:#9ccfb0;color:#0C593E;font-weight:600;';
+    b.textContent = 'Built from your uploaded county evidence packet (' + CURRENT_TAX_YEAR
+      + '). Review the figures before you export.';
+    root.insertBefore(b, root.firstChild);
+  }
+
+  function renderFromHandoff() {
+    showState('loading');
+    let payload = null;
+    try { payload = JSON.parse(localStorage.getItem('taxdrop-pack-handoff') || 'null'); } catch (_) {}
+    const data = payload && payload.data;
+    if (!data || !data.subject) {
+      $('error-detail').innerHTML =
+        '<p><b>Couldn\'t load the packet data.</b></p>' +
+        '<p>Re-run the analysis in the agent tool, then reopen the report.</p>';
+      showState('error');
+      return;
+    }
+    renderReport(escapeDeep(data), { curated: true });
+    showState('report');
+    showPacketBanner();
+  }
+
+  async function renderFromStored() {
+    showState('loading');
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const jti = (params.get('jti') || '').trim();
+      // With a jti we're the sup reviewer preview — ask for overrides applied so
+      // the pack reflects the reviewer's saved edits. The customer path (no jti)
+      // already returns the override-applied report.
+      const resp = await fetch('/api/report' + (jti ? '?jti=' + encodeURIComponent(jti) + '&applied=1' : ''),
+        { headers: { 'Accept': 'application/json' } });
+      if (!resp.ok) {
+        $('error-detail').innerHTML =
+          '<p><b>Couldn\'t load the reviewed report.</b></p>' +
+          '<p>You may need to sign in again, or the report link may have expired.</p>';
+        showState('error');
+        return;
+      }
+      const payload = await resp.json();
+      // Sup reviewer view nests the row as { review }; customer view as { report }.
+      const draft = payload.review ? payload.review.draft : payload.report;
+      const data = draft && draft.our;
+      if (!data || !data.subject) {
+        $('error-detail').innerHTML =
+          '<p><b>This report isn\'t ready yet.</b></p>' +
+          '<p>The reviewed evidence pack becomes available once a TaxDrop reviewer approves it.</p>';
+        showState('error');
+        return;
+      }
+      // Untrusted stored draft (client-computed, persisted verbatim by
+      // /api/intake) — escape every string field before it reaches the
+      // innerHTML sinks in renderReport. The agent-authored WYSIWYG overlay
+      // (data.reportHtml) is the exception: it's written only through the
+      // sup-gated save path, so it's trusted and passed RAW (escaping it would
+      // corrupt the HTML). Pull it off before escapeDeep so we don't waste work
+      // escaping a large blob we inject verbatim.
+      const rawOverlay = (data && typeof data.reportHtml === 'string') ? data.reportHtml : '';
+      const dataForRender = Object.assign({}, data);
+      delete dataForRender.reportHtml;
+      renderReport(escapeDeep(dataForRender), { curated: true, overlayHtml: rawOverlay });
+      showState('report');
+
+      // Agent edit mode: /test/evidence-pack-v3?review=1&edit=1&jti=… turns the
+      // rendered report into an on-page WYSIWYG editor. Only meaningful for a
+      // sup agent (the save endpoint is sup-gated); customers never get here.
+      const editMode = /^(1|true)$/.test(params.get('edit') || '');
+      if (editMode) initReportEditor(jti);
+
+      // Stash everything the live-comps handler needs so the /review console can
+      // drive an instant re-render as the agent toggles comps — without a save +
+      // reload round-trip. (2026-07-21 — Ryder: comp removal updates the report.)
+      _live = { base: dataForRender, overlay: rawOverlay, editMode, jti };
+    } catch (e) {
+      $('error-detail').innerHTML =
+        '<p><b>Error loading the reviewed report.</b></p><p>Message: <code>' + (e.message || String(e)) + '</code></p>';
+      showState('error');
+    }
+  }
+
+  // ────────── Page boot ──────────
+  (function init() {
+    const params = new URLSearchParams(window.location.search);
+    // Hide the address search when this is a loaded report — the /review console
+    // iframe (embedded), a CAD handoff, or reviewed-report mode. There's nothing
+    // to search in those; the report is already loaded.
+    if (window.self !== window.top || params.get('review') === '1' || params.get('review') === 'true' || params.get('source') === 'cad') {
+      const _ss = $('search-shell'); if (_ss) _ss.style.display = 'none';
+    }
+    $('addr-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); submitSearch(); }
+    });
+    // Reviewed-report mode takes precedence over the address search path.
+    if (params.get('review') === '1' || params.get('review') === 'true') {
+      renderFromStored();
+      return;
+    }
+    if (params.get('source') === 'cad') {
+      renderFromHandoff();
+      return;
+    }
+    const addr = params.get('address');
+    if (addr) {
+      $('addr-input').value = addr;
+      submitSearch();
+    } else {
+      showState('empty');
+    }
+  })();
+</script>
+
+</body>
+</html>

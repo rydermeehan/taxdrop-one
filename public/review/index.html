@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>TaxDrop One — Review Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Review Console MVP — charcoal/monochrome design system.
+       Tokens mirror the TaxDrop UX Brand Guidelines v2.0 (Space Grotesk display,
+       Inter body, ink #1A1A1A). Restyle only — all data wiring is unchanged. */
+    :root {
+      --ink:#1A1A1A; --gray-700:#3A4148; --gray-500:#5C666F; --gray-300:#C3C9CF;
+      --gray-200:#E5E7EB; --gray-100:#F4F6F8; --white:#fff;
+      --text-primary:#1A1A1A; --text-secondary:#5C666F;
+      --border-subtle:#E5E7EB; --border-strong:#C3C9CF;
+      --surface-sunken:#F4F6F8;
+      --text-on-dark:#fff; --text-on-dark-dim:rgba(255,255,255,.78);
+      --danger:#CC3333; --danger-tint:#FFF0F0; --warning:#C99700; --warn-tint:#FBF6E9;
+      --font-display:'Space Grotesk','Inter','Helvetica Neue',Arial,sans-serif;
+      --font-sans:'Inter','Helvetica Neue',Arial,sans-serif;
+      --radius-sm:8px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+      --shadow-xs:0 1px 2px rgba(16,24,40,.06);
+      --shadow-sm:0 1px 3px rgba(16,24,40,.10),0 1px 2px rgba(16,24,40,.06);
+      --shadow-md:0 4px 12px rgba(16,24,40,.08),0 2px 6px rgba(16,24,40,.06);
+      --shadow-card:0 2px 8px rgba(16,24,40,.06),0 12px 28px rgba(16,24,40,.06);
+      --shadow-lg:0 16px 40px rgba(16,24,40,.14),0 6px 14px rgba(16,24,40,.08);
+      --ease-out:cubic-bezier(.16,1,.3,1);
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; padding:0; height:100%; }
+    body { font-family:var(--font-sans); background:var(--gray-100); color:var(--text-primary); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+    ::selection { background:#e5e7eb; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    kbd { font-family:inherit; background:#ffffff1a; border:1px solid #ffffff2e; border-radius:5px; padding:1px 5px; font-size:11px; }
+
+    /* Top bar */
+    header.top { height:52px; flex:0 0 auto; display:flex; align-items:center; gap:12px; padding:0 20px; background:var(--ink); color:var(--text-on-dark); }
+    header.top .logo-chip { background:#fff; border-radius:var(--radius-sm); padding:4px 10px; display:flex; align-items:center; }
+    header.top .logo-chip img { height:20px; display:block; }
+    header.top .tag { font-size:13px; color:var(--text-on-dark-dim); font-weight:500; }
+    header.top .sp { flex:1; }
+    header.top .count { font-size:12px; color:var(--text-on-dark-dim); }
+    header.top .kbd-hint { font-size:11px; color:var(--text-on-dark-dim); }
+    @media (max-width:820px){ header.top .kbd-hint { display:none; } }
+
+    .shell { flex:1; display:flex; min-height:0; }
+
+    /* Queue */
+    aside.queue { width:280px; flex:0 0 auto; display:flex; flex-direction:column; background:var(--white); border-right:1px solid var(--border-subtle); min-height:0; }
+    aside.queue .qbar { padding:12px 12px 10px; display:flex; flex-direction:column; gap:8px; border-bottom:1px solid var(--border-subtle); }
+    aside.queue input[type=text] { height:36px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0 12px; font-size:13px; background:var(--surface-sunken); outline:none; width:100%; font-family:inherit; color:var(--ink); }
+    aside.queue input[type=text]:focus { border-color:var(--ink); background:#fff; }
+    aside.queue select { height:34px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0 10px; font-size:12.5px; font-family:inherit; color:var(--ink); background:var(--surface-sunken); cursor:pointer; width:100%; outline:none; }
+    .qchips { display:flex; flex-wrap:wrap; gap:6px; }
+    .chip { height:26px; padding:0 12px; border-radius:var(--radius-pill); font-size:11.5px; font-weight:600; cursor:pointer; border:1px solid var(--gray-200); background:#fff; color:var(--gray-700); display:inline-flex; align-items:center; gap:4px; font-family:inherit; }
+    .chip.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+    .chip .c { opacity:.7; font-weight:700; }
+    .bulkbtn { height:34px; width:100%; border-radius:var(--radius-sm); border:none; background:var(--ink); color:#fff; font-weight:600; font-size:12.5px; cursor:pointer; box-shadow:var(--shadow-sm); font-family:inherit; }
+    .bulkbtn:hover { filter:brightness(1.08); }
+    .qlist { flex:1; overflow-y:auto; padding:8px; }
+    .row { padding:10px 12px; border-radius:var(--radius-md); cursor:pointer; margin-bottom:4px; border:1px solid transparent; }
+    .row:hover { background:var(--gray-100); }
+    .row.sel { background:var(--gray-100); border-color:var(--ink); }
+    .row .rtop { display:flex; align-items:flex-start; gap:8px; }
+    .row .rtop input[type=checkbox] { width:15px; height:15px; margin-top:2px; flex:0 0 auto; accent-color:var(--ink); cursor:pointer; }
+    .row .addr { font-size:13px; font-weight:600; line-height:1.3; color:var(--ink); }
+    .row .city { font-size:11.5px; color:var(--text-secondary); margin-top:2px; }
+    .row .saved { font-size:12.5px; font-weight:700; color:var(--ink); white-space:nowrap; flex-shrink:0; }
+    .row .rmeta { display:flex; align-items:center; gap:8px; margin-top:6px; }
+    .row .age { font-size:11px; font-weight:600; color:var(--gray-500); }
+    .row .age.overdue { color:var(--danger); }
+
+    .status-pill { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:2px 8px; border-radius:var(--radius-pill); display:inline-block; }
+    .st-submitted { background:#F4F6F8; color:#5C666F; }
+    .st-in_review { background:#E5E7EB; color:#1A1A1A; }
+    .st-approved  { background:#1A1A1A; color:#FFFFFF; }
+    .st-needs_info{ background:#C3C9CF; color:#1A1A1A; }
+    .st-err       { background:var(--danger-tint); color:var(--danger); }
+
+    /* Main */
+    main.content { flex:1; min-width:0; overflow-y:auto; }
+    .wrap { max-width:960px; margin:0 auto; padding:0 28px 64px; }
+    .empty { padding:80px 24px; text-align:center; color:var(--text-secondary); font-weight:500; }
+
+    .stickyhead { position:sticky; top:0; z-index:20; background:var(--gray-100); padding:14px 0 12px; border-bottom:1px solid var(--border-subtle); margin-bottom:18px; }
+    .headrow { display:flex; align-items:center; gap:12px; }
+    .headrow .hgrow { min-width:0; flex:1; }
+    .headrow h1 { margin:0; font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:-.01em; line-height:1.2; display:inline; }
+    .headrow .htitle { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .headrow .hmeta { font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+    .navbtn { width:34px; height:34px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle); background:#fff; cursor:pointer; color:var(--gray-700); font-size:15px; font-family:inherit; flex:0 0 auto; }
+    .navbtn:hover { background:var(--surface-sunken); }
+    .qpos { font-size:12px; color:var(--text-secondary); white-space:nowrap; }
+    .actionrow { display:flex; align-items:center; gap:8px; margin-top:12px; flex-wrap:wrap; }
+    .btn { height:38px; padding:0 16px; border-radius:var(--radius-sm); font-weight:600; font-size:13.5px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; text-decoration:none; border:1px solid var(--border-subtle); background:#fff; color:var(--gray-700); }
+    .btn:hover { background:var(--surface-sunken); }
+    .btn.primary { background:var(--ink); color:#fff; border:none; box-shadow:var(--shadow-sm); padding:0 18px; }
+    .btn.primary:hover { filter:brightness(1.08); background:var(--ink); }
+    .btn.primary:disabled { background:var(--gray-300); box-shadow:none; cursor:default; filter:none; }
+    .btn.outline { border:1px solid var(--ink); color:var(--ink); background:#fff; }
+    .btn.outline:hover { background:var(--gray-100); }
+    .btn.warn { border:1px solid var(--border-strong); color:var(--warning); background:#fff; }
+    .actionrow .sp { flex:1; }
+    .actionrow .kbd-hint { font-size:11.5px; color:var(--text-secondary); }
+    .msg { font-size:13px; font-weight:600; }
+    .msg.ok { color:var(--ink); } .msg.bad { color:var(--danger); }
+    .msg a { color:var(--ink); }
+
+    /* Case strategy (dark) */
+    .strategy { background:var(--ink); border-radius:var(--radius-lg); padding:18px 22px; margin-bottom:12px; box-shadow:var(--shadow-md); }
+    .strategy .eyebrow { display:flex; align-items:center; gap:10px; }
+    .strategy .eyebrow span.lbl { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); background:#fff; border-radius:var(--radius-pill); padding:3px 10px; }
+    .strategy .eyebrow span.rule { flex:1; height:1px; background:rgba(255,255,255,.18); }
+    .strategy .body { font-family:var(--font-display); font-size:17px; font-weight:600; line-height:1.45; color:#fff; margin-top:10px; letter-spacing:-.01em; }
+
+    /* Flags */
+    .flags { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+    .flag { display:flex; align-items:center; gap:10px; border-radius:var(--radius-sm); padding:8px 14px; font-size:13px; }
+    .flag.warn { background:#F4F6F8; border:1px solid #C3C9CF; color:#1A1A1A; }
+    .flag.danger { background:#E5E7EB; border:1px solid #5C666F; color:#1A1A1A; }
+    .flag .mk { font-weight:700; }
+    .flag strong { font-weight:600; }
+
+    /* Values grid */
+    .values { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+    @media (max-width:720px){ .values { grid-template-columns:repeat(2,1fr); } }
+    .val { background:#fff; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:12px 16px; }
+    .val.hi { background:var(--gray-100); border-color:var(--ink); }
+    .val .k { font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--text-secondary); }
+    .val.hi .k { color:var(--ink); }
+    .val .v { font-family:var(--font-display); font-size:21px; font-weight:700; margin-top:4px; }
+    .val.hi .v { color:var(--ink); }
+
+    /* Sections */
+    .sechead { display:flex; align-items:baseline; gap:12px; margin-bottom:10px; }
+    .sechead h2 { margin:0; font-family:var(--font-display); font-size:15px; font-weight:700; }
+    .sechead .note { font-size:12.5px; color:var(--text-secondary); }
+    .sechead .live { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink); background:var(--gray-100); border-radius:var(--radius-pill); padding:3px 10px; }
+    .panel { background:#fff; border:1px solid var(--border-subtle); border-radius:var(--radius-md); }
+
+    /* Comps table */
+    .comps-wrap { min-width:0; background:#fff; border:1px solid var(--border-subtle); border-radius:var(--radius-md); overflow-x:auto; margin-bottom:14px; }
+    table.comps { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    table.comps th { text-align:left; padding:8px 12px; background:var(--surface-sunken); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-secondary); border-bottom:1px solid var(--border-subtle); }
+    table.comps td { padding:9px 12px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    table.comps tr.dropped td { opacity:.45; }
+    table.comps .r { text-align:right; }
+    table.comps input[type=checkbox] { width:16px; height:16px; accent-color:var(--ink); cursor:pointer; }
+    .clbl { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; flex:0 0 auto; border-radius:5px; background:var(--gray-700); color:#fff; font-size:10.5px; font-weight:700; margin-right:8px; }
+    .caddr { display:flex; align-items:center; overflow:hidden; }
+    .caddr .t { font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    table.comps tfoot td, table.comps .medrow td { background:var(--surface-sunken); font-weight:700; }
+    .medrow .lbl { font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-secondary); font-weight:700; }
+    .livecomp { background:var(--gray-100); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:9px 12px; font-size:12.5px; margin-bottom:11px; line-height:1.5; color:var(--gray-700); }
+    .compmap { width:100%; height:230px; object-fit:cover; border-radius:var(--radius-md); border:1px solid var(--border-subtle); display:block; background:#eef0f2; margin-bottom:22px; }
+
+    /* Map strip (subject) */
+    .mapstrip { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+    @media (max-width:520px){ .mapstrip { grid-template-columns:1fr; } }
+    .mapstrip figure { margin:0; position:relative; }
+    .mapstrip img { width:100%; height:180px; object-fit:cover; border-radius:var(--radius-md); border:1px solid var(--border-subtle); display:block; background:#eef0f2; }
+    .mapstrip figcaption { position:absolute; top:8px; left:8px; background:#0009; color:#fff; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:3px 8px; border-radius:6px; }
+    .mapstrip a.map-link { position:absolute; bottom:8px; right:8px; background:#fffffff2; color:var(--ink); font-size:11px; font-weight:700; padding:4px 9px; border-radius:6px; text-decoration:none; border:1px solid var(--border-subtle); }
+
+    /* Reviewer edits */
+    .edits { padding:16px; margin-bottom:22px; }
+    .edits .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:640px){ .edits .grid2 { grid-template-columns:1fr; } }
+    label { display:block; font-size:11px; font-weight:600; color:var(--gray-700); margin-bottom:5px; }
+    input.fld, textarea.fld { width:100%; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:13.5px; font-weight:600; font-family:inherit; color:var(--ink); outline:none; background:#fff; }
+    input.fld { height:36px; padding:0 10px; }
+    textarea.fld { min-height:72px; padding:9px 10px; line-height:1.5; resize:vertical; font-weight:400; font-size:13px; }
+    input.fld:focus, textarea.fld:focus { border-color:var(--ink); box-shadow:0 0 0 3px rgba(26,26,26,.15); }
+
+    /* Evidence packet */
+    .files { display:flex; flex-wrap:wrap; gap:8px; }
+    a.file { display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink); background:var(--surface-sunken); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:9px 13px; text-decoration:none; }
+    a.file:hover { background:var(--gray-200); }
+    a.file .dl { color:var(--gray-500); font-weight:700; }
+    a.file .dl:hover { color:var(--ink); }
+
+    /* Protest form card */
+    .formcard { padding:14px 16px; margin-bottom:22px; display:flex; align-items:center; gap:16px; }
+    .formcard .thumb { width:44px; height:56px; flex:0 0 auto; background:var(--gray-100); border:1px solid var(--border-strong); border-radius:4px; position:relative; display:flex; align-items:center; justify-content:center; }
+    .formcard .thumb span { font-size:8px; font-weight:700; color:var(--gray-500); letter-spacing:.04em; }
+    .formcard .fmeta { flex:1; min-width:0; }
+    .formcard .fmeta .ft { font-size:14px; font-weight:700; }
+    .formcard .fmeta .fs { font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+
+    /* Report preview (live iframe) */
+    .preview-head { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+    .preview-head a, .preview-head button { font-size:12px; font-weight:700; color:var(--ink); background:var(--gray-100); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:6px 11px; cursor:pointer; text-decoration:none; font-family:inherit; }
+    .preview iframe { width:100%; height:70vh; min-height:520px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:#fff; box-shadow:var(--shadow-card); }
+    .preview .stale { font-size:11.5px; color:var(--warning); font-weight:600; margin-top:8px; display:none; }
+    .preview.dirty .stale { display:block; }
+
+    /* Hearing prep */
+    .tp-btn { background:var(--gray-100); color:var(--ink); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:10px 16px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+    .tp-btn:disabled { opacity:.6; cursor:default; }
+    .tp-out { margin-top:12px; white-space:pre-wrap; font-size:13px; line-height:1.6; color:var(--ink); background:var(--surface-sunken); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:14px 16px; display:none; }
+    .tp-out.show { display:block; }
+
+    .warnbox { border-radius:var(--radius-md); padding:11px 14px; font-size:13px; margin-bottom:18px; font-weight:500; }
+    .warnbox.err { background:var(--danger-tint); border:1px solid #f0c9c5; color:var(--danger); }
+    .warnbox.thin { background:var(--warn-tint); border:1px solid #ecdcae; color:var(--warning); }
+
+    details.raw { margin-top:18px; } details.raw summary { cursor:pointer; font-size:12px; color:var(--text-secondary); font-weight:600; }
+    pre { background:var(--ink); color:#e6e8eb; padding:15px; border-radius:var(--radius-md); overflow:auto; font-size:11.5px; max-height:320px; margin-top:10px; }
+
+    .sec { margin-top:22px; }
+
+    /* Toast */
+    .toast { position:fixed; bottom:24px; right:24px; z-index:50; background:var(--ink); color:#fff; border-radius:var(--radius-md); padding:12px 18px; font-size:13.5px; font-weight:500; box-shadow:var(--shadow-lg); animation:toastIn 220ms var(--ease-out); display:none; align-items:center; gap:10px; }
+    .toast.show { display:flex; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="logo-chip"><img src="/pro/assets/taxdrop-logo.png" alt="TaxDrop" /></div>
+    <span class="tag">Review</span>
+    <div class="sp"></div>
+    <span class="count" id="count"></span>
+    <span class="kbd-hint">· <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>↵</kbd> open · <kbd>/</kbd> search</span>
+  </header>
+
+  <div class="shell">
+    <aside class="queue">
+      <div class="qbar">
+        <input type="text" id="qsearch" placeholder="Search address, owner, county…" autocomplete="off" />
+        <div class="qchips" id="qchips"></div>
+        <select id="qsort">
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="sla">SLA risk (oldest pending)</option>
+          <option value="savings">Highest savings</option>
+        </select>
+      </div>
+      <div class="qlist" id="qlist"><div class="empty">Loading…</div></div>
+    </aside>
+
+    <main class="content">
+      <div class="wrap" id="detail"><div class="empty">Select a submission to review.</div></div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"><span style="font-weight:700">✓</span><span id="toastMsg"></span></div>
+
+  <!-- Agent-only: floating "Test evidence upload" self-test button. -->
+  <script src="/pro/selftest.js"></script>
+
+  <script>
+    const fmt = (n) => (n == null || isNaN(n)) ? "—" : "$" + Math.round(n).toLocaleString();
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+    // Coerce to a bare number for HTML attribute contexts. The draft is
+    // customer-computed and stored verbatim, so a value like '"><img onerror=…>'
+    // must never reach an attribute unescaped. Non-numeric → "".
+    const numAttr = (v) => (v == null || v === "" || !Number.isFinite(Number(v))) ? "" : Number(v);
+    const isHttps = (u) => typeof u === "string" && /^https:\/\//i.test(u);
+    // Same key the customer app uses (one.taxdrop.com origin). Needs Maps Static
+    // + Street View Static enabled on the key; images auto-hide (onerror) if not.
+    const GMAPS_KEY = "AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE";
+    const num = (v) => Number(v).toLocaleString();
+    const median = (arr) => { const a = arr.filter((x) => x > 0).sort((x, y) => x - y); if (!a.length) return 0; const n = a.length; return n % 2 ? a[(n - 1) / 2] : Math.round((a[n / 2 - 1] + a[n / 2]) / 2); };
+    // Size-adjusted $/sqft: normalizes a comp's $/sqft to the subject's living
+    // area (matches the Review Console MVP design's adjPsf curve).
+    const adjPsf = (mv, sf, subjSf) => (mv && sf && subjSf) ? (mv / sf) * Math.pow(sf / subjSf, 0.15) : 0;
+    // Straight-line miles between two lat/lng pairs. Used to fill the comp
+    // Distance column when the stored comp has no distance_mi — since the pack
+    // no longer auto-drops far comps on reviewed drafts, the agent needs this
+    // number visible to catch a comp like the 41-mi Lake Shore outlier. Returns
+    // null when either coordinate is missing/unparseable.
+    const milesBetween = (aLat, aLng, bLat, bLng) => {
+      const la1 = parseFloat(aLat), lo1 = parseFloat(aLng), la2 = parseFloat(bLat), lo2 = parseFloat(bLng);
+      if (![la1, lo1, la2, lo2].every(Number.isFinite)) return null;
+      const R = 3959, toRad = (d) => d * Math.PI / 180;
+      const dLat = toRad(la2 - la1), dLng = toRad(lo2 - lo1);
+      const x = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(la1)) * Math.cos(toRad(la2)) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+    };
+
+    let toastT;
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      document.getElementById("toastMsg").textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toastT);
+      toastT = setTimeout(() => t.classList.remove("show"), 2600);
+    }
+
+    function reloadFrame() {
+      const f = document.getElementById("reportFrame");
+      if (f) f.src = f.src.replace(/&_=\d+$/, "") + "&_=" + Date.now();
+      const p = document.getElementById("previewPane");
+      if (p) p.classList.remove("dirty");
+    }
+
+    // Instant directional readout as the reviewer toggles comps — shows how the
+    // kept-comp median moves before Save. The report still computes the exact
+    // adjusted value; this is the fast "did that drop help?" signal.
+    function recomputeLive(ourComps, subjSqft) {
+      const el = document.getElementById("liveComp");
+      if (!el) return;
+      const kept = [...document.querySelectorAll(".compchk")].filter((c) => c.checked).map((c) => ourComps[Number(c.dataset.i)]).filter(Boolean);
+      if (kept.length < 3) { el.innerHTML = "<b>" + kept.length + " comp" + (kept.length === 1 ? "" : "s") + " kept</b> — keep at least 3 for a stable median."; return; }
+      const medMv = median(kept.map((c) => Number(c.total_market) || 0));
+      const medPsf = median(kept.map((c) => { const mv = Number(c.total_market) || 0, sf = Number(c.living_sqft || c.sqft) || 0; return mv && sf ? mv / sf : 0; }));
+      const medAdj = median(kept.map((c) => adjPsf(Number(c.total_market) || 0, Number(c.living_sqft || c.sqft) || 0, subjSqft)));
+      el.innerHTML = "<b>" + kept.length + " kept</b> · median market <b>" + fmt(medMv) + "</b> · median $/sqft <b>$" + Math.round(medPsf) +
+        "</b> · adj $/sqft <b>$" + Math.round(medAdj) +
+        '</b> <span style="color:var(--text-secondary)">— directional; the report computes the adjusted value</span>';
+    }
+
+    // Push the agent's current kept-comp set into the embedded report iframe so
+    // it re-renders (comp tables + values) instantly as comps are toggled — no
+    // save/reload. The report is the authority for comp→value math and posts the
+    // recomputed opinion back (see the "td-report-values" listener), which
+    // updates the scorecard. (2026-07-21 — Ryder: comp removal cascades.)
+    function pushLiveComps(ourComps, salesComps) {
+      liveDirty = true;
+      const frame = document.getElementById("reportFrame");
+      if (!frame || !frame.contentWindow) return;
+      const kept = [...document.querySelectorAll(".compchk")].filter((c) => c.checked).map((c) => ourComps[Number(c.dataset.i)]).filter(Boolean);
+      const msg = { type: "td-live-comps", comps: kept };
+      // Also stream the kept SALES comps when the case has them, so the report's
+      // sales approach (and the opinion competition) re-renders live too.
+      if (Array.isArray(salesComps) && salesComps.length) {
+        msg.salesComps = [...document.querySelectorAll(".salechk")].filter((c) => c.checked).map((c) => salesComps[Number(c.dataset.i)]).filter(Boolean);
+      }
+      frame.contentWindow.postMessage(msg, location.origin);
+    }
+
+    // Directional opinion readout for the sales section — shows the equity vs
+    // sales indicated values and which approach currently wins, as the reviewer
+    // toggles either comp set. The report is the authority (it posts the exact
+    // opinion back to the scorecard); this is the fast in-place signal.
+    function recomputeOpinion(ourComps, salesComps, subjSqft, subjVal) {
+      const el = document.getElementById("opinionLive");
+      if (!el) return;
+      const eqKept = [...document.querySelectorAll(".compchk")].filter((c) => c.checked).map((c) => ourComps[Number(c.dataset.i)]).filter(Boolean);
+      let eqVal = null;
+      if (eqKept.length >= 3 && subjSqft) { const m = median(eqKept.map((c) => adjPsf(Number(c.total_market) || 0, Number(c.living_sqft || c.sqft) || 0, subjSqft))); if (m) eqVal = Math.round(m * subjSqft); }
+      const saKept = [...document.querySelectorAll(".salechk")].filter((c) => c.checked).map((c) => salesComps[Number(c.dataset.i)]).filter(Boolean).filter((c) => Number(c.sale_price) > 0 && Number(c.living_sqft || c.sqft) > 0);
+      let saVal = null;
+      if (saKept.length >= 3 && subjSqft) { const m = median(saKept.map((c) => Number(c.sale_price) / Number(c.living_sqft || c.sqft))); if (m) saVal = Math.round(m * subjSqft); }
+      const cands = [];
+      if (eqVal && subjVal && (subjVal - eqVal) / subjVal >= 0.03) cands.push({ k: "Equity", v: eqVal });
+      if (saVal && subjVal && (subjVal - saVal) / subjVal >= 0.03) cands.push({ k: "Sales", v: saVal });
+      cands.sort((a, b) => a.v - b.v);
+      const win = cands[0];
+      el.innerHTML = "<b>Opinion &rarr; " + (win ? win.k + " " + fmt(win.v) : "no defensible reduction") + "</b> " +
+        '<span style="color:var(--text-secondary)">— equity ' + (eqVal ? fmt(eqVal) : "—") + " · sales " + (saVal ? fmt(saVal) : "—") + " (" + saKept.length + " sales kept; directional — the report computes the exact value)</span>";
+    }
+
+    // Rewrite the four scorecard cards from the report's freshly-computed opinion
+    // of value. Keeping the value math in the report (single source of truth)
+    // guarantees the scorecard and the delivered report always agree. taxSaved
+    // isn't recomputed from a rate here (the rate lives in the engine) — we scale
+    // the draft's original taxSaved by the reduction ratio, mirroring
+    // api/_overrides.ts. current.draft.result holds the originals.
+    function updateScorecard(m) {
+      const setTxt = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+      // Approach label — shown on every emit (informational, even before a toggle)
+      // so the agent always sees WHICH approach is binding and both indicated
+      // values. The delivered opinion is the LOWER defensible of the equity
+      // (comp-driven) and sales-comparison approaches; both are editable in
+      // /review, so this makes the competition legible and explains when a comp
+      // edit can't move the number (it's on the losing approach).
+      const lbl = document.getElementById("scApproach");
+      if (lbl) {
+        const eq = Number(m.equity) || 0, sa = Number(m.sales) || 0;
+        if (m.noCase || !(Number(m.opinion) > 0)) {
+          lbl.textContent = "⚖ No defensible comp-based reduction on the current set.";
+        } else if (m.approach === "sales") {
+          lbl.textContent = "⚖ Opinion follows the sales-comparison approach (" + fmt(sa) + ")"
+            + (eq > 0 ? " — equity comps indicate " + fmt(eq) + "; editing equity only lowers the opinion once it drops below the sales value." : "") + ".";
+        } else if (m.approach === "equity") {
+          lbl.textContent = "⚖ Opinion follows the equity comps (" + fmt(eq) + ")"
+            + (sa > 0 ? " — sales comparison indicates " + fmt(sa) + "." : ".");
+        } else {
+          lbl.textContent = "";
+        }
+      }
+      // Case Strategy — name the approach (unequal-appraisal/equity vs market/
+      // sales, or a combination when both are developed) and the comp basis it
+      // rests on, kept consistent with the scorecard numbers (stored draft until
+      // a real toggle, live after). (2026-07-21 — Ryder: strategy must state the
+      // approach + whether comps are sales, equity, or a combination.)
+      const cs = document.getElementById("caseStrategy");
+      if (cs) {
+        const rcs = (current && current.draft && current.draft.result) || {};
+        const eqN = document.querySelectorAll(".compchk:checked").length;
+        const saN = document.querySelectorAll(".salechk:checked").length;
+        const aName = m.approach === "sales" ? "market sales-comparison" : (m.approach === "equity" ? "unequal-appraisal (equity)" : null);
+        if (m.noCase || !aName) {
+          cs.textContent = "No defensible comp-based reduction on the current comp set — walk this one back or gather stronger comps.";
+        } else {
+          const bothDeveloped = eqN >= 3 && saN >= 3;
+          const basis = bothDeveloped
+            ? "Combination — " + eqN + " equity comp" + (eqN === 1 ? "" : "s") + " and " + saN + " sales comp" + (saN === 1 ? "" : "s") + " developed; the opinion of value follows the " + aName + " approach (the lower defensible of the two)"
+            : (m.approach === "sales"
+                ? "Market sales-comparison approach on " + saN + " sales comp" + (saN === 1 ? "" : "s")
+                : "Unequal-appraisal (equity) approach on " + eqN + " equity comp" + (eqN === 1 ? "" : "s"));
+          let notice, opinion, reduction, taxSaved;
+          if (liveDirty) {
+            notice = Number(m.notice) || Number(rcs.notice) || 0;
+            opinion = Number(m.opinion) || 0;
+            reduction = Math.max(notice - opinion, 0);
+            const oR = Number(rcs.reduction) || 0, oT = Number(rcs.taxSaved) || 0;
+            taxSaved = oR > 0 ? Math.round((oT / oR) * reduction) : 0;
+          } else {
+            notice = Number(rcs.notice) || 0; opinion = Number(rcs.target) || 0;
+            reduction = Number(rcs.reduction) || 0; taxSaved = Number(rcs.taxSaved) || 0;
+          }
+          const pct = notice > 0 ? (reduction / notice * 100) : 0;
+          cs.textContent = basis + ". Requesting " + fmt(opinion) + " on the " + fmt(notice) + " notice — a " + fmt(reduction) + " reduction (" + pct.toFixed(1) + "%)" + (taxSaved > 0 ? ", worth ~" + fmt(taxSaved) + "/yr" : "") + ".";
+        }
+      }
+      if (!liveDirty) return; // numbers stay on the stored draft until a real comp toggle
+      const r = (current && current.draft && current.draft.result) || {};
+      const notice = Number(m.notice) || Number(r.notice) || 0;
+      if (notice > 0) setTxt("scNotice", fmt(notice));
+      // No defensible comp-based case (or a bad value): don't invent a reduction.
+      if (m.noCase || !(Number(m.opinion) > 0)) {
+        setTxt("scRecommended", "No case");
+        setTxt("scReduction", "—");
+        setTxt("scTaxSaved", "—");
+        return;
+      }
+      const opinion = Number(m.opinion);
+      const reduction = Math.max(notice - opinion, 0);
+      const origRed = Number(r.reduction) || 0, origTax = Number(r.taxSaved) || 0;
+      const rate = origRed > 0 ? origTax / origRed : 0;
+      setTxt("scRecommended", fmt(opinion));
+      setTxt("scReduction", fmt(reduction));
+      setTxt("scTaxSaved", rate > 0 ? fmt(Math.round(rate * reduction)) + "/yr" : "—");
+    }
+
+    let selected = null, current = null;
+    let allRows = [], visRows = [], filter = "pending", sortBy = "new", search = "";
+    // True once the agent has toggled a comp on the current review. The report
+    // iframe emits its value on initial load too, but its formula can differ
+    // slightly from the engine's stored target — so we ignore that first emit
+    // and only rewrite the scorecard once the agent actually changes the comp
+    // set. Reset per review in renderDetail.
+    let liveDirty = false;
+
+    // Relative "3h ago" / "2d ago" from an ISO timestamp.
+    function ago(iso) {
+      if (!iso) return "";
+      const ms = Date.now() - new Date(iso).getTime();
+      const h = ms / 3.6e6;
+      if (h < 1) return Math.max(1, Math.round(ms / 6e4)) + "m ago";
+      if (h < 24) return Math.round(h) + "h ago";
+      return Math.round(h / 24) + "d ago";
+    }
+    function pendingHours(r) {
+      return r.status === "approved" ? -1 : (Date.now() - new Date(r.submittedAt).getTime()) / 3.6e6;
+    }
+
+    async function loadQueue() {
+      const res = await fetch("/api/review-approve?all=1", { headers: { Accept: "application/json" } });
+      if (res.status === 403) { location.href = "/agent?next=/review"; return; }
+      const data = await res.json().catch(() => ({}));
+      allRows = data.reviews || [];
+      renderChips();
+      applyQueue();
+    }
+
+    const FILTERS = [
+      { key: "pending", label: "Open", test: (r) => r.status !== "approved" && r.status !== "needs_info" },
+      { key: "in_review", label: "In review", test: (r) => r.status === "in_review" && !r.draftError },
+      { key: "submitted", label: "New", test: (r) => r.status === "submitted" && !r.draftError },
+      { key: "needs_info", label: "Sent back", test: (r) => r.status === "needs_info" },
+      { key: "err", label: "Draft failed", test: (r) => !!r.draftError },
+      { key: "approved", label: "Approved", test: (r) => r.status === "approved" },
+      { key: "all", label: "All", test: () => true },
+    ];
+    function renderChips() {
+      document.getElementById("qchips").innerHTML = FILTERS.map((f) => {
+        const n = allRows.filter(f.test).length;
+        return '<span class="chip' + (filter === f.key ? " active" : "") + '" data-k="' + f.key + '">' + f.label + '<span class="c">' + n + "</span></span>";
+      }).join("");
+      document.querySelectorAll("#qchips .chip").forEach((el) => el.addEventListener("click", () => { filter = el.dataset.k; renderChips(); applyQueue(); }));
+    }
+
+    function applyQueue() {
+      const f = FILTERS.find((x) => x.key === filter) || FILTERS[0];
+      const s = search.trim().toLowerCase();
+      visRows = allRows.filter(f.test).filter((r) => !s ||
+        (r.address || "").toLowerCase().includes(s) ||
+        (r.contactEmail || "").toLowerCase().includes(s) ||
+        (r.contactName || "").toLowerCase().includes(s) ||
+        (r.county || "").toLowerCase().includes(s));
+      visRows.sort((a, b) => {
+        if (sortBy === "savings") return (b.savings || 0) - (a.savings || 0);
+        if (sortBy === "old") return new Date(a.submittedAt) - new Date(b.submittedAt);
+        if (sortBy === "sla") { const pa = pendingHours(a), pb = pendingHours(b); return pb - pa; } // most-overdue pending first
+        return new Date(b.submittedAt) - new Date(a.submittedAt); // new
+      });
+      document.getElementById("count").textContent = visRows.length + " shown";
+      const q = document.getElementById("qlist");
+      if (!visRows.length) { q.innerHTML = '<div class="empty">Nothing here.</div>'; return; }
+      q.innerHTML = visRows.map((r) => {
+        const st = r.draftError ? "err" : r.status;
+        const stLabel = r.draftError ? "failed" : r.status.replace("_", " ");
+        const ph = pendingHours(r);
+        const overdue = ph > 48;
+        const owner = r.contactName || r.contactEmail || "—";
+        const city = esc(owner) + (r.county ? " · " + esc(r.county) + " County" : "");
+        return '<div class="row' + (r.jti === selected ? " sel" : "") + '" data-jti="' + esc(r.jti) + '">' +
+          '<div class="rtop">' +
+            '<div style="flex:1;min-width:0">' +
+              '<div class="addr">' + esc(r.address || "(no address)") + "</div>" +
+              '<div class="city">' + city + "</div>" +
+            "</div>" +
+            (r.savings ? '<div class="saved">' + fmt(r.savings) + "/yr</div>" : "") +
+          "</div>" +
+          '<div class="rmeta">' +
+            '<span class="status-pill st-' + st + '">' + esc(stLabel) + "</span>" +
+            '<span class="age' + (overdue ? " overdue" : "") + '">' + esc(ago(r.submittedAt)) + (overdue ? " · overdue" : "") + "</span>" +
+          "</div></div>";
+      }).join("");
+      q.querySelectorAll(".row").forEach((el) => el.addEventListener("click", () => openDetail(el.dataset.jti)));
+    }
+
+    async function openDetail(jti) {
+      selected = jti;
+      document.querySelectorAll(".row").forEach((el) => el.classList.toggle("sel", el.dataset.jti === jti));
+      const d = document.getElementById("detail");
+      d.innerHTML = '<div class="empty">Loading…</div>';
+      const res = await fetch("/api/report?jti=" + encodeURIComponent(jti), { headers: { Accept: "application/json" } });
+      if (res.status === 403) { location.href = "/agent?next=/review"; return; }
+      const data = await res.json().catch(() => ({}));
+      current = data.review;
+      renderDetail(current);
+    }
+
+    function renderDetail(rv) {
+      liveDirty = false; // new review — wait for a real comp toggle before syncing the scorecard
+      const d = document.getElementById("detail");
+      if (!rv) { d.innerHTML = '<div class="empty">Not found.</div>'; return; }
+      const draft = rv.draft || {};
+      const r = draft.result || {};
+      const subject = (draft.our && draft.our.subject) || {};
+      const hasEngine = !!(draft.our && draft.our.subject);
+      const jtiEnc = encodeURIComponent(rv.jti);
+      const ev = rv.evidence || [];
+
+      // Effective subject living area (reviewer override wins) drives adj $/sqft.
+      const subjSqft = Number((rv.overrides && rv.overrides.subject && rv.overrides.subject.living_sqft) || subject.living_sqft) || 0;
+
+      // Uploaded county evidence packet — view links + a download affordance.
+      // Files live in a PRIVATE Blob store, so they're served through the
+      // sup-gated /api/evidence-download proxy (never a direct blob URL).
+      const evUrl = (i, dl) => "/api/evidence-download?jti=" + jtiEnc + "&i=" + i + (dl ? "&dl=1" : "");
+      const files = ev.length
+        ? ev.map((f, i) =>
+            '<a class="file" href="' + evUrl(i, false) + '" target="_blank" rel="noopener">📄 <span>' + esc(f.filename) + "</span>" +
+                '<span class="dl" data-dl="' + i + '" title="Download">⬇</span></a>').join("")
+        : '<span style="font-size:13px;color:var(--text-secondary)">No county evidence packet uploaded.</span>';
+      const downloadableCount = ev.length;
+
+      // Editable evidence comps — the engine-shape comps the V3 pack renders.
+      const excluded = new Set((rv.overrides && rv.overrides.excludeComps) || []);
+      const ourComps = (draft.our && Array.isArray(draft.our.comps)) ? draft.our.comps : [];
+      const LBL = "ABCDEFGHIJKL";
+      const keptComps = ourComps.filter((c, i) => !excluded.has(i));
+      const equity = String((draft.our && draft.our.strategy) || (r && r.method) || "").toLowerCase().indexOf("market") === -1;
+      const adjColLabel = equity ? "Adj equity" : "Adj market";
+
+      // Sale year isn't available on TX (non-disclosure) or DB comps that don't
+      // carry a sale date — only show the "Yr Sold" column when at least one
+      // comp actually has one.
+      const compSaleYr = (c) => { const m = String(c.last_sale_date || c.sale_date || c.sale_year || c.sale_dt || "").match(/(19|20)\d{2}/); return m ? m[0] : ""; };
+      const hasSaleYr = ourComps.some((c) => compSaleYr(c));
+
+      // Sales comps (Clear Capital) — the competing MARKET approach, curated the
+      // same way as equity comps. Dropping a sale re-derives the sales-indicated
+      // value and can flip which approach wins the opinion of value.
+      const salesExcluded = new Set((rv.overrides && rv.overrides.excludeSalesComps) || []);
+      const salesComps = (draft.our && Array.isArray(draft.our.sales_comps)) ? draft.our.sales_comps : [];
+      const subjValLive = Number(r.notice) || Number(subject.total_market) || 0;
+      const saleRows = salesComps.map((c, i) => {
+        const addr = c.address || c.site_address || c.full_address || ("Sale " + (i + 1));
+        const checked = salesExcluded.has(i) ? "" : "checked";
+        const dropped = salesExcluded.has(i) ? ' class="dropped"' : "";
+        const price = Number(c.sale_price) || 0, sf = Number(c.living_sqft || c.sqft) || 0;
+        const psf = price && sf ? "$" + Math.round(price / sf) : "—";
+        const sdate = (String(c.sale_date || c.sale_dt || "").match(/\d{4}-\d{2}-\d{2}/) || [String(c.sale_date || c.sale_dt || "")])[0] || "—";
+        const dmi = (c.distance_mi != null && isFinite(c.distance_mi)) ? Number(c.distance_mi) : milesBetween(subject.latitude, subject.longitude, c.latitude, c.longitude);
+        const dist = (dmi != null && isFinite(dmi)) ? dmi.toFixed(2) + " mi" : "—";
+        return "<tr" + dropped + '><td style="text-align:center"><input type="checkbox" class="salechk" data-i="' + i + '" ' + checked + "></td>" +
+          '<td><div class="caddr"><span class="t">' + esc(addr) + "</span></div></td>" +
+          '<td class="r" style="color:var(--gray-700)">' + esc(sdate) + "</td>" +
+          '<td class="r" style="font-weight:600">' + fmt(price) + "</td>" +
+          '<td class="r" style="color:var(--gray-700)">' + esc(sf || "") + "</td>" +
+          '<td class="r" style="font-weight:600">' + psf + "</td>" +
+          '<td class="r" style="color:var(--gray-700)">' + esc(c.year_built || "") + "</td>" +
+          '<td class="r" style="color:var(--gray-700)">' + dist + "</td></tr>";
+      }).join("");
+
+      const compRows = ourComps.map((c, i) => {
+        const addr = c.full_address || c.site_address || c.address || ("Comp " + (i + 1));
+        const checked = excluded.has(i) ? "" : "checked";
+        const dropped = excluded.has(i) ? ' class="dropped"' : "";
+        const mv = Number(c.total_market) || 0, sf = Number(c.living_sqft || c.sqft) || 0;
+        const psf = mv && sf ? "$" + Math.round(mv / sf) : "—";
+        const ap = adjPsf(mv, sf, subjSqft);
+        const apf = ap ? "$" + Math.round(ap) : "—";
+        const avf = ap && subjSqft ? fmt(ap * subjSqft) : "—";
+        const badge = i < LBL.length ? '<span class="clbl">' + LBL[i] + "</span>" : "";
+        // Distance: prefer the stored distance_mi, else derive from lat/lng so
+        // the column is populated even when the engine didn't ship a distance.
+        const dmi = (c.distance_mi != null && isFinite(c.distance_mi))
+          ? Number(c.distance_mi)
+          : milesBetween(subject.latitude, subject.longitude, c.latitude, c.longitude);
+        const dist = (dmi != null && isFinite(dmi)) ? dmi.toFixed(2) + " mi" : "—";
+        // Flag far comps in red — the auto distance-cap no longer runs on
+        // reviewed drafts, so this is the agent's cue to uncheck an outlier.
+        const distStyle = (dmi != null && dmi > 10) ? "color:#B42318;font-weight:700" : "color:var(--gray-700)";
+        const saleYr = compSaleYr(c);
+        return "<tr" + dropped + '><td style="text-align:center"><input type="checkbox" class="compchk" data-i="' + i + '" ' + checked + "></td>" +
+          '<td><div class="caddr">' + badge + '<span class="t">' + esc(addr) + "</span></div></td>" +
+          '<td class="r" style="' + distStyle + '">' + dist + "</td>" +
+          '<td class="r" style="font-weight:600">' + fmt(c.total_market) + "</td>" +
+          '<td class="r" style="color:var(--gray-700)">' + esc(c.living_sqft || c.sqft || "") + "</td>" +
+          '<td class="r" style="font-weight:600">' + psf + "</td>" +
+          '<td class="r" style="color:var(--gray-700)">' + apf + "</td>" +
+          '<td class="r" style="font-weight:700">' + avf + "</td>" +
+          '<td class="r" style="color:var(--gray-700)">' + esc(c.year_built || "") + "</td>" +
+          (hasSaleYr ? '<td class="r" style="color:var(--gray-700)">' + esc(saleYr || "") + "</td>" : "") + "</tr>";
+      }).join("");
+
+      const medMv = median(keptComps.map((c) => Number(c.total_market) || 0));
+      const medPsf = median(keptComps.map((c) => { const mv = Number(c.total_market) || 0, sf = Number(c.living_sqft || c.sqft) || 0; return mv && sf ? mv / sf : 0; }));
+      const medAdj = median(keptComps.map((c) => adjPsf(Number(c.total_market) || 0, Number(c.living_sqft || c.sqft) || 0, subjSqft)));
+      const medRow = ourComps.length
+        ? '<tr class="medrow"><td></td><td><span class="lbl">Kept median</span></td><td></td>' +
+            '<td class="r">' + fmt(medMv) + '</td><td></td>' +
+            '<td class="r" style="color:var(--ink)">$' + Math.round(medPsf) + '</td>' +
+            '<td class="r" style="color:var(--ink)">$' + Math.round(medAdj) + '</td>' +
+            '<td class="r" style="color:var(--ink)">' + (medAdj && subjSqft ? fmt(medAdj * subjSqft) : "—") + '</td><td></td>' + (hasSaleYr ? '<td></td>' : '') + '</tr>'
+        : "";
+
+      // Comps map: subject (S) + each comp (lettered), auto-fit.
+      // Marker location: prefer exact lat/lng (frames tight, no geocode
+      // ambiguity); else the street address QUALIFIED with state (+zip) so
+      // Google can resolve it. A bare "6017 LAKESIDE DR" is nationally
+      // ambiguous — Google silently drops the pin, which is why this map used
+      // to render empty. Mirrors the evidence pack's buildCompAddrForMaps.
+      // Only place by lat/lng when the comps carry ≥2 DISTINCT coordinates —
+      // the DB sometimes stores a shared subdivision centroid, which would stack
+      // every comp on one pin; fall back to state-qualified addresses then.
+      const mapState = (rv.state || subject.us_state || subject.site_state || "TX");
+      const coordKey = (o) => { const la = parseFloat(o && o.latitude), lo = parseFloat(o && o.longitude); return (Number.isFinite(la) && Number.isFinite(lo)) ? la.toFixed(5) + "," + lo.toFixed(5) : null; };
+      const useLatLng = new Set(ourComps.map(coordKey).filter(Boolean)).size > 1;
+      const markerLoc = (o) => {
+        if (!o) return "";
+        const lat = parseFloat(o.latitude), lng = parseFloat(o.longitude);
+        if (useLatLng && Number.isFinite(lat) && Number.isFinite(lng)) return lat + "," + lng;
+        const addr = o.full_address || o.site_address || o.address || "";
+        if (!addr) return "";
+        if (/,\s*[A-Z]{2}\b/.test(addr)) return addr;          // already has a state
+        return addr + (o.site_zip ? " " + o.site_zip : "") + ", " + mapState;
+      };
+      const compMarkers = ourComps.slice(0, LBL.length).map((c, i) => {
+        const loc = markerLoc(c);
+        return loc ? "&markers=color:0x3A4148%7Clabel:" + LBL[i] + "%7C" + encodeURIComponent(loc) : "";
+      }).join("");
+      const subjLoc = markerLoc(subject) || markerLoc({ site_address: rv.address });
+
+      // Padding: auto-fit frames markers with almost no margin, so a comp lands
+      // right on the map edge (half-clipped). Compute a bbox from the marker
+      // lat/lngs, pad it, and pass &visible= those padded corners so Google
+      // frames wider. Floor keeps a tight cluster from zooming in too far.
+      const geoPts = [];
+      const pushPt = (o) => { const la = parseFloat(o && o.latitude), lo = parseFloat(o && o.longitude); if (Number.isFinite(la) && Number.isFinite(lo)) geoPts.push([la, lo]); };
+      pushPt(subject); ourComps.slice(0, LBL.length).forEach(pushPt);
+      let visibleParam = "";
+      if (geoPts.length) {
+        const las = geoPts.map((p) => p[0]), los = geoPts.map((p) => p[1]);
+        const minLa = Math.min(...las), maxLa = Math.max(...las), minLo = Math.min(...los), maxLo = Math.max(...los);
+        const padLa = Math.max((maxLa - minLa) * 0.55, 0.006);
+        const padLo = Math.max((maxLo - minLo) * 0.55, 0.006);
+        visibleParam = "&visible=" + (minLa - padLa) + "," + (minLo - padLo) + "%7C" + (maxLa + padLa) + "," + (maxLo + padLo);
+      }
+      const compsMap = (subjLoc && compMarkers)
+        ? '<img loading="lazy" class="compmap" onerror="this.style.display=\'none\'" src="https://maps.googleapis.com/maps/api/staticmap?size=640x380&scale=2&maptype=roadmap&markers=color:0x1A1A1A%7Clabel:S%7C' + encodeURIComponent(subjLoc) + compMarkers + visibleParam + '&key=' + GMAPS_KEY + '" alt="subject + comps map">'
+        : "";
+
+      // Thin-case heads-up.
+      const thin = Number(r.notice) > 0 && Number(r.reduction) > 0 && (Number(r.reduction) / Number(r.notice)) < 0.03;
+
+      // Map + Street View of the subject property.
+      const mapAddr = encodeURIComponent(subject.site_address || rv.address || "");
+      const mapStrip = mapAddr
+        ? '<div class="mapstrip">' +
+            '<figure><figcaption>Aerial</figcaption>' +
+              '<img loading="lazy" onerror="this.closest(\'figure\').style.display=\'none\'" src="https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&zoom=18&maptype=hybrid&markers=color:0x1A1A1A%7C' + mapAddr + '&key=' + GMAPS_KEY + '" alt="aerial">' +
+              '<a class="map-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + mapAddr + '">Maps ↗</a></figure>' +
+            '<figure><figcaption>Street View</figcaption>' +
+              '<img loading="lazy" onerror="this.closest(\'figure\').style.display=\'none\'" src="https://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + mapAddr + '&fov=80&key=' + GMAPS_KEY + '" alt="street view">' +
+              '<a class="map-link" target="_blank" rel="noopener" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + mapAddr + '">Pano ↗</a></figure>' +
+          "</div>"
+        : "";
+
+      // Case-strategy one-liner from the (draft) numbers.
+      const reductionPct = Number(r.notice) > 0 ? ((Number(r.reduction) || 0) / Number(r.notice) * 100) : 0;
+      const strategy = hasEngine && Number(r.target) > 0
+        ? "Protest the " + fmt(r.notice) + " notice using " + keptComps.length + " comps at a $" + Math.round(medPsf) +
+          "/sqft kept median — requesting " + fmt(r.target) + ", a " + fmt(r.reduction) + " reduction (" + reductionPct.toFixed(1) + "%) worth ~" + fmt(r.taxSaved) + "/yr."
+        : "";
+
+      const flags = [];
+      if (keptComps.length && keptComps.length < 3) flags.push({ level: "danger", title: "Low comp count", detail: "only " + keptComps.length + " kept — packs under 3 comps rarely survive ARB review" });
+      if (reductionPct > 12) flags.push({ level: "warn", title: "Reduction " + reductionPct.toFixed(1) + "% — above the auto-approve threshold", detail: "requires licensed-agent sign-off before release" });
+      if (downloadableCount === 0 && hasEngine) flags.push({ level: "warn", title: "No county evidence uploaded", detail: "the case relies only on our own comps" });
+      const flagsHtml = flags.length
+        ? '<div class="flags">' + flags.map((f) => '<div class="flag ' + f.level + '"><span class="mk">⚑</span><span><strong>' + esc(f.title) + "</strong> — " + esc(f.detail) + "</span></div>").join("") + "</div>"
+        : "";
+
+      const factsHtml = hasEngine
+        ? '<div class="sec"><div class="sechead"><h2>Property details</h2></div><div class="values" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">' +
+            factCard("Parcel / APN", subject.parcel_id) +
+            factCard("County", subject.county_name || subject.county) +
+            factCard("Tax year", subject.tax_year) +
+            factCard("Living area", subject.living_sqft, (v) => num(v) + " sqft") +
+            factCard("Lot size", subject.lot_sqft || subject.land_sqft, (v) => num(v) + " sqft") +
+            factCard("Year built", subject.year_built) +
+            factCard("Eff. year", subject.effective_year_built) +
+            factCard("Beds", subject.bedroom_count || subject.beds) +
+            factCard("Baths", subject.bathroom_count || subject.baths) +
+            factCard("Land value", subject.land_value, fmt) +
+            factCard("Improvement", subject.improvement_value, fmt) +
+            factCard("Market value", subject.total_market, fmt) +
+          "</div></div>"
+        : "";
+
+      const stCls = "st-" + esc(rv.status);
+      const html =
+        // Sticky header
+        '<div class="stickyhead">' +
+          '<div class="headrow">' +
+            '<div class="hgrow"><div class="htitle">' +
+              "<h1>" + esc(rv.address || "(no address)") + "</h1>" +
+              '<span class="status-pill ' + stCls + '">' + esc(rv.status.replace("_", " ")) + "</span>" +
+            "</div>" +
+            '<div class="hmeta">' + esc(rv.contactName || "") + (rv.contactEmail ? " · " + esc(rv.contactEmail) : "") + (rv.contactPhone ? " · " + esc(rv.contactPhone) : "") +
+              (subject.county_name || subject.county || rv.county ? " · " + esc(subject.county_name || subject.county || rv.county) + " County" : "") +
+              " · " + esc(rv.taxYear || subject.tax_year || "—") + " · " + esc(rv.state || "TX") +
+              (subject.living_sqft ? " · " + num(subject.living_sqft) + " sqft" : "") +
+              (subject.year_built ? " · built " + esc(subject.year_built) : "") + "</div></div>" +
+            '<button class="navbtn" id="prevBtn" title="Previous (k)">↑</button>' +
+            '<button class="navbtn" id="nextBtn" title="Next (j)">↓</button>' +
+            '<span class="qpos" id="qpos"></span>' +
+          "</div>" +
+          '<div class="actionrow">' +
+            '<button class="btn primary" id="approveBtn"' + (rv.status === "approved" ? " disabled" : "") + ">" + (rv.status === "approved" ? "Approved ✓" : "✓ Approve & Release") + "</button>" +
+            '<button class="btn outline" id="saveBtn">Save Draft</button>' +
+            (rv.contactEmail ? '<a class="btn" id="emailBtn" href="mailto:' + esc(rv.contactEmail) + "?subject=" + encodeURIComponent("Your " + (rv.taxYear || "") + " property tax protest — " + (rv.address || "")) + '">✉ Email Customer</a>' : "") +
+            '<span class="sp"></span>' +
+            '<span class="msg" id="approveMsg"></span>' +
+            '<span class="kbd-hint">J/K next · A approve · S save</span>' +
+          "</div>" +
+        "</div>" +
+        (rv.draftError ? '<div class="warnbox err"><b>Auto-draft failed:</b> ' + esc(rv.draftError) + " — build this report by hand.</div>" : "") +
+        // Case strategy
+        (strategy ? '<div class="strategy"><div class="eyebrow"><span class="lbl">Case strategy</span><span class="rule"></span></div><div class="body" id="caseStrategy">' + esc(strategy) + "</div></div>" : "") +
+        flagsHtml +
+        // Values
+        '<div class="values">' +
+          valCard("Noticed value", fmt(r.notice), false, "scNotice") +
+          valCard("Recommended", fmt(r.target), true, "scRecommended") +
+          valCard("Reduction", fmt(r.reduction), false, "scReduction") +
+          valCard("Est. tax saved", (r.taxSaved != null ? fmt(r.taxSaved) + "/yr" : "—"), true, "scTaxSaved") +
+        "</div>" +
+        // Live approach indicator — filled by updateScorecard from the report's
+        // emitted value. Explains which approach is binding so the agent knows
+        // why the number stops moving once the sales floor takes over.
+        '<div id="scApproach" style="margin:-6px 2px 2px;color:var(--gray-700);font-size:12px;line-height:1.4"></div>' +
+        (thin ? '<div class="warnbox thin" style="margin-top:-6px">⚠ Thin case — the reduction is under 3% of the noticed value; it may not clear the ARB threshold.</div>' : "") +
+        factsHtml +
+        // Comps
+        (ourComps.length
+          ? '<div class="sec"><div class="sechead"><h2>Equity comps</h2><span class="note">' + keptComps.length + " kept · recommended value follows the kept median</span></div>" +
+              '<div id="liveComp" class="livecomp"></div>' +
+              '<div class="comps-wrap"><table class="comps"><thead><tr>' +
+                "<th>Keep</th><th>Address</th><th class=\"r\">Dist</th><th class=\"r\">Market</th><th class=\"r\">Sqft</th><th class=\"r\">$/sqft</th><th class=\"r\">Adj $/sqft</th><th class=\"r\">" + adjColLabel + "</th><th class=\"r\">Yr Built</th>" + (hasSaleYr ? "<th class=\"r\">Yr Sold</th>" : "") +
+              "</tr></thead><tbody>" + compRows + medRow + "</tbody></table></div>" +
+              compsMap +
+              '<p style="font-size:12px;color:var(--text-secondary);margin:-12px 2px 0">The comps you leave checked are <b>exactly</b> what ship in the report — automated distance/outlier culling is off once a human reviews, so uncheck any comp flagged far (in red) or off. The requested value follows the kept median.</p></div>'
+          : "") +
+        // Sales comps (Clear Capital) — the competing MARKET approach. Curated
+        // like equity comps; the opinion of value is the lower defensible of the
+        // two approaches, so this table can change which one wins.
+        (salesComps.length
+          ? '<div class="sec"><div class="sechead"><h2>Sales comps <span style="font-weight:500;color:var(--text-secondary)">· Clear Capital</span></h2><span class="note">market approach — competes with equity for the opinion of value</span></div>' +
+              '<div id="opinionLive" class="livecomp"></div>' +
+              '<div class="comps-wrap"><table class="comps"><thead><tr>' +
+                '<th>Keep</th><th>Sale address</th><th class="r">Sale date</th><th class="r">Sale price</th><th class="r">Sqft</th><th class="r">$/sqft</th><th class="r">Yr Built</th><th class="r">Dist</th>' +
+              "</tr></thead><tbody>" + saleRows + "</tbody></table></div>" +
+              '<p style="font-size:12px;color:var(--text-secondary);margin:-12px 2px 0">Closed MLS sales from Clear Capital. The opinion of value is the <b>lowest defensible</b> of the equity and sales approaches — keep the defensible sales; dropping a high sale can make the sales approach win (or a low one lose).</p></div>'
+          : "") +
+        // Advanced structured overrides — recompute values from the data (these
+        // re-run the engine's math: comp adjustments, median, reduction). Kept
+        // as a fallback for data corrections; the WYSIWYG editor above is the
+        // primary path for finishing the report.
+        '<details class="sec"><summary style="cursor:pointer;font-weight:700;font-size:15px;color:var(--ink);padding:6px 0">Advanced — recompute values from data</summary>' +
+          '<div class="panel edits" style="margin-top:12px"><div class="grid2">' +
+            '<div><label>Noticed value ($) — correct a wrong engine value</label><input class="fld" id="ovNotice" type="number" placeholder="' + numAttr(r.notice) + '" value="' + numAttr(rv.overrides && rv.overrides.notice) + '" /></div>' +
+            '<div><label>Requested value override ($) — blank for auto (kept median)</label><input class="fld" id="ovTarget" type="number" placeholder="auto: ' + numAttr(r.target) + '" value="' + numAttr(rv.overrides && rv.overrides.target) + '" /></div>' +
+            '<div><label>Subject living area (sqft) — fixes comp adjustments</label><input class="fld" id="ovSqft" type="number" placeholder="' + numAttr(subject.living_sqft) + '" value="' + numAttr(rv.overrides && rv.overrides.subject && rv.overrides.subject.living_sqft) + '" /></div>' +
+            '<div><label>Subject year built</label><input class="fld" id="ovYear" type="number" placeholder="' + numAttr(subject.year_built) + '" value="' + numAttr(rv.overrides && rv.overrides.subject && rv.overrides.subject.year_built) + '" /></div>' +
+          "</div>" +
+          '<div style="margin-top:14px"><label>Rationale — blank keeps the draft copy</label><textarea class="fld" id="ovRationale" placeholder="Leave blank to keep the draft rationale">' + esc(rv.overrides && rv.overrides.rationale || "") + "</textarea></div>" +
+          '<div style="margin-top:14px"><label>Internal notes (agent-only — never shown to the customer)</label><textarea class="fld" id="ovNotes" style="min-height:60px" placeholder="Notes for you and the team">' + esc(rv.overrides && rv.overrides.notes || "") + "</textarea></div>" +
+          '<div style="margin-top:14px"><label>Report notes — appears on the report cover (customer + ARB see this)</label><textarea class="fld" id="ovReportNotes" style="min-height:60px" placeholder="Optional. Shown in the Notes box on the evidence pack cover. Leave blank for a blank lined box.">' + esc(rv.overrides && rv.overrides.reportNotes || "") + "</textarea></div>" +
+          (rv.overrides && rv.overrides.reportHtml ? '<div class="warnbox" style="margin-top:12px;background:#FFF8E1;border:1px solid #F0E2BB;color:#7a5a20;border-radius:8px;padding:9px 13px;font-size:12.5px">⚠ A manual report edit is saved and will override these fields in the delivered report. Revert it in the report editor to use these values.</div>' : "") +
+        "</details>" +
+        // County evidence packet
+        '<div class="sec"><div class="sechead"><h2>County evidence packet</h2>' +
+          (downloadableCount ? '<span class="note">uploaded by the customer — ' + downloadableCount + " file" + (downloadableCount === 1 ? "" : "s") + "</span>" : "") + "</div>" +
+          '<div class="panel" style="padding:16px">' +
+            (downloadableCount ? '<button class="btn primary" id="dlPacketBtn" style="margin-bottom:12px">⬇ Download County Evidence Packet' + (downloadableCount > 1 ? " (" + downloadableCount + ")" : "") + "</button>" : "") +
+            '<div class="files">' + files + "</div>" +
+          "</div></div>" +
+        // Protest form
+        '<div class="sec"><div class="sechead"><h2>Protest form for the customer</h2><span class="note">auto-selected for the property’s state and county — verify before release</span></div>' +
+          '<div class="panel formcard">' +
+            '<div class="thumb"><span>PDF</span></div>' +
+            // Form name/authority/deadline come from the catalog (/api/form-schema),
+            // filled in by loadFormMeta() after render — never hardcoded per state.
+            '<div class="fmeta"><div class="ft" id="formTitleLine">Loading form details…</div>' +
+              '<div class="fs" id="formSubLine"></div>' +
+              '<div class="fs" style="color:var(--gray-700)">Blank official form for the property’s state and county — the customer fills it in, signs, and files it.</div></div>' +
+            '<button class="btn outline" id="genFormBtn" style="flex:0 0 auto">Preview Form ↗</button>' +
+          "</div><span class=\"msg\" id=\"formMsg\" style=\"display:block;margin-top:8px\"></span></div>" +
+        // Report editor — the report renders inline and IS editable in place
+        // (the embedded pack boots in ?edit=1 mode: click any text to edit,
+        // red ✕ to delete a comp column / row / section, then Save inside the
+        // frame). Export via the PDF/DOCX links (they open a clean standalone
+        // tab that renders the saved edits). Replaces the old read-only preview.
+        (hasEngine
+          ? '<div class="sec"><div class="preview" id="previewPane"><div class="sechead" style="margin-bottom:10px"><h2>Report editor</h2><span class="live">Editable</span>' +
+              '<span style="flex:1"></span>' +
+              '<div class="preview-head" style="margin:0">' +
+                '<button id="refreshPreview">↻ Refresh</button>' +
+                '<a href="/test/evidence-pack-v3?review=1&edit=1&jti=' + jtiEnc + '" target="_blank" rel="noopener" style="font-weight:700">Full-screen ↗</a>' +
+                '<a href="/test/evidence-pack-v3?review=1&export=pdf&jti=' + jtiEnc + '" target="_blank" rel="noopener">PDF</a>' +
+                '<a href="/test/evidence-pack-v3?review=1&export=docx&jti=' + jtiEnc + '" target="_blank" rel="noopener">DOCX</a>' +
+              "</div></div>" +
+              '<div class="note" style="margin:-2px 0 10px">Edit the report directly below — text, comps, and sections. <b>Save</b> inside the frame; then export with the PDF / DOCX links above. ' +
+                (rv.overrides && rv.overrides.reportHtml ? '<span style="color:#0B8F52;font-weight:600">✓ Manual edits are saved and will be delivered.</span>' : '') + '</div>' +
+              '<iframe id="reportFrame" title="report editor" style="height:82vh;min-height:760px" src="/test/evidence-pack-v3?review=1&edit=1&jti=' + jtiEnc + '"></iframe>' +
+            "</div></div>"
+          : '<div class="sec"><div class="empty">No engine data on this draft — build the pack manually.</div></div>') +
+        // Hearing prep
+        (hasEngine
+          ? '<div class="sec"><div class="sechead"><h2>Hearing prep</h2></div>' +
+              '<button class="tp-btn" id="tpBtn">✍ Generate Hearing Talking Points</button>' +
+              '<div class="tp-out" id="tpOut"></div></div>'
+          : "") +
+        '<details class="raw"><summary>Raw draft JSON</summary><pre>' + esc(JSON.stringify(draft, null, 2)) + "</pre></details>";
+
+      d.innerHTML = html;
+
+      // Queue position + prev/next.
+      const qi = visRows.findIndex((x) => x.jti === rv.jti);
+      const qposEl = document.getElementById("qpos");
+      if (qposEl) qposEl.textContent = qi >= 0 ? (qi + 1) + " of " + visRows.length : "";
+      const pv = document.getElementById("prevBtn"), nx = document.getElementById("nextBtn");
+      if (pv) pv.addEventListener("click", () => step(-1));
+      if (nx) nx.addEventListener("click", () => step(1));
+
+      const abtn = document.getElementById("approveBtn");
+      if (abtn && rv.status !== "approved") abtn.addEventListener("click", () => approve(rv.jti));
+      const sbtn = document.getElementById("saveBtn");
+      if (sbtn) sbtn.addEventListener("click", () => save(rv.jti));
+      const tbtn = document.getElementById("tpBtn");
+      if (tbtn) tbtn.addEventListener("click", () => genTalkingPoints(rv.jti));
+      const rbtn = document.getElementById("refreshPreview");
+      if (rbtn) rbtn.addEventListener("click", reloadFrame);
+      const gf = document.getElementById("genFormBtn");
+      if (gf) gf.addEventListener("click", () => genForm());
+      // Fill the blank-form meta line from the catalog for this property's
+      // state/county. Pass the draft's subject too — it carries county+state, so
+      // form-schema resolves the form without re-geocoding a bare street address.
+      loadFormMeta(rv.address || (subject && subject.site_address) || "", subject);
+
+      // County evidence packet download.
+      const dlBtn = document.getElementById("dlPacketBtn");
+      if (dlBtn) dlBtn.addEventListener("click", () => downloadPacket(rv.jti, ev));
+      document.querySelectorAll("[data-dl]").forEach((el) => el.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const i = Number(el.dataset.dl);
+        const f = ev[i];
+        if (f) downloadFile(rv.jti, i, f.filename);
+      }));
+
+      // Mark the preview stale on any edit so the reviewer knows to save+refresh.
+      const markDirty = () => { const p = document.getElementById("previewPane"); if (p) p.classList.add("dirty"); };
+      ["ovNotice", "ovTarget", "ovRationale", "ovSqft", "ovYear", "ovNotes", "ovReportNotes"].forEach((id) => { const el = document.getElementById(id); if (el) el.addEventListener("input", markDirty); });
+      document.querySelectorAll(".compchk").forEach((c) => c.addEventListener("change", () => { markDirty(); recomputeLive(ourComps, subjSqft); recomputeOpinion(ourComps, salesComps, subjSqft, subjValLive); pushLiveComps(ourComps, salesComps); }));
+      document.querySelectorAll(".salechk").forEach((c) => c.addEventListener("change", () => { markDirty(); recomputeOpinion(ourComps, salesComps, subjSqft, subjValLive); pushLiveComps(ourComps, salesComps); }));
+      recomputeLive(ourComps, subjSqft); // initial readout
+      if (salesComps.length) recomputeOpinion(ourComps, salesComps, subjSqft, subjValLive); // initial opinion readout
+    }
+
+    function valCard(k, v, hi, vid) { return '<div class="val' + (hi ? " hi" : "") + '"><div class="k">' + k + '</div><div class="v"' + (vid ? ' id="' + vid + '"' : "") + ">" + v + "</div></div>"; }
+    function factCard(k, v, fmtFn) {
+      if (v == null || v === "" || (typeof v === "number" && !isFinite(v))) return "";
+      return '<div class="val"><div class="k">' + esc(k) + '</div><div class="v" style="font-size:15px">' + (fmtFn ? fmtFn(v) : esc(v)) + "</div></div>";
+    }
+
+    // Blank-form metadata comes from the multi-state catalog, never from hardcoded
+    // Texas values — a CA/GA/FL case must not be shown Form 50-132 or a May 15
+    // deadline. Cached per rendered review so the meta line and the Preview Form
+    // button share one /api/form-schema call.
+    let formCatalog = null;
+
+    async function fetchFormCatalog(addr, subj) {
+      const res = await fetch("/api/form-schema", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: addr, subject: subj || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      return res.ok && data && data.catalog ? data.catalog : null;
+    }
+
+    // Fills the form card's title/subtitle after render. textContent throughout,
+    // so catalog strings are never interpolated into HTML.
+    async function loadFormMeta(addr, subj) {
+      formCatalog = null;
+      const ft = document.getElementById("formTitleLine");
+      const fs = document.getElementById("formSubLine");
+      if (!ft) return;
+      if (!addr && !subj) { ft.textContent = "No property address on file — can't look up the form."; return; }
+      try {
+        const c = await fetchFormCatalog(addr, subj);
+        if (!c) { ft.textContent = "No blank form on file for this county."; if (fs) fs.textContent = ""; return; }
+        formCatalog = c;
+        ft.textContent = c.form + " — " + c.formTitle + " (" + c.state + ")";
+        if (fs) fs.textContent = c.authority + " · deadline " + c.deadline + (c.paperOnly ? " · by mail only" : "");
+      } catch (e) {
+        ft.textContent = "Couldn't load the form details.";
+      }
+    }
+
+    // Move through the visible queue from the detail header buttons.
+    function step(dir) {
+      if (!visRows.length) return;
+      let i = visRows.findIndex((r) => r.jti === selected);
+      i = Math.min(visRows.length - 1, Math.max(0, i + dir));
+      const jti = visRows[i].jti;
+      openDetail(jti);
+      const el = document.querySelector('.row[data-jti="' + (window.CSS && CSS.escape ? CSS.escape(jti) : jti) + '"]');
+      if (el) el.scrollIntoView({ block: "nearest" });
+    }
+
+    // Force a real download of a private evidence file through the sup-gated
+    // proxy (?dl=1 sets Content-Disposition: attachment). Same-origin, so the
+    // sup cookie rides along automatically; fall back to opening it in a tab.
+    async function downloadFile(jti, index, filename) {
+      const url = "/api/evidence-download?jti=" + encodeURIComponent(jti) + "&i=" + index + "&dl=1";
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("bad status");
+        const blob = await res.blob();
+        const obj = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = obj; a.download = filename || "evidence";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(obj), 5000);
+      } catch (e) {
+        window.open(url, "_blank", "noopener");
+      }
+    }
+    async function downloadPacket(jti, files) {
+      const dl = files || [];
+      if (!dl.length) return;
+      showToast(dl.length === 1 ? "Downloading evidence…" : "Downloading " + dl.length + " files…");
+      for (let i = 0; i < dl.length; i++) { await downloadFile(jti, i, dl[i].filename); await new Promise((r) => setTimeout(r, 250)); }
+    }
+
+    // Open the BLANK official form the customer gets — the catalog's own copy for
+    // the property's state and county. Pre-fill is retired; there is no owner data
+    // to send, only the address the catalog resolves from.
+    async function genForm() {
+      const btn = document.getElementById("genFormBtn");
+      const msg = document.getElementById("formMsg");
+      const rv = current || {};
+      const subj = (rv.draft && rv.draft.our && rv.draft.our.subject) || null;
+      const addr = rv.address || (subj && subj.site_address) || "";
+      if (!addr && !subj) { msg.className = "msg bad"; msg.textContent = "Need the property address on file to look up the form."; return; }
+      const orig = btn.textContent; btn.disabled = true; btn.textContent = "Loading…";
+      msg.className = "msg"; msg.textContent = "";
+      try {
+        const c = formCatalog || await fetchFormCatalog(addr, subj);
+        // Prefer the same-origin mirror (pdfPath) — it's served
+        // `Content-Type: application/pdf; Content-Disposition: inline`, so the
+        // browser PREVIEWS it in a new tab. The Comptroller's officialUrl is
+        // served `application/octet-stream; attachment; nosniff`, which forces
+        // a download and makes window.open() land on a blank tab — i.e. Preview
+        // silently didn't work. Fall back to officialUrl only when a county has
+        // no mirror (some CA boards). (2026-07-21.)
+        const href = c && (c.pdfPath || c.officialUrl);
+        if (href) { window.open(href, "_blank", "noopener"); msg.className = "msg ok"; msg.textContent = "Blank form opened ✓"; }
+        else { msg.className = "msg bad"; msg.textContent = "No blank form on file for this county — see the customer's card."; }
+      } catch (e) { msg.className = "msg bad"; msg.textContent = "Network error."; }
+      btn.disabled = false; btn.textContent = orig;
+    }
+
+    // Collect every reviewer edit into one overrides object.
+    function collectOverrides() {
+      const overrides = {};
+      const n = document.getElementById("ovNotice").value.trim();
+      const t = document.getElementById("ovTarget").value.trim();
+      const rat = document.getElementById("ovRationale").value.trim();
+      if (n) overrides.notice = Number(n);
+      if (t) overrides.target = Number(t);
+      if (rat) overrides.rationale = rat;
+      const notes = document.getElementById("ovNotes");
+      if (notes && notes.value.trim()) overrides.notes = notes.value.trim();
+      const reportNotes = document.getElementById("ovReportNotes");
+      if (reportNotes && reportNotes.value.trim()) overrides.reportNotes = reportNotes.value.trim();
+      const sqft = document.getElementById("ovSqft"), year = document.getElementById("ovYear");
+      const subj = {};
+      if (sqft && sqft.value.trim()) subj.living_sqft = Number(sqft.value.trim());
+      if (year && year.value.trim()) subj.year_built = Number(year.value.trim());
+      if (Object.keys(subj).length) overrides.subject = subj;
+      const dropped = [...document.querySelectorAll(".compchk")].filter((c) => !c.checked).map((c) => Number(c.dataset.i));
+      if (dropped.length) overrides.excludeComps = dropped;
+      const droppedSales = [...document.querySelectorAll(".salechk")].filter((c) => !c.checked).map((c) => Number(c.dataset.i));
+      if (droppedSales.length) overrides.excludeSalesComps = droppedSales;
+      // Preserve the WYSIWYG report overlay across structured saves — it's saved
+      // by the on-page editor (a separate surface) and this full-replace save
+      // would otherwise wipe it.
+      if (current && current.overrides && current.overrides.reportHtml) overrides.reportHtml = current.overrides.reportHtml;
+      return overrides;
+    }
+
+    // Generate ARB-hearing talking points from the (edited) case via OpenRouter.
+    async function genTalkingPoints(jti) {
+      const btn = document.getElementById("tpBtn");
+      const out = document.getElementById("tpOut");
+      btn.disabled = true; const orig = btn.textContent; btn.textContent = "Generating…";
+      out.className = "tp-out show"; out.textContent = "Working…";
+      try {
+        const res = await fetch("/api/talking-points", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jti }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.text) {
+          out.textContent = data.text;
+          const copy = document.createElement("button");
+          copy.className = "tp-btn"; copy.style.marginTop = "10px"; copy.textContent = "Copy";
+          copy.onclick = () => { navigator.clipboard.writeText(data.text); copy.textContent = "Copied ✓"; };
+          out.appendChild(document.createElement("br")); out.appendChild(copy);
+        } else {
+          out.textContent = data.message || data.error || "Couldn't generate talking points.";
+        }
+      } catch (e) { out.textContent = "Network error."; }
+      btn.disabled = false; btn.textContent = orig;
+    }
+
+    // Save edits WITHOUT releasing, so the reviewer can Preview the edited pack.
+    async function save(jti) {
+      const btn = document.getElementById("saveBtn");
+      const msg = document.getElementById("approveMsg");
+      btn.disabled = true; msg.className = "msg"; msg.textContent = "Saving…";
+      try {
+        const res = await fetch("/api/review-approve", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jti, save: true, overrides: collectOverrides() }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { msg.className = "msg ok"; msg.textContent = "Saved ✓ — preview updated"; showToast("Draft saved"); reloadFrame(); }
+        else { msg.className = "msg bad"; msg.textContent = data.message || data.error || "Save failed"; }
+      } catch (e) { msg.className = "msg bad"; msg.textContent = "Network error"; }
+      btn.disabled = false;
+    }
+
+    async function approve(jti) {
+      const btn = document.getElementById("approveBtn");
+      const msg = document.getElementById("approveMsg");
+      const overrides = collectOverrides();
+      btn.disabled = true; msg.className = "msg"; msg.textContent = "Releasing…";
+      try {
+        const res = await fetch("/api/review-approve", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jti, overrides: Object.keys(overrides).length ? overrides : undefined }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          msg.className = "msg ok";
+          msg.innerHTML = data.reportUrl
+            ? 'Released ✓ &nbsp;<a href="' + esc(data.reportUrl) + '" target="_blank" rel="noopener" style="font-weight:600">view report link</a>'
+            : "Released ✓";
+          showToast("Approved — report released");
+          await loadQueue();
+        } else { msg.className = "msg bad"; msg.textContent = data.message || data.error || "Failed"; btn.disabled = false; }
+      } catch (e) { msg.className = "msg bad"; msg.textContent = "Network error"; btn.disabled = false; }
+    }
+
+    // Queue controls.
+    document.getElementById("qsearch").addEventListener("input", (e) => { search = e.target.value; applyQueue(); });
+    document.getElementById("qsort").addEventListener("change", (e) => { sortBy = e.target.value; applyQueue(); });
+
+    // The embedded report iframe posts its recomputed opinion of value here
+    // (on initial render and after every live comp toggle). Same-origin only.
+    window.addEventListener("message", (e) => {
+      if (e.origin !== location.origin) return;
+      const m = e.data;
+      if (m && m.type === "td-report-values") updateScorecard(m);
+    });
+
+    // Keyboard nav: j/k move, Enter opens, / focuses search, a approve, s save.
+    // Ignored while typing in an input/textarea (except / and Escape).
+    document.addEventListener("keydown", (e) => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ""));
+      if (e.key === "/" && !typing) { e.preventDefault(); document.getElementById("qsearch").focus(); return; }
+      if (e.key === "Escape" && typing) { e.target.blur(); return; }
+      if (typing) return;
+      const k = e.key.toLowerCase();
+      if (k === "j" || k === "k") {
+        e.preventDefault();
+        if (!visRows.length) return;
+        if (selected == null) { openDetail(visRows[0].jti); return; }
+        step(k === "j" ? 1 : -1);
+      } else if (k === "a") {
+        const b = document.getElementById("approveBtn");
+        if (b && !b.disabled) { e.preventDefault(); b.click(); }
+      } else if (k === "s") {
+        const b = document.getElementById("saveBtn");
+        if (b && !b.disabled) { e.preventDefault(); b.click(); }
+      }
+    });
+
+    // Boot: load the queue, then — if the URL carries ?jti= (the agent
+    // self-test opens /review?jti=sup-selftest) — open that row's full review
+    // detail directly instead of leaving the agent on the queue. openDetail
+    // fetches the row by jti, so it works even before the queue paint settles.
+    (async function boot() {
+      await loadQueue();
+      const jti = new URLSearchParams(location.search).get("jti");
+      if (jti) openDetail(jti);
+    })();
+  </script>
+</body>
+</html>

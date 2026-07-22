@@ -1,0 +1,13 @@
+# Prevent Vercel CLI from walking up to the workspace root and trying to
+# upload massive CAD data files (the workspace has a 2.18 GB clearcapital
+# CSV at the parent dir). These globs apply relative to the project root.
+screenshots/
+*.csv
+*.zip
+*.rar
+
+# Vitest unit tests + config are dev-only. Without these globs Vercel would try
+# to build each api/*.test.ts as a serverless function (they import vitest and
+# have no handler export → broken/failed functions).
+api/*.test.ts
+vitest.config.ts

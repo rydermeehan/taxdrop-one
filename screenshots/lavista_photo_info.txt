@@ -1,0 +1,30 @@
+[
+  {
+    "src": "https://maps.googleapis.com/maps/api/streetview?size=640x320&location=5749%20LA%20VISTA%20CT%2C%20DA",
+    "width": 640,
+    "height": 320,
+    "left": 400,
+    "right": 1040,
+    "windowWidth": 1440,
+    "leftMargin": 400,
+    "rightMargin": 400,
+    "parentTextAlign": "center",
+    "parentDisplay": "block",
+    "imgMargin": "0px 198px",
+    "imgDisplay": "block"
+  },
+  {
+    "src": "https://maps.googleapis.com/maps/api/staticmap?size=720x340&scale=2&maptype=hybrid&markers=color:gre",
+    "width": 720,
+    "height": 383.4375,
+    "left": 360,
+    "right": 1080,
+    "windowWidth": 1440,
+    "leftMargin": 360,
+    "rightMargin": 360,
+    "parentTextAlign": "center",
+    "parentDisplay": "block",
+    "imgMargin": "0px 158px",
+    "imgDisplay": "block"
+  }
+]

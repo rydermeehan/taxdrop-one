@@ -1,0 +1,110 @@
+Generate Report
+Pulls subject + 5 same-subdivision comparables from TaxDrop's CAD database (17 TX counties currently populated with building characteristics). Try example: 20022 Atasca Villas Dr
+Property Appraisal Report
+Tax Year 2024 · CAD-Style v3 (Draft for Mike's Review)
+Export PDF
+Export Docx
+Presentation Notes
+1. Subject Property
+Street address
+2420 Holsten Hill Dr, Pflugerville, Tx, TX 78660
+PID #
+181131748
+Land size
+12,245 sqft (land use code SFR)
+CAD 2024 noticed land value
+$53,151
+CAD 2024 noticed improvement value
+$540,195
+CAD 2024 noticed market value
+$593,346 ($183/sqft)
+2. Owner's Requested 2024 Market Value
+2024 CAD NOTICE VALUE
+$593,346
+$183/sqft
+REQUESTED MARKET VALUE
+$569,418
+$176/sqft · 96.0% of CAD notice
+3. Comparable Property Analysis
+
+5 comparable properties from the same county and property classification (no in-subdivision peers were available), sorted by living-area proximity. All share property classification Single Family Residence / Townhouse and the same school district.
+
+SSubject (2420 Holsten Hill Dr)
+120408 Treyburn Ln
+22416 Holsten Hill Dr
+320428 Crooked Stick Dr
+420628 Kearney Hill Rd
+520404 Treyburn Ln
+Pin numbers correspond to comparable column numbers in the table below. Map data © Google.
+ 	SUBJECT
+2420 HOLSTEN HILL DR	COMP #1
+20408 TREYBURN LN	COMP #2
+2416 HOLSTEN HILL DR	COMP #3
+20428 CROOKED STICK DR	COMP #4
+20628 KEARNEY HILL RD	COMP #5
+20404 TREYBURN LN
+Street view	
+	
+	
+	
+	
+	
+
+PID #	181131748	27807503	27807501	34514230	35711466	34513908
+Property address	2420 Holsten Hill Dr	20408 Treyburn Ln	2416 Holsten Hill Dr	20428 Crooked Stick Dr	20628 Kearney Hill Rd	20404 Treyburn Ln
+Subdivision	Meadows Of Blackhawk Phs 7a-1					
+State class	Single Family Residence / Townhouse	Single Family Residence / Townhouse	Single Family Residence / Townhouse	Single Family Residence / Townhouse	Single Family Residence / Townhouse	Single Family Residence / Townhouse
+Location from subject (miles)	—	0.05 mi	0.01 mi	0.06 mi	0.06 mi	0.06 mi
+BUILDING CHARACTERISTICS
+Living area (SF)	3,240	3,240	3,213	3,453	3,013	3,527
+Year built	2010	2007	2007	2007	2003	2011
+Bedrooms	4					
+2024 MARKET VALUES
+Land value	$53,151	$46,698	$49,826	$54,855	$56,429	$49,862
+Land value ($/SF — living area)	$16.40	$14.41	$15.51	$15.89	$18.73	$14.14
+Market improvement value	$540,195	$600,887	$439,174	$509,083	$453,879	$512,985
+Market improvement value ($/SF)	$166.73	$185.46	$136.69	$147.43	$150.64	$145.45
+CAD market value	$593,346	$647,585	$489,000	$563,938	$510,308	$562,847
+CAD market value ($/SF)	$183.13	$199.87	$152.19	$163.32	$169.37	$159.58
+ADJUSTMENTS
+Land value adj.		+$6,453	+$3,325	−$1,704	−$3,278	+$3,289
+Improvement adj. — size		$0	−$407	+$3,707	−$3,575	+$4,986
+Age/condition adj.		+$5,828	+$4,397	+$5,109	+$10,641	−$1,703
+Additional (pools, garages, misc.)		$0	$0	$0	$0	$0
+TOTALS
+Total net adjustment		+$12,281	+$7,315	+$7,112	+$3,788	+$6,571
+Total net adjustment ($/SF)		+$3.79	+$2.28	+$2.06	+$1.26	+$1.86
+DERIVATION
+CAD market value		$647,585	$489,000	$563,938	$510,308	$562,847
+Total net adjustments		+$12,281	+$7,315	+$7,112	+$3,788	+$6,571
+Adjusted property value		$659,866	$496,315	$571,050	$514,096	$569,418
+% difference from comp CAD market value		+1.9%	+1.5%	+1.3%	+0.7%	+1.2%
+INDICATOR (BASED ON SUBJECT SF)
+Adjusted $/SF — based on Subject SF		$203.66	$153.18	$176.25	$158.67	$175.75
+Median adjusted value of comps	$569,418
+Median adjusted value ($/SF — based on Subject SF)	$176/sqft
+4. Analysis
+
+For each of the 5 comparables in Section 3, the CAD's noticed market value is adjusted for size, age/condition, land value, and additional features (pools, garages, misc.) to produce an indicated value for the subject. The median of those 5 indicated values is the requested ask.
+
+Median adjusted property value (5 comparables): $569,418
+Implied $/SF on subject footprint: $176/sqft
+Subject's living area: 3,240 sqft
+Subject's current notice: $593,346
+Difference: $23,928 (4.03% above the comparable median)
+5. Adjustment Methodology
+
+Each comparable's raw $/sqft is normalized to the subject before the equity median is taken, so the baseline reflects what the comparable would cost on equal footing with the subject — not its raw market price. The adjustments below mirror the engine that produced Section 4's recommendation.
+
+ADJUSTMENT	MAGNITUDE	WHAT IT CORRECTS FOR
+Size (GLA)	±10% per size delta	Economies of scale: bigger homes have lower $/sqft (fixed costs — kitchen, roof, mechanicals — amortize over more square footage). Larger comp adjusts up toward the subject's smaller footprint; smaller comp adjusts down.
+Age	0.3%/yr · year delta capped at ±15 yr (max ±4.5%)	Newer comp adjusts down; older comp adjusts up. Uses effective year built when the CAD publishes it — a renovated 1967 home with an effective year of 2007 compares as a 2007 build, not a 1967 build.
+Land value	max ±10% of $/sqft	Adjusts for CAD-published land valuation differences between the subject and comp. The cap prevents a single high-land-value comp from collapsing the baseline on a low-land subject (or vice versa).
+Additional (pools, garages, misc.)	flat-$ per CAD-published methodology	Pool, garage spaces, fireplace, and similar features are adjusted in dollar terms when the CAD publishes the flag. Values match HCAD/DCAD published methodology. Skipped on individual comps when the relevant flag is missing.
+Single-comp cap	±30% from raw	No single comp can adjust more than 30% from its unadjusted $/sqft. Keeps the brief defensible against a CAD reviewer who would challenge a 50% swing on any one comparable.
+
+Adjustments are applied multiplicatively in the order shown; the single-comp cap is enforced last so the displayed Adj $/sqft never deviates more than 30% from its raw value. Additional (pool/garage/misc.) adjustments fire per-comp based on whether the CAD published reliable flags for that property.
+
+Non-appraisal disclaimer: This report is not a USPAP-compliant appraisal and does not constitute a real estate appraisal as defined under the Uniform Standards of Professional Appraisal Practice. The analysis is prepared solely for the purpose of supporting a property tax protest filing under Texas Property Tax Code §41.43, using CAD-published data and adjustment methodologies. The requested market value reflects the property owner's good-faith opinion of value based on equity with comparable properties; it does not represent a market-value opinion for any purpose other than this protest. (Placeholder text — pending Mike's final wording.)
+
+Travis Central Appraisal District · Tax Year 2024 · Account 181131748 · Page 1 of 1

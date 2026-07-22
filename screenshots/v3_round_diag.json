@@ -1,0 +1,14 @@
+{
+  "hasYoYGridItem": false,
+  "bodyHasYoYText": true,
+  "bodyHasSqftDecimal": true,
+  "bodyHasSqftNoDecimal": true,
+  "bodyHasPercentOfNotice": false,
+  "bodyHasExclusion": false,
+  "bodyHasFiveSubjectExcerpt": false,
+  "bodyHasMedianAdjusted": true,
+  "bodyHasMedianPerSF": false,
+  "bodyHasMethodologyParagraph": true,
+  "bodyHasAdjMagnitudeTable": false,
+  "requestValue": 0
+}

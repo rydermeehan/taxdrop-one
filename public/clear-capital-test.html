@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxDrop — Clear Capital vs DB/ATTOM (Staging)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE&libraries=places&loading=async" async></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, -apple-system, sans-serif; background: #f5f5f5; color: #1A1A1A; padding: 24px; }
+    h1 { font-family: 'Space Grotesk', sans-serif; color: #0C593E; font-size: 26px; }
+    .subtitle { color: #5C666F; font-size: 13px; margin-bottom: 20px; }
+
+    /* Login gate */
+    #login-gate { position: fixed; inset: 0; background: linear-gradient(135deg, #0C593E, #0B8F52); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    #login-gate.hidden { display: none; }
+    .login-box { background: white; padding: 32px; border-radius: 12px; width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+    .login-box h2 { color: #0C593E; margin-bottom: 8px; }
+    .login-box p { color: #5C666F; font-size: 13px; margin-bottom: 16px; }
+    .login-box input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin-bottom: 12px; }
+    .login-box input.error { border-color: #cc3333; animation: shake 0.2s; }
+    .login-box button { width: 100%; padding: 12px; background: #0B8F52; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; }
+    .login-error { color: #cc3333; font-size: 12px; margin-top: 8px; display: none; }
+    @keyframes shake { 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+
+    #page { display: none; }
+    #page.unlocked { display: block; }
+
+    .search { display: flex; gap: 8px; margin-bottom: 20px; }
+    .search input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; }
+    .search input:focus { outline: none; border-color: #0B8F52; }
+    .search button { padding: 12px 24px; background: #0B8F52; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    .search button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card h2 { font-size: 16px; color: #0C593E; margin-bottom: 4px; }
+    .card .tag { font-size: 11px; color: #5C666F; margin-bottom: 12px; display: inline-block; padding: 2px 8px; background: #f0f0f0; border-radius: 10px; }
+    .card.cc h2 { color: #1a6fa0; }
+    .card.cc .tag { background: #E8F4FD; color: #1a6fa0; }
+    .card.td .tag { background: #DFFFEA; color: #0C593E; }
+
+    .kv { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .kv:last-of-type { border-bottom: none; }
+    .kv .k { color: #5C666F; }
+    .kv .v { font-weight: 500; word-break: break-word; }
+    .big { font-size: 24px; font-weight: 700; color: #0C593E; font-family: 'Space Grotesk', sans-serif; }
+    .cc .big { color: #1a6fa0; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #f0f0f0; }
+    th { background: #fafafa; font-weight: 600; color: #5C666F; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .status { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; display: none; }
+    .status.show { display: block; }
+    .status.loading { background: #FFF8E1; color: #8a6d00; }
+    .status.error { background: #FFF0F0; color: #cc3333; }
+
+    details { margin-top: 12px; }
+    summary { cursor: pointer; font-size: 12px; color: #0B8F52; }
+    pre { background: #1A1A1A; color: #C4FF64; padding: 12px; border-radius: 8px; overflow: auto; font-size: 11px; max-height: 360px; margin-top: 8px; }
+
+    .timer { font-size: 11px; color: #5C666F; margin-left: 8px; }
+
+    /* Test-address chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; padding: 12px 14px; background: white; border-radius: 10px; border: 1px solid #ececec; }
+    .chips-label { font-size: 11px; color: #5C666F; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 8px; align-self: center; }
+    .chip { padding: 5px 10px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 14px; font-size: 11px; color: #1A1A1A; cursor: pointer; transition: all .12s; white-space: nowrap; font-family: inherit; }
+    .chip:hover { background: #DFFFEA; border-color: #0B8F52; color: #0C593E; }
+    .chip .chip-label { font-weight: 600; }
+    .chip .chip-note { color: #5C666F; margin-left: 4px; font-size: 10px; }
+    .chip:hover .chip-note { color: #0B8F52; }
+
+    /* Google Places dropdown — force above other UI */
+    .pac-container { z-index: 10000 !important; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.15); border: 1px solid #ddd; font-family: inherit; }
+    .pac-item { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+    .pac-item:hover { background: #DFFFEA; }
+  </style>
+</head>
+<body>
+
+  <div id="login-gate">
+    <div class="login-box">
+      <h2>Clear Capital Test</h2>
+      <p>Internal staging tool — comparing Clear Capital's RealTimeCMA against our DB/ATTOM pipeline.</p>
+      <input type="password" id="pw" placeholder="Access code" autofocus
+        onkeydown="if(event.key==='Enter')checkLogin()" />
+      <button onclick="checkLogin()">Enter</button>
+      <div class="login-error" id="login-error">Incorrect code.</div>
+    </div>
+  </div>
+
+  <div id="page">
+    <h1>Clear Capital vs DB/ATTOM</h1>
+    <div class="subtitle">RealTimeCMA sandbox API • side-by-side comp comparison • staff only</div>
+
+    <div class="search">
+      <input id="addr" type="text"
+        placeholder="Start typing an address… (Google autocomplete)"
+        value=""
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter')runLookup()" />
+      <button id="go" onclick="runLookup()">Compare</button>
+    </div>
+
+    <div class="chips" id="test-chips">
+      <span class="chips-label">Test cases:</span>
+      <!-- chips injected by JS -->
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div id="winner-card" style="display:none; background:linear-gradient(135deg,#0C593E,#0B8F52); color:white; padding:18px 22px; border-radius:12px; margin-bottom:16px;">
+      <div style="font-size:11px; opacity:.8; text-transform:uppercase; letter-spacing:.05em;">Lower-of-two recommended target</div>
+      <div style="font-size:28px; font-weight:700; margin:6px 0;" id="winner-amount">—</div>
+      <div style="font-size:13px; opacity:.9;" id="winner-detail">—</div>
+    </div>
+
+    <div class="grid">
+      <div class="card td">
+        <h2>TaxDrop (DB + ATTOM)</h2>
+        <span class="tag" id="td-tag">awaiting lookup</span>
+        <span class="timer" id="td-timer"></span>
+        <div id="td-body">—</div>
+      </div>
+      <div class="card cc">
+        <h2>Clear Capital (RealTimeCMA)</h2>
+        <span class="tag" id="cc-tag">awaiting lookup</span>
+        <span class="timer" id="cc-timer"></span>
+        <div id="cc-body">—</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Engine calls route through same-origin /api/cad-proxy (key injected server-side).
+    const AUTH_KEY = 'taxdrop_test_auth';
+
+    function checkLogin() {
+      const pw = document.getElementById('pw').value;
+      if (pw === 'sup') {
+        sessionStorage.setItem(AUTH_KEY, '1');
+        unlock();
+      } else {
+        const el = document.getElementById('pw');
+        el.classList.add('error');
+        document.getElementById('login-error').style.display = 'block';
+        setTimeout(() => el.classList.remove('error'), 300);
+      }
+    }
+    function unlock() {
+      document.getElementById('login-gate').classList.add('hidden');
+      document.getElementById('page').classList.add('unlocked');
+    }
+    if (sessionStorage.getItem(AUTH_KEY) === '1') unlock();
+
+    // ── Test address chips — one click loads the address and runs the lookup.
+    // Each picked to exercise a different weakness in our existing pipeline,
+    // so we can see whether Clear Capital's MLS-derived comps fill the gap.
+    const TEST_ADDRESSES = [
+      { label: 'Dallas baseline',  note: 'standard SFR',       addr: '4624 Junius St, Dallas, TX 75246' },
+      { label: 'Harris PKY case',  note: 'HCAD suffix variant',addr: '19203 Westfield Pkwy, Katy, TX 77449' },
+      { label: 'Tarrant lake',     note: 'street-token fallback', addr: '6101 Lake Shore Dr, Fort Worth, TX 76179' },
+      { label: 'Franklin tiny CAD', note: 'low MLS coverage?', addr: '102 E Barker Creek Dr, Scroggins, TX 75480' },
+      { label: 'Parker not-ingested', note: 'gap our DB has',  addr: '300 Appaloosa Dr, Willow Park, TX 76087' },
+      { label: 'Brazos rural lake', note: 'distant comp issue', addr: '12200 Wickson Lake Rd, Bryan, TX 77808' },
+      { label: 'Dallas $1M+',      note: 'high-value tier',    addr: '7041 Yamini Dr, Dallas, TX 75230' },
+      { label: 'Grimes',           note: 'just-ingested',      addr: '17758 Chestnut Dr, Waller, TX 77484' },
+      { label: 'Freestone',        note: 'just-ingested',      addr: '330 Main St, Fairfield, TX 75840' },
+    ];
+
+    function renderChips() {
+      const wrap = document.getElementById('test-chips');
+      TEST_ADDRESSES.forEach(t => {
+        const b = document.createElement('button');
+        b.className = 'chip';
+        b.innerHTML = `<span class="chip-label">${t.label}</span><span class="chip-note">· ${t.note}</span>`;
+        b.title = t.addr;
+        b.onclick = () => {
+          document.getElementById('addr').value = t.addr;
+          runLookup();
+        };
+        wrap.appendChild(b);
+      });
+    }
+    renderChips();
+
+    // ── Google Places autocomplete on the address input.
+    // Restricted to US addresses; biased to TX/CA where our customers live.
+    function initAutocomplete() {
+      if (!window.google || !google.maps || !google.maps.places) {
+        // Script hasn't loaded yet — retry shortly
+        setTimeout(initAutocomplete, 300);
+        return;
+      }
+      const input = document.getElementById('addr');
+      const ac = new google.maps.places.Autocomplete(input, {
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address', 'address_components'],
+      });
+      ac.addListener('place_changed', () => {
+        const place = ac.getPlace();
+        if (place && place.formatted_address) {
+          input.value = place.formatted_address;
+          // Auto-fire the lookup once a place is picked — feels much snappier
+          runLookup();
+        }
+      });
+    }
+    initAutocomplete();
+
+    function authHeaders() {
+      // Key injected server-side by /api/cad-proxy; never sent from the browser.
+      return { 'Content-Type': 'application/json' };
+    }
+
+    function fmt(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString(); }
+    function showStatus(msg, kind) {
+      const s = document.getElementById('status');
+      s.className = 'status show ' + (kind || 'loading');
+      s.textContent = msg;
+    }
+    function hideStatus() { document.getElementById('status').className = 'status'; }
+
+    function renderTaxDrop(data) {
+      const res = data.result || {};
+      const tagEl = document.getElementById('td-tag');
+      const bodyEl = document.getElementById('td-body');
+      tagEl.textContent = data.data_vintage || 'unknown vintage';
+
+      let html = `<div class="kv"><div class="k">Address</div><div class="v">${res.address || '—'}</div></div>`;
+      html += `<div class="kv"><div class="k">County</div><div class="v">${res.county || '—'} (${res.tax_year || '?'})</div></div>`;
+      html += `<div class="kv"><div class="k">Year built</div><div class="v">${res.year_built || '—'} · ${res.living_sqft || '—'} sqft · ${res.beds || '?'}bd/${res.baths || '?'}ba</div></div>`;
+      html += `<div class="kv"><div class="k">Current value</div><div class="v big">${fmt(res.current_value)}</div></div>`;
+      html += `<div class="kv"><div class="k">Recommended</div><div class="v big">${fmt(res.recommended_value)}</div></div>`;
+      html += `<div class="kv"><div class="k">Annual savings</div><div class="v"><strong>${fmt(res.annual_savings)}</strong> · ${res.gap_percentage || 0}% gap · ${res.confidence || '?'}</div></div>`;
+      html += `<div class="kv"><div class="k">Comps used</div><div class="v">${res.comp_count || 0} · baseline ${res.baseline_psf ? '$' + res.baseline_psf : '—'}/sqft · source: ${data.comps_source || '—'}</div></div>`;
+      html += `<details><summary>Raw response</summary><pre>${JSON.stringify({ result: data.result, vintage: data.data_vintage, db_county: data.db_county, db_tax_year: data.db_tax_year, comps_source: data.comps_source }, null, 2)}</pre></details>`;
+      bodyEl.innerHTML = html;
+    }
+
+    function renderClearCapital(data) {
+      const tagEl = document.getElementById('cc-tag');
+      const bodyEl = document.getElementById('cc-body');
+      if (!data.success) {
+        tagEl.textContent = `upstream ${data.upstream_http || 'error'}`;
+        bodyEl.innerHTML = `<div class="kv"><div class="k">Error</div><div class="v">${(data.upstream_body || data.detail || 'request failed').slice(0, 500)}</div></div>`;
+        return;
+      }
+      const s = data.subject || {};
+      tagEl.textContent = `${data.comp_count} comps · ${data.elapsed_ms}ms`;
+      let html = `<div class="kv"><div class="k">Address</div><div class="v">${s.address || '—'}<br><span style="color:#5C666F">${s.city_state_zip || ''}</span></div></div>`;
+      html += `<div class="kv"><div class="k">APN</div><div class="v">${s.apn || '—'} · FIPS ${s.fips || '—'}</div></div>`;
+      html += `<div class="kv"><div class="k">Geocode</div><div class="v">${s.lat || '?'}, ${s.lng || '?'}</div></div>`;
+      html += `<div class="kv"><div class="k">CC AVM</div><div class="v"><span class="big">${fmt(data.clear_capital_avm)}</span><br><span style="color:#5C666F;font-size:11px">market value (for lenders) — typically 20-40% above CAD assessed</span></div></div>`;
+
+      // Two calc paths run server-side on CC's MLS comps:
+      //   1. SALES path: CC sale prices as evidence (sales-comp protest)
+      //   2. EQUITY path: CC's MLS-sourced GLA in baseline (quality-check
+      //      signal — uses sale price as proxy for assessed value, so tends
+      //      higher; if it wins, that's an anomaly worth a closer look)
+      function renderCalcResult(label, calc, isQualityCheck) {
+        if (!calc) return '';
+        if (calc.error || calc.skipped) {
+          return `<div class="kv"><div class="k">${label}</div><div class="v"><span style="color:#5C666F;font-size:12px">${calc.error || calc.skipped}</span></div></div>`;
+        }
+        if (!calc.recommended_value) return '';
+        const sav = calc.annual_savings || 0;
+        const used = calc.sale_comp_count_used || calc.equity_comp_count_used || 0;
+        const tone = isQualityCheck ? '#E8F4FD' : '#FFF8E1';
+        const noteSuffix = isQualityCheck ? ' · <em>quality check</em>' : '';
+        return `<div class="kv" style="background:${tone};padding:12px;border-radius:8px;margin:8px 0"><div class="k"><strong>${label}</strong></div><div class="v"><span class="big">${fmt(calc.recommended_value)}</span> · <strong>${fmt(sav)}/yr savings</strong><br><span style="color:#5C666F;font-size:11px">${calc.confidence || '?'} · ${calc.gap_percentage || 0}% gap · ${used} comps · baseline $${calc.baseline_psf || 0}/sqft${noteSuffix}</span></div></div>`;
+      }
+
+      html += renderCalcResult('Our calc on CC sales',                       data.taxdrop_calc_on_cc,        false);
+      html += renderCalcResult('Our calc on CC equity (GLA-driven baseline)', data.taxdrop_calc_on_cc_equity, true);
+      html += `<div class="kv"><div class="k">CC comp count</div><div class="v">${data.comp_count} returned (all event types incl. withdrawn/cancelled)</div></div>`;
+
+      if (data.comps && data.comps.length) {
+        html += `<table><thead><tr><th>#</th><th>Address</th><th>Dist</th><th>Sqft</th><th>Yr</th><th>Bd/Ba</th><th class="num">Sale $</th><th class="num">$/sqft</th><th>Date</th><th>Type</th></tr></thead><tbody>`;
+        data.comps.slice(0, 20).forEach((c, i) => {
+          const dist = c.distance_mi != null ? c.distance_mi.toFixed(2) + ' mi' : '—';
+          const sale = c.sale_price ? '$' + Math.round(c.sale_price).toLocaleString() : '—';
+          const psf = c.psf ? '$' + Math.round(c.psf) : '—';
+          const bdba = (c.beds || '?') + '/' + (c.baths || '?');
+          const date = c.sale_date ? c.sale_date.slice(0, 7) : '—';
+          const evt = c.event_type || '—';
+          html += `<tr><td>${i + 1}</td><td>${c.address || '?'}<br><span style="color:#999;font-size:11px">${c.city_state_zip || ''}</span></td><td>${dist}</td><td>${c.living_sqft || '—'}</td><td>${c.year_built || '—'}</td><td>${bdba}</td><td class="num">${sale}</td><td class="num">${psf}</td><td>${date}</td><td><span style="color:#5C666F;font-size:10px">${evt}</span></td></tr>`;
+        });
+        html += `</tbody></table>`;
+      } else {
+        html += `<div style="color:#5C666F;font-size:13px;margin-top:12px">No comparables returned.</div>`;
+      }
+      html += `<details><summary>Raw JSON</summary><pre>${JSON.stringify(data.raw, null, 2).slice(0, 50000)}</pre></details>`;
+      bodyEl.innerHTML = html;
+    }
+
+    async function runLookup() {
+      const addr = document.getElementById('addr').value.trim();
+      if (!addr) return;
+      const goBtn = document.getElementById('go');
+      goBtn.disabled = true; goBtn.textContent = 'Looking up…';
+      document.getElementById('td-body').innerHTML = '<em style="color:#5C666F">loading…</em>';
+      document.getElementById('cc-body').innerHTML = '<em style="color:#5C666F">loading…</em>';
+      document.getElementById('td-tag').textContent = '…';
+      document.getElementById('cc-tag').textContent = '…';
+      hideStatus();
+
+      const tStart = performance.now();
+
+      // Fire both in parallel
+      const tdPromise = fetch('/api/cad-proxy?path=/api/lookup', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ address: addr, internal: true, comps_source: 'auto', include_summary: false }),
+      }).then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d })));
+
+      const ccPromise = fetch('/api/cad-proxy?path=/api/clear-capital/lookup', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ address: addr }),
+      }).then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d })));
+
+      const [tdRes, ccRes] = await Promise.allSettled([tdPromise, ccPromise]);
+      const elapsed = Math.round(performance.now() - tStart);
+
+      let tdResult = null;
+      let ccSalesResult = null;
+      let ccEquityResult = null;
+
+      if (tdRes.status === 'fulfilled' && tdRes.value.ok) {
+        document.getElementById('td-timer').textContent = `(${elapsed}ms total)`;
+        renderTaxDrop(tdRes.value.data);
+        tdResult = tdRes.value.data?.result;
+      } else {
+        document.getElementById('td-body').innerHTML = `<div style="color:#cc3333;font-size:13px">Lookup failed: ${tdRes.status === 'fulfilled' ? (tdRes.value.data?.detail || 'HTTP ' + tdRes.value.status) : tdRes.reason?.message || 'network error'}</div>`;
+        document.getElementById('td-tag').textContent = 'error';
+      }
+
+      if (ccRes.status === 'fulfilled' && ccRes.value.ok) {
+        renderClearCapital(ccRes.value.data);
+        ccSalesResult = ccRes.value.data?.taxdrop_calc_on_cc;
+        ccEquityResult = ccRes.value.data?.taxdrop_calc_on_cc_equity;
+      } else {
+        document.getElementById('cc-body').innerHTML = `<div style="color:#cc3333;font-size:13px">CC lookup failed: ${ccRes.status === 'fulfilled' ? (ccRes.value.data?.detail || 'HTTP ' + ccRes.value.status) : ccRes.reason?.message || 'network error'}</div>`;
+        document.getElementById('cc-tag').textContent = 'error';
+      }
+
+      // 3-way winner card: TaxDrop equity vs CC-sales vs CC-equity-quality-check.
+      // Lowest recommended value = most savings = the protest target we'd file.
+      renderWinner(tdResult, ccSalesResult, ccEquityResult);
+
+      goBtn.disabled = false; goBtn.textContent = 'Compare';
+    }
+
+    function renderWinner(td, ccSales, ccEquity) {
+      const card = document.getElementById('winner-card');
+      const valid = (c) => c && c.recommended_value && !c.show_no_savings;
+
+      const candidates = [];
+      if (valid(td))       candidates.push({ source: 'TaxDrop equity (DB)',    value: td.recommended_value,       savings: td.annual_savings,       gap: td.gap_percentage,       conf: td.confidence });
+      if (valid(ccSales))  candidates.push({ source: 'CC sales (MLS prices)',  value: ccSales.recommended_value,  savings: ccSales.annual_savings,  gap: ccSales.gap_percentage,  conf: ccSales.confidence });
+      if (valid(ccEquity)) candidates.push({ source: 'CC equity (GLA-based)',  value: ccEquity.recommended_value, savings: ccEquity.annual_savings, gap: ccEquity.gap_percentage, conf: ccEquity.confidence });
+
+      if (!candidates.length) {
+        card.style.display = 'none';
+        return;
+      }
+
+      candidates.sort((a, b) => a.value - b.value);
+      const winner = candidates[0];
+
+      card.style.display = 'block';
+      document.getElementById('winner-amount').textContent =
+        fmt(winner.value) + '  ·  ' + fmt(winner.savings) + '/yr savings';
+
+      let detail = `<strong>Winner: ${winner.source}</strong> · ${winner.conf} · ${winner.gap}% gap`;
+      if (candidates.length > 1) {
+        detail += '<br><span style="opacity:.85;font-size:12px;">';
+        candidates.slice(1).forEach(c => {
+          const diff = c.value - winner.value;
+          detail += `vs ${c.source}: ${fmt(c.value)} (+${fmt(diff)}) &nbsp;`;
+        });
+        detail += '</span>';
+      } else {
+        detail += '<br><span style="opacity:.75;font-size:12px;">only one path produced a case</span>';
+      }
+      document.getElementById('winner-detail').innerHTML = detail;
+    }
+  </script>
+</body>
+</html>

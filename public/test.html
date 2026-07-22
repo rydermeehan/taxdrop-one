@@ -1,0 +1,3010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logos/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/logos/favicon-180.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxDrop Savings Engine — Test Console</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; color: #1A1A1A; padding: 24px; }
+    h1 { font-family: 'Space Grotesk', sans-serif; color: #0C593E; margin-bottom: 4px; font-size: 28px; }
+    .subtitle { color: #5C666F; margin-bottom: 24px; font-size: 14px; }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card h2 { font-size: 18px; margin-bottom: 4px; color: #0C593E; }
+    .card .tag { font-size: 12px; color: #5C666F; margin-bottom: 16px; display: block; }
+    .btn { display: inline-block; padding: 12px 24px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-right: 8px; margin-bottom: 8px; transition: all 0.15s; }
+    .btn-primary { background: #0B8F52; color: white; }
+    .btn-primary:hover { background: #0C593E; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+    .btn-outline { background: white; color: #0B8F52; border: 1px solid #0B8F52; }
+    .btn-outline:hover { background: #DFFFEA; }
+    .btn-danger { background: #cc3333; color: white; }
+    .btn-danger:hover { background: #aa2222; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .result-box { margin-top: 16px; padding: 16px; border-radius: 8px; font-size: 14px; display: none; }
+    .result-box.show { display: block; }
+    .result-box.success { background: #DFFFEA; border: 1px solid #0B8F52; }
+    .result-box.error { background: #FFF0F0; border: 1px solid #cc3333; }
+    .savings-hero { text-align: center; padding: 20px; background: linear-gradient(135deg, #0C593E, #0B8F52); color: white; border-radius: 10px; margin-top: 12px; display: none; }
+    .savings-hero.show { display: block; }
+    .savings-hero .amount { font-size: 42px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+    .savings-hero .label { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+    .savings-hero .detail { font-size: 13px; opacity: 0.75; margin-top: 8px; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: #5C666F; }
+    .stat-value { font-weight: 600; }
+    .confidence-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .confidence-STRONG { background: #DFFFEA; color: #0C593E; }
+    .confidence-MODERATE { background: #E8F4FD; color: #1a6fa0; }
+    .confidence-MARGINAL { background: #FFF8E1; color: #8a6d00; }
+    .confidence-NO_CASE { background: #f5f5f5; color: #666; }
+    .summary-text { margin-top: 12px; padding: 16px; background: #fafafa; border-radius: 8px; font-size: 15px; line-height: 1.6; border-left: 3px solid #0B8F52; display: none; }
+    .summary-text.show { display: block; }
+    .timer { font-size: 12px; color: #5C666F; margin-top: 8px; }
+    .section-title { font-size: 16px; font-weight: 600; color: #1A1A1A; margin: 20px 0 12px; }
+    pre { background: #1A1A1A; color: #C4FF64; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.5; max-height: 400px; overflow-y: auto; margin-top: 12px; display: none; }
+    pre.show { display: block; }
+    .toggle-raw { font-size: 12px; color: #0B8F52; cursor: pointer; margin-top: 8px; display: inline-block; }
+    .toggle-raw:hover { text-decoration: underline; }
+    .samples-section { margin-top: 24px; }
+    .samples-section h3 { font-size: 16px; color: #0C593E; margin-bottom: 12px; font-family: 'Space Grotesk', sans-serif; }
+    .samples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) { .samples-grid { grid-template-columns: 1fr; } }
+    .sample-list { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .sample-list h4 { font-size: 14px; font-weight: 600; color: #0C593E; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #DFFFEA; }
+    .sample-item { padding: 6px 10px; font-size: 13px; color: #1A1A1A; cursor: pointer; border-radius: 6px; transition: background 0.1s; display: flex; justify-content: space-between; align-items: center; }
+    .sample-item:hover { background: #DFFFEA; }
+    .sample-item .type-tag { font-size: 11px; color: #5C666F; white-space: nowrap; margin-left: 8px; }
+
+    /* Main two-column layout */
+    .main-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 2000px; align-items: start; }
+    .left-col { min-width: 0; }
+    .right-col { min-width: 0; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; }
+    @media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr; } .right-col { position: static; max-height: none; } }
+
+    /* Formula Review Styles */
+    .formula-panel { }
+    .formula-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    .formula-card h3 { font-size: 16px; color: #0C593E; margin-bottom: 16px; font-family: 'Space Grotesk', sans-serif; border-bottom: 2px solid #DFFFEA; padding-bottom: 8px; }
+    .step { margin-bottom: 20px; padding: 16px; background: #fafafa; border-radius: 8px; border-left: 3px solid #0B8F52; }
+    .step-header { font-weight: 600; font-size: 14px; color: #0C593E; margin-bottom: 8px; }
+    .step-explain { font-size: 14px; color: #5C666F; line-height: 1.6; margin-bottom: 8px; }
+    .step-math { font-size: 15px; color: #1A1A1A; font-weight: 500; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #e0e0e0; }
+    .step-math .highlight { color: #0B8F52; font-weight: 700; }
+    .step-math .changed { color: #d35400; font-weight: 700; }
+    .param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    @media (max-width: 768px) { .param-grid { grid-template-columns: 1fr; } }
+    .param-group { padding: 12px; background: #fafafa; border-radius: 8px; }
+    .param-group label { display: block; font-size: 12px; color: #5C666F; margin-bottom: 4px; font-weight: 500; }
+    .param-group input, .param-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: Inter, sans-serif; }
+    .param-group input:focus, .param-group select:focus { outline: none; border-color: #0B8F52; box-shadow: 0 0 0 2px rgba(11,143,82,0.15); }
+    .param-group .param-help { font-size: 11px; color: #999; margin-top: 2px; }
+    .comp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    .comp-table th { text-align: left; padding: 6px 8px; border-bottom: 2px solid #DFFFEA; color: #0C593E; font-size: 12px; font-weight: 600; }
+    .comp-table td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; }
+    .comp-table tr.excluded { opacity: 0.4; text-decoration: line-through; }
+    .comp-table .exclude-reason { font-size: 10px; color: #cc3333; display: block; font-style: italic; text-decoration: none; }
+    .comp-table .adj-psf { font-size: 11px; color: #0B8F52; display: block; }
+    .comp-table tr:hover { background: #fafafa; }
+    .variant-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; padding: 12px 16px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e8e8e8; }
+    .variant-bar input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: Inter, sans-serif; width: 200px; }
+    .variant-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: Inter, sans-serif; }
+    .variant-label { font-size: 12px; color: #5C666F; font-weight: 600; }
+    .recalc-hero { text-align: center; padding: 16px; background: linear-gradient(135deg, #d35400, #e67e22); color: white; border-radius: 10px; margin-top: 12px; }
+    .recalc-hero .amount { font-size: 36px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+    .recalc-hero .label { font-size: 13px; opacity: 0.85; }
+    .diff-tag { font-size: 12px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: 600; }
+    .diff-up { background: #DFFFEA; color: #0C593E; }
+    .diff-down { background: #FFF0F0; color: #cc3333; }
+    .diff-same { background: #f5f5f5; color: #666; }
+
+    /* Export buttons */
+    .export-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; padding: 16px; background: #f9f9f9; border-radius: 10px; border: 1px solid #e8e8e8; align-items: center; }
+    .export-bar .export-label { font-size: 12px; color: #5C666F; font-weight: 600; margin-right: 4px; }
+    .btn-export { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border: 1px solid #0B8F52; background: white; color: #0B8F52; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: Inter, sans-serif; }
+    .btn-export:hover { background: #DFFFEA; }
+    .btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-export.generating { background: #f5f5f5; color: #999; border-color: #ddd; }
+    .btn-export svg { width: 16px; height: 16px; }
+    .report-panel { margin-top: 16px; display: none; }
+    .report-panel.show { display: block; }
+    .report-content { background: white; border: 1px solid #e0e0e0; border-radius: 10px; padding: 24px; font-size: 14px; line-height: 1.7; color: #1A1A1A; white-space: pre-wrap; font-family: 'Inter', sans-serif; max-height: 600px; overflow-y: auto; }
+    .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .report-header h4 { font-size: 16px; color: #0C593E; font-family: 'Space Grotesk', sans-serif; }
+
+    /* Login gate */
+    #login-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0C593E 0%, #0B8F52 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    #login-gate.hidden { display: none; }
+    .login-box { background: white; border-radius: 16px; padding: 48px 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%; }
+    .login-box h2 { font-family: 'Space Grotesk', sans-serif; color: #0C593E; margin-bottom: 8px; font-size: 24px; }
+    .login-box p { color: #5C666F; font-size: 14px; margin-bottom: 24px; }
+    .login-box input { width: 100%; padding: 14px 18px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; font-family: Inter, sans-serif; text-align: center; letter-spacing: 2px; transition: border-color 0.2s; }
+    .login-box input:focus { outline: none; border-color: #0B8F52; }
+    .login-box input.error { border-color: #cc3333; animation: shake 0.3s ease-in-out; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+    .login-box button { margin-top: 16px; width: 100%; padding: 14px; background: #0B8F52; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .login-box button:hover { background: #0C593E; }
+    .login-error { color: #cc3333; font-size: 13px; margin-top: 12px; display: none; }
+    #page-content { display: none; }
+    #page-content.unlocked { display: block; }
+
+    /* How We Calculate section (collapsible) */
+    .how-section { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 24px; }
+    .how-section summary::-webkit-details-marker { display: none; }
+    .how-section[open] .how-chevron { transform: rotate(180deg); }
+    .how-section h2 { font-family: 'Space Grotesk', sans-serif; color: #0C593E; font-size: 22px; margin-bottom: 16px; }
+    .how-steps { display: grid; gap: 16px; }
+    .how-step { display: flex; gap: 16px; padding: 16px; background: #fafafa; border-radius: 10px; border-left: 3px solid #0B8F52; }
+    .how-step-num { background: #0B8F52; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .how-step-content h4 { font-size: 15px; color: #0C593E; margin-bottom: 4px; }
+    .how-step-content p { font-size: 13px; color: #5C666F; line-height: 1.5; }
+    .how-toggle { font-size: 13px; color: #0B8F52; cursor: pointer; font-weight: 600; margin-top: 12px; display: inline-block; }
+    .how-toggle:hover { text-decoration: underline; }
+
+    /* State Toggle */
+    .state-toggle-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px 16px; background: #DFFFEA; border-radius: 8px; border: 1px solid #0B8F52; }
+    .state-toggle-btns { display: flex; gap: 0; }
+    .state-btn { padding: 8px 20px; border: 1px solid #0B8F52; background: white; color: #0C593E; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: Inter, sans-serif; }
+    .state-btn:first-child { border-radius: 6px 0 0 6px; }
+    .state-btn:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+    .state-btn.active { background: #0B8F52; color: white; }
+    .state-btn:hover:not(.active) { background: #f0faf4; }
+    .state-auto-tag { font-size: 11px; color: #5C666F; font-style: italic; }
+    /* State-conditional param visibility */
+    .param-group[data-state-only="CA"] { display: none; }
+    .param-group[data-state-only="TX"] { display: none; }
+    body[data-formula-state="TX"] .param-group[data-state-only="TX"] { display: block; }
+    body[data-formula-state="CA"] .param-group[data-state-only="CA"] { display: block; }
+
+    /* Google Places Autocomplete */
+    .pac-container { z-index: 10000; border-radius: 8px; margin-top: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); font-family: Inter, sans-serif; }
+    .pac-item { padding: 8px 12px; font-size: 14px; cursor: pointer; }
+    .pac-item:hover { background: #DFFFEA; }
+
+    /* Chat Panel */
+    .chat-fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #0C593E, #0B8F52); color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(12,89,62,0.4); z-index: 1000; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; }
+    .chat-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(12,89,62,0.5); }
+    .chat-panel { position: fixed; bottom: 92px; right: 24px; width: 420px; height: 540px; background: white; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); z-index: 1001; display: none; flex-direction: column; overflow: hidden; }
+    .chat-panel.open { display: flex; }
+    .chat-header { background: linear-gradient(135deg, #0C593E, #0B8F52); color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .chat-header h4 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; margin: 0; }
+    .chat-header span { font-size: 12px; opacity: 0.8; }
+    .chat-close { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 6px; opacity: 0.8; }
+    .chat-close:hover { opacity: 1; background: rgba(255,255,255,0.15); }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+    .chat-msg.user { align-self: flex-end; background: #0B8F52; color: white; border-bottom-right-radius: 4px; }
+    .chat-msg.assistant { align-self: flex-start; background: #f0f0f0; color: #1A1A1A; border-bottom-left-radius: 4px; }
+    .chat-msg.system { align-self: center; background: #DFFFEA; color: #0C593E; font-size: 12px; text-align: center; padding: 8px 16px; }
+    .chat-typing { align-self: flex-start; background: #f0f0f0; color: #999; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 4px; font-size: 14px; }
+    .chat-typing .dots span { display: inline-block; animation: blink 1.4s infinite; opacity: 0.3; }
+    .chat-typing .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .chat-typing .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 50% { opacity: 1; } }
+    .chat-input-bar { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #e8e8e8; background: #fafafa; flex-shrink: 0; }
+    .chat-input-bar input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; font-family: Inter, sans-serif; }
+    .chat-input-bar input:focus { outline: none; border-color: #0B8F52; }
+    .chat-input-bar button { padding: 10px 18px; background: #0B8F52; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 14px; white-space: nowrap; }
+    .chat-input-bar button:hover { background: #0C593E; }
+    .chat-input-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (max-width: 520px) { .chat-panel { width: calc(100vw - 32px); right: 16px; bottom: 80px; height: 60vh; } }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE&libraries=places&loading=async"></script>
+</head>
+<body>
+
+  <!-- Login Gate -->
+  <div id="login-gate">
+    <div class="login-box">
+      <h2>TaxDrop Savings Engine</h2>
+      <p>Internal test console. Enter the access code to continue.</p>
+      <input type="password" id="login-password" placeholder="Access code" autofocus
+        onkeydown="if(event.key==='Enter')checkLogin()" />
+      <button onclick="checkLogin()">Enter</button>
+      <div class="login-error" id="login-error">Incorrect code. Try again.</div>
+    </div>
+  </div>
+
+  <div id="page-content">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>TaxDrop Savings Engine</h1>
+      <p class="subtitle">Test Console — Live ATTOM Data + Formula Review</p>
+    </div>
+    <div class="export-bar" id="export-bar" style="display:none; margin-top:0; padding:10px 16px;">
+      <button class="btn-export" onclick="exportPDF()" id="btn-export-pdf">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Export PDF
+      </button>
+      <button class="btn-export" onclick="generateReport()" id="btn-generate-report">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span id="btn-report-text">Generate Protest Report</span>
+      </button>
+      <button class="btn-export" onclick="exportJSON()" id="btn-export-json">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Export JSON
+      </button>
+    </div>
+  </div>
+
+  <!-- How We Calculate (collapsible) -->
+  <details class="how-section" id="how-section">
+    <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;">
+      <h2 style="margin:0;">How We Calculate Your Savings Estimate</h2>
+      <span style="font-size:20px; color:#0B8F52; transition:transform 0.2s;" class="how-chevron">&#9662;</span>
+    </summary>
+    <p style="color: #5C666F; font-size: 14px; margin-bottom: 20px;">
+      Our engine uses the same methodology that professional property tax consultants and appraisal districts use. Here's the 6-step process, powered by real ATTOM property data.
+    </p>
+    <div class="how-steps" id="how-steps-summary">
+      <div class="how-step">
+        <div class="how-step-num">1</div>
+        <div class="how-step-content">
+          <h4>Pull Subject Property Data</h4>
+          <p>We fetch your property's assessed value, square footage, year built, beds/baths, lot size, garage, and pool from ATTOM's expanded profile. This is the official data appraisal districts use.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">2</div>
+        <div class="how-step-content">
+          <h4>Find &amp; Filter Comparable Properties</h4>
+          <p>We search nearby properties using an adaptive radius (tighter in dense urban areas, wider in suburban). We filter out comps with wildly different sizes, nominal transfers ($0 sales), sales older than 24 months, and wrong property types. In California, we also filter out extremely low Prop 13 base-year assessments.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">3</div>
+        <div class="how-step-content">
+          <h4>Adjust Each Comp for Differences</h4>
+          <p>Every comp is adjusted to be "apples to apples" with your property. A smaller comp has inflated $/sqft — we adjust it down. A newer comp sells higher — we adjust for that. We also adjust for bedroom/bathroom count, lot size differences, and weight closer comps more heavily.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">4</div>
+        <div class="how-step-content">
+          <h4>Calculate the Market Baseline</h4>
+          <p>We take the <strong>weighted 40th percentile</strong> of all adjusted comp values. This is a standard protest strategy — the 40th percentile is defensible evidence that the property is worth less than the district's assessment, while the 50th (median) would be "fair market."</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">5</div>
+        <div class="how-step-content">
+          <h4>Apply Depreciation &amp; Amenity Discounts</h4>
+          <p>Older buildings get an age depreciation discount (2-8% based on age brackets, capped at 15%). If your property <strong>lacks</strong> a garage or pool, we apply an additional discount since the comp pool likely includes properties with those amenities inflating market values.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">6</div>
+        <div class="how-step-content">
+          <h4>Calculate Gap &amp; Savings</h4>
+          <p>We compare your property's current $/sqft to the adjusted baseline. The gap shows how much you're over-assessed. We multiply the baseline by your square footage, round down to the nearest $5,000, and calculate annual savings using your county's actual tax rate (from ATTOM data, not state averages).</p>
+        </div>
+      </div>
+    </div>
+    <div id="how-details" style="display: none; margin-top: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="padding: 16px; background: #DFFFEA; border-radius: 10px;">
+          <h4 style="font-size: 14px; color: #0C593E; margin-bottom: 8px;">Comp Adjustments We Make</h4>
+          <ul style="font-size: 13px; color: #5C666F; line-height: 1.8; padding-left: 18px;">
+            <li><strong>GLA (size):</strong> 10% size diff = 1% $/sqft adjustment</li>
+            <li><strong>Year built:</strong> 0.3% per year difference (max 15%)</li>
+            <li><strong>Bedrooms:</strong> $7,500 per bedroom difference</li>
+            <li><strong>Bathrooms:</strong> $12,500 per bathroom difference</li>
+            <li><strong>Lot size:</strong> $3/sqft of lot difference (max 10%)</li>
+            <li><strong>Distance:</strong> Exponential decay weighting (closer = more weight)</li>
+          </ul>
+        </div>
+        <div style="padding: 16px; background: #E8F4FD; border-radius: 10px;">
+          <h4 style="font-size: 14px; color: #1a6fa0; margin-bottom: 8px;">Confidence Levels</h4>
+          <ul style="font-size: 13px; color: #5C666F; line-height: 1.8; padding-left: 18px;">
+            <li><strong>STRONG:</strong> 5%+ gap with 3+ comps</li>
+            <li><strong>MODERATE:</strong> 3%+ gap with 2+ comps</li>
+            <li><strong>MARGINAL:</strong> 1%+ gap with 1+ comp</li>
+            <li><strong>NO_CASE:</strong> Property assessed at or below market</li>
+          </ul>
+          <h4 style="font-size: 14px; color: #1a6fa0; margin: 12px 0 8px;">Data Sources</h4>
+          <ul style="font-size: 13px; color: #5C666F; line-height: 1.8; padding-left: 18px;">
+            <li><strong>Sales comps:</strong> Recent nearby sales (ATTOM)</li>
+            <li><strong>Equity comps:</strong> Nearby assessed values (ATTOM)</li>
+            <li><strong>Tax rate:</strong> Actual county rate from ATTOM tax records</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <span class="how-toggle" onclick="toggleHowDetails()">Show detailed adjustments &amp; confidence levels &#9662;</span>
+  </details>
+
+  <div class="main-layout">
+  <!-- LEFT COLUMN: Test + Results -->
+  <div class="left-col">
+
+  <!-- API Key (hardcoded for internal use) -->
+  <input type="hidden" id="api-key-input" value="" />
+  <div id="api-key-status" style="display:none;"></div>
+
+  <!-- Live Address Lookup -->
+  <div class="card" style="margin-bottom: 24px;">
+    <h2>Test Any Address</h2>
+    <span class="tag">Enter a property address or click one from the sample list below</span>
+    <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 8px;">
+      <div style="flex: 1; min-width: 300px;">
+        <label style="font-size: 13px; color: #5C666F; display: block; margin-bottom: 4px;">Property Address</label>
+        <input type="text" id="lookup-address" placeholder="e.g. 4624 Junius St, Dallas, TX 75246"
+          style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; font-family: Inter, sans-serif;"
+        />
+      </div>
+      <button class="btn btn-primary" onclick="runLookup()" id="btn-lookup">Get Estimate</button>
+    </div>
+
+    <div class="savings-hero" id="hero-lookup">
+      <div class="label">Estimated Annual Savings</div>
+      <div class="amount" id="hero-lookup-amount">—</div>
+      <div class="detail" id="hero-lookup-detail"></div>
+    </div>
+
+    <div class="summary-text" id="summary-lookup"></div>
+    <div id="stats-lookup"></div>
+    <div class="timer" id="timer-lookup"></div>
+    <span class="toggle-raw" id="toggle-lookup" onclick="toggleRaw('lookup')" style="display:none">Show raw JSON response</span>
+    <pre id="raw-lookup"></pre>
+    <div class="result-box" id="result-lookup"></div>
+
+    <!-- Street View -->
+    <div id="streetview-section" style="display:none; margin-top: 16px;">
+      <div class="section-title">Street View — Subject Property</div>
+      <div id="streetview-subject" style="margin-bottom: 12px;"></div>
+      <div class="section-title">Street View — Comparable Properties</div>
+      <div id="streetview-comps" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+    </div>
+
+    <!-- Comp Map -->
+    <div id="map-section" style="display:none; margin-top: 16px;">
+      <div class="section-title">Comparable Properties Map</div>
+      <div id="comp-map" style="height: 400px; border-radius: 10px; border: 1px solid #e0e0e0;"></div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">
+        <span style="display:inline-block;width:10px;height:10px;background:#0B8F52;border-radius:50%;margin-right:4px;vertical-align:middle;"></span>Subject &nbsp;
+        <span style="display:inline-block;width:10px;height:10px;background:#2563eb;border-radius:50%;margin-right:4px;vertical-align:middle;"></span>Sales Comp &nbsp;
+        <span style="display:inline-block;width:10px;height:10px;background:#9333ea;border-radius:50%;margin-right:4px;vertical-align:middle;"></span>Equity Comp
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sample Addresses (in left column under search) -->
+  <div class="samples-section">
+    <h3>Sample Addresses — Click to test</h3>
+    <div class="samples-grid">
+      <div class="sample-list">
+        <h4>Texas (28 properties)</h4>
+        <div class="sample-item" onclick="useAddress(this)"><span>4624 Junius St, Dallas, TX 75246</span><span class="type-tag">Apartment</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>3030 McKinney Ave Apt 1405, Dallas, TX 75204</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>5918 Bryan Pkwy, Dallas, TX 75206</span><span class="type-tag">Apartment</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>7015 Westlake Ave, Dallas, TX 75214</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>3225 Turtle Creek Blvd, Dallas, TX 75219</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>5811 Gaston Ave, Dallas, TX 75214</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>4519 Rawlins St, Dallas, TX 75219</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>3617 Binkley Ave, Dallas, TX 75205</span><span class="type-tag">Duplex</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>5310 Morningside Ave, Dallas, TX 75206</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>5239 Monticello Ave, Dallas, TX 75206</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1600 S Beckley Ave, Dallas, TX 75224</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>3901 Travis St, Dallas, TX 75204</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>2809 6th Ave, Fort Worth, TX 76110</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1709 Fairmount Ave, Fort Worth, TX 76110</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>4901 Birchman Ave, Fort Worth, TX 76107</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>3509 Wicklow Ct, Fort Worth, TX 76116</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1805 W Main St, Houston, TX 77098</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>3711 San Felipe St, Houston, TX 77027</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1122 Jackson Blvd, Houston, TX 77006</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>14903 Bramblewood Dr, Houston, TX 77079</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>702 Welch St, Houston, TX 77006</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1511 S Presa St, San Antonio, TX 78210</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1801 Lavaca St, Austin, TX 78701</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>4405 Duval St, Austin, TX 78751</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>200 Wellington Dr, Waco, TX 76712</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>108 E 3rd St, Marfa, TX 79843</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>204 Kingston Dr, Woodway, TX 76712</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>7136 Cloudcroft Ln, Fort Worth, TX 76131</span><span class="type-tag">SFR</span></div>
+      </div>
+      <div class="sample-list">
+        <h4>California (25 properties)</h4>
+        <div class="sample-item" onclick="useAddress(this)"><span>8402 Norwood Pl, Rosemead, CA 91770</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>2115 3rd St, Santa Monica, CA 90405</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>11740 W Sunset Blvd, Los Angeles, CA 90049</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>330 S Mentor Ave, Pasadena, CA 91106</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>3520 Muscatel Ave, Rosemead, CA 91770</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>235 S Reeves Dr, Beverly Hills, CA 90212</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>2721 2nd St, Santa Monica, CA 90405</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1250 N Kings Rd, West Hollywood, CA 90069</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>88 King St, San Francisco, CA 94107</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1438 Green St, San Francisco, CA 94109</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>733 N Poinsettia Pl, Los Angeles, CA 90046</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>828 N Hudson Ave, Los Angeles, CA 90038</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>4455 Los Feliz Blvd, Los Angeles, CA 90027</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>830 Haverford Ave, Pacific Palisades, CA 90272</span><span class="type-tag">Condo</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>746 N Orange Dr, Los Angeles, CA 90038</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>2335 Meadow Valley Ter, Los Angeles, CA 90039</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>4050 Madelia Ave, Sherman Oaks, CA 91403</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>14230 Chandler Blvd, Sherman Oaks, CA 91401</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>6601 Langdon Ave, Van Nuys, CA 91406</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>840 Stanford St, Santa Monica, CA 90403</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>2225 Silver Lake Blvd, Los Angeles, CA 90039</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>9021 Rangely Ave, West Hollywood, CA 90048</span><span class="type-tag">SFR</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1129 S Cloverdale Ave, Los Angeles, CA 90019</span><span class="type-tag">Duplex</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>1036 S Shenandoah St, Los Angeles, CA 90035</span><span class="type-tag">Duplex</span></div>
+        <div class="sample-item" onclick="useAddress(this)"><span>153 Marview Way, San Francisco, CA</span><span class="type-tag">SFR</span></div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- end left-col -->
+
+  <!-- RIGHT COLUMN: Formula Review -->
+  <div class="right-col">
+  <div class="formula-panel" id="formula-panel">
+
+    <!-- Variant Save/Load Bar -->
+    <div class="formula-card">
+      <h3>Formula Review — How We Calculate Savings</h3>
+      <p style="font-size: 14px; color: #5C666F; margin-bottom: 16px;">
+        Review each step below. Adjust any parameter and click <strong>Recalculate</strong> to see how it changes the result.
+        Your changes won't affect the production formula — save them as a named variant to share with the team.
+      </p>
+      <div class="state-toggle-bar" id="state-toggle-bar">
+        <span class="variant-label">Formula Type:</span>
+        <div class="state-toggle-btns">
+          <button class="state-btn active" id="state-btn-TX" onclick="setFormulaState('TX')">TX — Protest</button>
+          <button class="state-btn" id="state-btn-CA" onclick="setFormulaState('CA')">CA — Appeal</button>
+        </div>
+        <span class="state-auto-tag" id="state-auto-tag" style="display:none;"></span>
+      </div>
+      <div class="variant-bar">
+        <span class="variant-label">Variants:</span>
+        <select id="variant-select" onchange="loadVariant()">
+          <option value="">Original (default)</option>
+        </select>
+        <input type="text" id="variant-name" placeholder="My variant name..." />
+        <button class="btn btn-outline btn-sm" onclick="saveVariant()">Save Variant</button>
+        <button class="btn btn-sm" style="background:#cc3333;color:white;" onclick="deleteVariant()">Delete</button>
+        <button class="btn btn-primary btn-sm" onclick="resetToDefaults()">Reset to Original</button>
+      </div>
+    </div>
+
+    <!-- Step 1: Subject Property -->
+    <div class="formula-card">
+      <h3>Step 1: Subject Property</h3>
+      <div class="step">
+        <div class="step-header">What is this property worth per square foot?</div>
+        <div class="step-explain">
+          We take the property's current appraised/assessed value and divide by its living area to get a price-per-square-foot ($/sqft).
+          This is the number we'll compare against nearby properties.
+        </div>
+        <div class="step-math" id="step1-math">—</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Comparable Properties -->
+    <div class="formula-card">
+      <h3>Step 2: Find &amp; Filter Comparable Properties</h3>
+      <div class="step">
+        <div class="step-header">Which nearby properties do we use for comparison?</div>
+        <div class="step-explain">
+          We pull two sets of comparables from ATTOM: <strong>Sales Comps</strong> (recent nearby sales with actual sale prices)
+          and <strong>Equity Comps</strong> (nearby properties with their current assessed values from the appraisal district).
+          Then we filter out properties that are too different in size, too old (sale date), or have nominal values.
+        </div>
+        <div class="step-explain" style="margin-top: 8px; font-size: 13px; background: #fff8e1; padding: 10px; border-radius: 6px; border-left: 3px solid #d4a017;">
+          <strong>Strikethrough rows</strong> in the tables below are comps that were excluded. Hover to see why. Common reasons:<br>
+          &bull; <strong>Size out of range</strong> — too different in sqft from the subject (e.g. 900 sqft comp vs 2,500 sqft subject)<br>
+          &bull; <strong>Sale too old</strong> — sale date is beyond the max age window<br>
+          &bull; <strong>Nominal transfer</strong> — sale price below minimum (family transfer, foreclosure, etc.)<br>
+          &bull; <strong>CA Prop 13 floor</strong> — assessed value far below market due to long-held Prop 13 base year<br>
+          &bull; <strong>No valid data</strong> — missing sqft or assessed value
+        </div>
+      </div>
+      <div class="param-grid">
+        <div class="param-group">
+          <label>Max Comp Age (months)</label>
+          <input type="number" id="p-max-age" value="24" min="6" max="60" />
+          <div class="param-help">Only include sales from the last N months</div>
+        </div>
+        <div class="param-group">
+          <label>Min Sale Price ($)</label>
+          <input type="number" id="p-min-sale" value="100" min="0" max="10000" />
+          <div class="param-help">Exclude nominal transfers (e.g. $1 family sales)</div>
+        </div>
+        <div class="param-group">
+          <label>Sales Size Range (% of subject)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="number" id="p-sales-size-min" value="50" min="10" max="100" style="width:50%;" />
+            <span style="line-height:36px;color:#999;">to</span>
+            <input type="number" id="p-sales-size-max" value="200" min="100" max="500" style="width:50%;" />
+          </div>
+          <div class="param-help">e.g. 50-200% means a 2,000 sqft subject uses 1,000–4,000 sqft comps</div>
+        </div>
+        <div class="param-group">
+          <label>Equity Size Range (% of subject)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="number" id="p-equity-size-min" value="40" min="10" max="100" style="width:50%;" />
+            <span style="line-height:36px;color:#999;">to</span>
+            <input type="number" id="p-equity-size-max" value="300" min="100" max="500" style="width:50%;" />
+          </div>
+          <div class="param-help">Equity comps use a wider range since we have more of them</div>
+        </div>
+        <div class="param-group" data-state-only="CA">
+          <label>CA Equity PSF Floor (% of subject)</label>
+          <input type="number" id="p-ca-floor" value="50" min="10" max="90" />
+          <div class="param-help">CA only: exclude Prop 13 properties assessed far below market</div>
+        </div>
+      </div>
+      <div style="margin-top: 16px;">
+        <div class="step-header">Sales Comps</div>
+        <div id="sales-comp-table" style="overflow-x:auto;">—</div>
+      </div>
+      <div style="margin-top: 16px;">
+        <div class="step-header">Equity Comps</div>
+        <div id="equity-comp-table" style="overflow-x:auto;">—</div>
+      </div>
+    </div>
+
+    <!-- Step 3: Comp Adjustments -->
+    <div class="formula-card">
+      <h3>Step 3: Adjust Comps for Differences vs Subject</h3>
+      <div class="step">
+        <div class="step-header">Are these comps truly comparable, or do we need to adjust them?</div>
+        <div class="step-explain">
+          A 1,200 sqft comp selling at $400/sqft naturally trades higher per sqft than a 2,500 sqft home.
+          A brand-new comp sells higher than a 1960 home. More bedrooms and a bigger lot add value.
+          We adjust each comp's $/sqft to account for these differences — this is standard appraisal methodology
+          that appraisal districts themselves use.
+        </div>
+        <div class="step-explain" style="margin-top: 8px; font-size: 13px;">
+          <strong>How adjustments work:</strong> If a comp is <em>smaller</em> than the subject, its $/sqft is inflated,
+          so we adjust it <em>downward</em>. If a comp is <em>newer</em>, it sells higher, so we adjust <em>downward</em>.
+          If a comp has <em>more bedrooms</em>, we adjust down. Closer comps also get more weight in the baseline calculation.
+        </div>
+      </div>
+      <div class="param-grid">
+        <div class="param-group">
+          <label>GLA (Size) Adjustment Rate</label>
+          <input type="number" id="p-gla-rate" value="10" min="0" max="30" step="1" />
+          <div class="param-help">For every 1% size difference, adjust $/sqft by this %. Standard: 10%</div>
+        </div>
+        <div class="param-group">
+          <label>Comp Age Adjustment (% per year)</label>
+          <input type="number" id="p-comp-age-rate" value="0.3" min="0" max="2" step="0.1" />
+          <div class="param-help">Per year newer/older than subject. Standard: 0.3%</div>
+        </div>
+        <div class="param-group">
+          <label>Max Comp Age Adjustment (%)</label>
+          <input type="number" id="p-comp-age-max" value="15" min="0" max="30" step="1" />
+          <div class="param-help">Cap so age adjustment doesn't get extreme</div>
+        </div>
+        <div class="param-group">
+          <label>Bedroom Adjustment ($)</label>
+          <input type="number" id="p-bed-adj" value="7500" min="0" max="25000" step="500" />
+          <div class="param-help">$ value per bedroom difference</div>
+        </div>
+        <div class="param-group">
+          <label>Bathroom Adjustment ($)</label>
+          <input type="number" id="p-bath-adj" value="12500" min="0" max="25000" step="500" />
+          <div class="param-help">$ value per bathroom difference</div>
+        </div>
+        <div class="param-group">
+          <label>Lot Size Adjustment ($/sqft)</label>
+          <input type="number" id="p-lot-adj" value="3" min="0" max="20" step="0.5" />
+          <div class="param-help">$ per sqft of lot size difference. Cap at 10% of comp value</div>
+        </div>
+        <div class="param-group">
+          <label>Distance Weight Decay</label>
+          <input type="number" id="p-dist-decay" value="2" min="0" max="5" step="0.5" />
+          <div class="param-help">Higher = closer comps matter more. 0 = equal weight. 2 = standard</div>
+        </div>
+      </div>
+      <div class="step" style="margin-top: 12px;">
+        <div class="step-math" id="step3-math">—</div>
+      </div>
+    </div>
+
+    <!-- Step 4: Baseline Calculation -->
+    <div class="formula-card">
+      <h3>Step 4: Calculate the Baseline $/sqft</h3>
+      <div class="step">
+        <div class="step-header">What should this property be worth per square foot?</div>
+        <div class="step-explain">
+          We take all the <strong>adjusted</strong> comp $/sqft values (from Step 3) and calculate a <strong>distance-weighted 40th percentile</strong>.
+          Closer comps carry more influence. We use a lower percentile because it's the standard protest strategy — present the most favorable defensible number.
+          For Texas, we use whichever is lower: sales baseline or equity baseline. For California, we prefer sales comps.
+        </div>
+      </div>
+      <div class="param-grid">
+        <div class="param-group">
+          <label>Baseline Percentile</label>
+          <input type="number" id="p-percentile" value="40" min="5" max="95" step="5" />
+          <div class="param-help">40 = aggressive (protest-ready), 50 = median (fair market), 25 = very aggressive</div>
+        </div>
+      </div>
+      <div class="step" style="margin-top: 12px;">
+        <div class="step-math" id="step4-math">—</div>
+      </div>
+    </div>
+
+    <!-- Step 5: Depreciation -->
+    <div class="formula-card">
+      <h3>Step 5: Subject Age &amp; Condition Depreciation</h3>
+      <div class="step">
+        <div class="step-header">Should the baseline be adjusted further for the subject's age or condition?</div>
+        <div class="step-explain">
+          This is separate from the comp-level age adjustments in Step 3. Here we apply an additional depreciation
+          discount to the <strong>baseline itself</strong> based on the <em>subject property's</em> age and condition.
+          Older or poorly-maintained properties shouldn't be assessed at the same $/sqft as newer ones.
+          This is a standard argument in protests and appeals. Capped at 15% total.
+        </div>
+      </div>
+      <div class="param-grid">
+        <div class="param-group">
+          <label>Age Depreciation: Under 30 years</label>
+          <input type="number" id="p-dep-age-0" value="0" min="0" max="20" step="0.5" />
+          <div class="param-help">% depreciation for properties under 30 years old</div>
+        </div>
+        <div class="param-group">
+          <label>Age Depreciation: 30–49 years</label>
+          <input type="number" id="p-dep-age-30" value="2" min="0" max="20" step="0.5" />
+        </div>
+        <div class="param-group">
+          <label>Age Depreciation: 50–69 years</label>
+          <input type="number" id="p-dep-age-50" value="4" min="0" max="20" step="0.5" />
+        </div>
+        <div class="param-group">
+          <label>Age Depreciation: 70–99 years</label>
+          <input type="number" id="p-dep-age-70" value="6" min="0" max="20" step="0.5" />
+        </div>
+        <div class="param-group">
+          <label>Age Depreciation: 100+ years</label>
+          <input type="number" id="p-dep-age-100" value="8" min="0" max="20" step="0.5" />
+        </div>
+        <div class="param-group">
+          <label>Max Total Depreciation (%)</label>
+          <input type="number" id="p-dep-max" value="15" min="0" max="30" step="1" />
+          <div class="param-help">Cap so depreciation doesn't get extreme</div>
+        </div>
+      </div>
+      <div class="step" style="margin-top: 12px;">
+        <div class="step-math" id="step5-math">—</div>
+      </div>
+    </div>
+
+    <!-- Step 5b: Amenity Discount -->
+    <div class="formula-card">
+      <h3>Step 5b: Amenity Discount (Garage &amp; Pool)</h3>
+      <div class="step">
+        <div class="step-header">Does the subject lack amenities that comps may have?</div>
+        <div class="step-explain">
+          ATTOM only provides garage/pool data on the subject property, not on comps.
+          If the subject <strong>lacks</strong> a garage or pool, nearby comps likely include properties
+          with these amenities — inflating the market baseline. We discount the baseline to account
+          for this. Set to 0% to disable.
+        </div>
+      </div>
+      <div class="param-grid">
+        <div class="param-group">
+          <label>No Garage Discount (%)</label>
+          <input type="number" id="p-no-garage" value="3" min="0" max="10" step="0.5" />
+          <div class="param-help">Applied when subject has no garage. Typical: 3-5%.</div>
+        </div>
+        <div class="param-group">
+          <label>No Pool Discount (%)</label>
+          <input type="number" id="p-no-pool" value="2" min="0" max="10" step="0.5" />
+          <div class="param-help">Applied when subject has no pool. Typical: 2-4%.</div>
+        </div>
+      </div>
+      <div class="step" style="margin-top: 12px;">
+        <div class="step-math" id="step5b-math">—</div>
+      </div>
+    </div>
+
+    <!-- Step 6: Gap & Recommendation -->
+    <div class="formula-card">
+      <h3>Step 6: Calculate Gap, Recommended Value &amp; Savings</h3>
+      <div class="step">
+        <div class="step-header">How much is this property over-assessed?</div>
+        <div class="step-explain">
+          We compare the subject's $/sqft to the adjusted baseline. The gap tells us how much the property is overvalued.
+          Then we multiply the baseline $/sqft by the living area, round down to the nearest $5,000, and that's our recommended value.
+          Savings = (current value - recommended value) &times; tax rate.
+        </div>
+      </div>
+      <div class="param-grid">
+        <div class="param-group">
+          <label>Tax Rate Override (%)</label>
+          <input type="number" id="p-tax-override" value="" min="0" max="5" step="0.01" placeholder="Auto from ATTOM" />
+          <div class="param-help">Leave blank to use the property's actual county rate from ATTOM. Set a value to override.</div>
+        </div>
+        <div class="param-group">
+          <label id="p-tax-info" style="color: #0C593E; font-weight: 600;">County rate will appear after lookup</label>
+          <div class="param-help">Derived from ATTOM: tax amount paid &divide; assessed value. Falls back to state average if unavailable.</div>
+        </div>
+        <div class="param-group">
+          <label>Value Rounding Step ($)</label>
+          <input type="number" id="p-round-step" value="5000" min="1000" max="25000" step="1000" />
+          <div class="param-help">Round recommended value down to this increment</div>
+        </div>
+        <div class="param-group">
+          <label>Minimum Reduction Floor (%)</label>
+          <input type="number" id="p-min-reduction" value="10" min="0" max="25" step="1" />
+          <div class="param-help">If any gap exists, suggest at least this % reduction</div>
+        </div>
+      </div>
+      <div class="step" style="margin-top: 12px;">
+        <div class="step-math" id="step6-math">—</div>
+      </div>
+    </div>
+
+    <!-- Recalculate Button + Result -->
+    <div class="formula-card" style="text-align: center;">
+      <button class="btn btn-primary" onclick="recalculate()" style="font-size: 18px; padding: 14px 40px;">Recalculate with My Settings</button>
+      <div style="margin-top: 8px; font-size: 12px; color: #5C666F;">Note: The variant below is a client-side approximation for experimentation. The "Production" number (from the Python API) is what Bubble and all live tools use.</div>
+      <div id="recalc-result" style="display:none; margin-top: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left;">
+          <div>
+            <div style="font-size: 12px; color: #0C593E; font-weight: 700; margin-bottom: 4px;">PRODUCTION (Python API — Source of Truth)</div>
+            <div class="savings-hero show" style="margin-top: 0;" id="recalc-original-hero">
+              <div class="label">Annual Savings</div>
+              <div class="amount" id="recalc-original-amount">—</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #d35400; font-weight: 600; margin-bottom: 4px;">YOUR VARIANT <span class="diff-tag" id="recalc-diff"></span></div>
+            <div class="recalc-hero" id="recalc-variant-hero">
+              <div class="label">Annual Savings</div>
+              <div class="amount" id="recalc-variant-amount">—</div>
+            </div>
+          </div>
+        </div>
+        <div id="recalc-details" style="margin-top: 16px; text-align: left;"></div>
+      </div>
+    </div>
+  </div><!-- end formula-panel -->
+  </div><!-- end right-col -->
+  </div><!-- end main-layout -->
+
+  <script>
+    // Engine calls route through same-origin /api/cad-proxy (key server-side).
+
+    // ── Engine auth handled server-side by /api/cad-proxy; no key in the browser ──
+    // Engine auth is handled server-side by /api/cad-proxy. Sentinel keeps the
+    // legacy key-gate satisfied; never sent anywhere.
+    function getApiKey() { return 'via-proxy'; }
+    function saveApiKey(key) {
+      if (key) localStorage.setItem('taxdrop_api_key', key);
+      else localStorage.removeItem('taxdrop_api_key');
+    }
+    function authHeaders() {
+      // Key injected server-side by /api/cad-proxy; never sent from the browser.
+      return { 'Content-Type': 'application/json' };
+    }
+
+    // ── State: stores the last API response for client-side recalculation ──
+    let lastResponse = null;  // full API response
+    let lastOriginalResult = null;  // original server result
+
+    // ── State Toggle: per-state defaults and cache ──
+    const STATE_DEFAULTS = {
+      TX: { maxAge: '24', minSale: '100', salesSizeMin: '70', salesSizeMax: '140',
+            equitySizeMin: '70', equitySizeMax: '140', caFloor: '50', percentile: '40',
+            depAge0: '0', depAge30: '2', depAge50: '4', depAge70: '6', depAge100: '8',
+            depMax: '15', minReduction: '10', glaRate: '10', compAgeRate: '1.0',
+            compAgeMax: '15', bedAdj: '0', bathAdj: '0', lotAdj: '3',
+            distDecay: '2', noGarage: '3', noPool: '2', taxOverride: '', roundStep: '5000' },
+      CA: { maxAge: '24', minSale: '100', salesSizeMin: '70', salesSizeMax: '140',
+            equitySizeMin: '70', equitySizeMax: '140', caFloor: '50', percentile: '35',
+            depAge0: '0', depAge30: '2', depAge50: '4', depAge70: '6', depAge100: '8',
+            depMax: '15', minReduction: '10', glaRate: '10', compAgeRate: '1.0',
+            compAgeMax: '15', bedAdj: '0', bathAdj: '0', lotAdj: '3',
+            distDecay: '2', noGarage: '3', noPool: '2', taxOverride: '', roundStep: '5000' },
+    };
+    let currentFormulaState = 'TX';
+    let stateParamCache = { TX: null, CA: null };
+
+    function captureCurrentParams() {
+      return {
+        maxAge: document.getElementById('p-max-age').value,
+        minSale: document.getElementById('p-min-sale').value,
+        salesSizeMin: document.getElementById('p-sales-size-min').value,
+        salesSizeMax: document.getElementById('p-sales-size-max').value,
+        equitySizeMin: document.getElementById('p-equity-size-min').value,
+        equitySizeMax: document.getElementById('p-equity-size-max').value,
+        caFloor: document.getElementById('p-ca-floor').value,
+        percentile: document.getElementById('p-percentile').value,
+        depAge0: document.getElementById('p-dep-age-0').value,
+        depAge30: document.getElementById('p-dep-age-30').value,
+        depAge50: document.getElementById('p-dep-age-50').value,
+        depAge70: document.getElementById('p-dep-age-70').value,
+        depAge100: document.getElementById('p-dep-age-100').value,
+        depMax: document.getElementById('p-dep-max').value,
+        taxOverride: document.getElementById('p-tax-override').value,
+        roundStep: document.getElementById('p-round-step').value,
+        minReduction: document.getElementById('p-min-reduction').value,
+        glaRate: document.getElementById('p-gla-rate').value,
+        compAgeRate: document.getElementById('p-comp-age-rate').value,
+        compAgeMax: document.getElementById('p-comp-age-max').value,
+        bedAdj: document.getElementById('p-bed-adj').value,
+        bathAdj: document.getElementById('p-bath-adj').value,
+        lotAdj: document.getElementById('p-lot-adj').value,
+        distDecay: document.getElementById('p-dist-decay').value,
+        noGarage: document.getElementById('p-no-garage').value,
+        noPool: document.getElementById('p-no-pool').value,
+      };
+    }
+
+    function applyParamValues(v) {
+      document.getElementById('p-max-age').value = v.maxAge;
+      document.getElementById('p-min-sale').value = v.minSale;
+      document.getElementById('p-sales-size-min').value = v.salesSizeMin;
+      document.getElementById('p-sales-size-max').value = v.salesSizeMax;
+      document.getElementById('p-equity-size-min').value = v.equitySizeMin;
+      document.getElementById('p-equity-size-max').value = v.equitySizeMax;
+      document.getElementById('p-ca-floor').value = v.caFloor;
+      document.getElementById('p-percentile').value = v.percentile;
+      document.getElementById('p-dep-age-0').value = v.depAge0;
+      document.getElementById('p-dep-age-30').value = v.depAge30;
+      document.getElementById('p-dep-age-50').value = v.depAge50;
+      document.getElementById('p-dep-age-70').value = v.depAge70;
+      document.getElementById('p-dep-age-100').value = v.depAge100;
+      document.getElementById('p-dep-max').value = v.depMax;
+      document.getElementById('p-tax-override').value = v.taxOverride || '';
+      document.getElementById('p-round-step').value = v.roundStep;
+      document.getElementById('p-min-reduction').value = v.minReduction;
+      document.getElementById('p-gla-rate').value = v.glaRate;
+      document.getElementById('p-comp-age-rate').value = v.compAgeRate;
+      document.getElementById('p-comp-age-max').value = v.compAgeMax;
+      document.getElementById('p-bed-adj').value = v.bedAdj;
+      document.getElementById('p-bath-adj').value = v.bathAdj;
+      document.getElementById('p-lot-adj').value = v.lotAdj;
+      document.getElementById('p-dist-decay').value = v.distDecay;
+      document.getElementById('p-no-garage').value = v.noGarage;
+      document.getElementById('p-no-pool').value = v.noPool;
+    }
+
+    function setFormulaState(state, skipRecalc) {
+      // Save current params for the outgoing state
+      stateParamCache[currentFormulaState] = captureCurrentParams();
+      // Switch
+      currentFormulaState = state;
+      document.body.setAttribute('data-formula-state', state);
+      // Update toggle buttons
+      document.getElementById('state-btn-TX').classList.toggle('active', state === 'TX');
+      document.getElementById('state-btn-CA').classList.toggle('active', state === 'CA');
+      // Load cached params or defaults
+      applyParamValues(stateParamCache[state] || STATE_DEFAULTS[state]);
+      // Refresh variant list for this state
+      loadVariantList();
+      // Recalculate if data loaded
+      if (!skipRecalc && lastResponse) recalculate();
+    }
+
+    function formatMoney(n) {
+      return '$' + Math.round(n).toLocaleString();
+    }
+
+    function useAddress(el) {
+      const addr = el.querySelector('span').textContent;
+      document.getElementById('lookup-address').value = addr;
+      runLookup();
+    }
+
+    function showStats(state, r) {
+      const html = `
+        <div class="section-title">Calculation Details</div>
+        <div class="stat-row"><span class="stat-label">Current Appraised Value</span><span class="stat-value">${formatMoney(r.current_value)}</span></div>
+        <div class="stat-row"><span class="stat-label">Recommended Value</span><span class="stat-value">${formatMoney(r.recommended_value)}</span></div>
+        <div class="stat-row"><span class="stat-label">Reduction</span><span class="stat-value">${formatMoney(r.reduction_amount)}</span></div>
+        <div class="stat-row"><span class="stat-label">Subject $/sqft</span><span class="stat-value">$${r.subject_psf}</span></div>
+        <div class="stat-row"><span class="stat-label">Baseline $/sqft</span><span class="stat-value">$${r.baseline_psf}</span></div>
+        <div class="stat-row"><span class="stat-label">Gap</span><span class="stat-value">${r.gap_percentage}%</span></div>
+        <div class="stat-row"><span class="stat-label">Confidence</span><span class="stat-value"><span class="confidence-badge confidence-${r.confidence}">${r.confidence}</span></span></div>
+        ${r.no_case_reason ? `<div class="stat-row"><span class="stat-label">No Case Reason</span><span class="stat-value">${r.no_case_reason === 'fairly_assessed' ? '✓ Fairly assessed' : '⚠ Insufficient data'}</span></div>` : ''}
+        ${r.data_quality_warning ? `<div class="stat-row"><span class="stat-label" style="color:#cc3333;">⚠ Data Quality</span><span class="stat-value" style="color:#cc3333;">Gap &gt;65% — possible data issue</span></div>` : ''}
+        <div class="stat-row"><span class="stat-label">Baseline Source</span><span class="stat-value">${r.baseline_source}</span></div>
+        <div class="stat-row"><span class="stat-label">Sales Comps Used</span><span class="stat-value">${r.sales_comp_count}</span></div>
+        <div class="stat-row"><span class="stat-label">Equity Comps Used</span><span class="stat-value">${r.equity_comp_count}</span></div>
+        <div class="stat-row"><span class="stat-label">Same-Subdivision Comps</span><span class="stat-value">${r.same_sub_count}</span></div>
+        <div class="stat-row"><span class="stat-label">Tax Rate</span><span class="stat-value">${(r.effective_tax_rate * 100).toFixed(2)}%</span></div>
+        <div class="stat-row"><span class="stat-label">Property Type</span><span class="stat-value">${r.property_type}</span></div>
+        <div class="stat-row"><span class="stat-label">Year Built</span><span class="stat-value">${r.year_built}</span></div>
+        <div class="stat-row"><span class="stat-label">Living Sqft</span><span class="stat-value">${r.living_sqft.toLocaleString()}</span></div>
+      `;
+      document.getElementById('stats-' + state).innerHTML = html;
+    }
+
+    function renderAssessmentTrend(subject) {
+      const history = subject.assessmentHistory || [];
+      if (history.length === 0) return '';
+
+      let html = '<div class="section-title" style="margin-top:16px;">Assessment History</div>';
+      html += '<table class="comp-table"><thead><tr>';
+      html += '<th>Year</th><th>Total Value</th><th>Improvement</th><th>Land</th><th>Tax Amount</th><th>YoY Change</th>';
+      html += '</tr></thead><tbody>';
+
+      for (let i = 0; i < history.length; i++) {
+        const h = history[i];
+        const prev = history[i + 1]; // prior year (sorted desc)
+        let yoyHtml = '—';
+        if (prev && prev.total > 0) {
+          const change = ((h.total - prev.total) / prev.total * 100);
+          const color = change > 0 ? '#cc3333' : (change < 0 ? '#0B8F52' : '#5C666F');
+          const arrow = change > 0 ? '&#9650;' : (change < 0 ? '&#9660;' : '');
+          yoyHtml = `<span style="color:${color};font-weight:600;">${arrow} ${change > 0 ? '+' : ''}${change.toFixed(1)}%</span>`;
+        }
+        html += '<tr>';
+        html += `<td style="font-weight:600;">${h.year}</td>`;
+        html += `<td>${formatMoney(h.total)}</td>`;
+        html += `<td>${h.impr > 0 ? formatMoney(h.impr) : '—'}</td>`;
+        html += `<td>${h.land > 0 ? formatMoney(h.land) : '—'}</td>`;
+        html += `<td>${h.tax > 0 ? formatMoney(h.tax) : '—'}</td>`;
+        html += `<td>${yoyHtml}</td>`;
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      return html;
+    }
+
+    async function runLookup() {
+      const address = document.getElementById('lookup-address').value.trim();
+      if (!address) { alert('Please enter a property address.'); return; }
+
+      const btn = document.getElementById('btn-lookup');
+      btn.disabled = true;
+      btn.textContent = 'Looking up...';
+
+      const resultBox = document.getElementById('result-lookup');
+      resultBox.className = 'result-box';
+
+      // Reset previous results
+      document.getElementById('hero-lookup').classList.remove('show');
+      document.getElementById('summary-lookup').classList.remove('show');
+      document.getElementById('stats-lookup').innerHTML = '';
+      document.getElementById('export-bar').style.display = 'none';
+      document.getElementById('timer-lookup').textContent = '';
+      document.getElementById('toggle-lookup').style.display = 'none';
+      document.getElementById('raw-lookup').classList.remove('show');
+      // Reset formula panel steps
+      document.getElementById('step1-math').innerHTML = '—';
+      document.getElementById('step3-math').innerHTML = '—';
+      document.getElementById('step4-math').innerHTML = '—';
+      document.getElementById('step5-math').innerHTML = '—';
+      document.getElementById('step5b-math').innerHTML = '—';
+      document.getElementById('step6-math').innerHTML = '—';
+      document.getElementById('sales-comp-table').innerHTML = '—';
+      document.getElementById('equity-comp-table').innerHTML = '—';
+      document.getElementById('recalc-result').style.display = 'none';
+
+      const start = performance.now();
+
+      try {
+        const resp = await fetch('/api/cad-proxy?path=/api/lookup', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ address, include_summary: true, include_raw_data: true }),
+        });
+        const elapsed = Math.round(performance.now() - start);
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          resultBox.className = 'result-box error show';
+          resultBox.textContent = 'Error (' + resp.status + '): ' + (data.detail || JSON.stringify(data));
+          return;
+        }
+
+        if (data.success) {
+          const r = data.result;
+          lastResponse = data;
+          lastOriginalResult = { ...r };
+
+          // Hero savings card
+          document.getElementById('hero-lookup').classList.add('show');
+          document.getElementById('hero-lookup-amount').textContent = formatMoney(r.annual_savings) + '/yr';
+          document.getElementById('hero-lookup-detail').textContent =
+            r.show_no_savings
+              ? (r.no_case_reason === 'insufficient_data'
+                  ? 'No reduction case found \u2014 insufficient comparable data'
+                  : 'No reduction case found \u2014 assessment appears fair')
+              : 'Reduce from ' + formatMoney(r.current_value) + ' to ' + formatMoney(r.recommended_value);
+
+          if (data.summary) {
+            const summEl = document.getElementById('summary-lookup');
+            summEl.textContent = data.summary;
+            summEl.classList.add('show');
+          }
+
+          showStats('lookup', r);
+
+          // Assessment trend
+          const subject = parseSubject(data.attom_data);
+          const trendHtml = renderAssessmentTrend(subject);
+          if (trendHtml) {
+            document.getElementById('stats-lookup').innerHTML += trendHtml;
+          }
+
+          document.getElementById('timer-lookup').textContent =
+            'Total: ' + elapsed + 'ms | ATTOM: ' + data.attom_ms + 'ms | Calc: ' + data.calculation_ms + 'ms' +
+            (data.summary_ms != null ? ' | Summary: ' + data.summary_ms + 'ms' : '');
+
+          document.getElementById('raw-lookup').textContent = JSON.stringify(data, null, 2);
+          document.getElementById('toggle-lookup').style.display = 'inline-block';
+
+          resultBox.className = 'result-box success show';
+          resultBox.textContent = 'Success \u2014 ' + elapsed + 'ms total | ' + r.comp_count + ' comps found';
+
+          // Show export buttons and populate formula review panel
+          showExportBar();
+          populateFormulaReview(data);
+
+          // Initialize map + Street View with subject + selected comps
+          const mapSubject = parseSubject(data.attom_data);
+          const mapCalc = runCalc(data.attom_data, getParams());
+          const mapSalesComps = (mapCalc.rawSales || []).filter(c => (mapCalc.salesIncluded || new Set()).has(c.address));
+          const mapEquityComps = (mapCalc.rawEquity || []).filter(c => (mapCalc.equityIncluded || new Set()).has(c.address));
+          initMap(mapSubject, mapSalesComps, mapEquityComps);
+          renderStreetView(mapSubject, mapSalesComps, mapEquityComps);
+        } else {
+          resultBox.className = 'result-box error show';
+          resultBox.textContent = 'Error: ' + JSON.stringify(data);
+        }
+      } catch (err) {
+        resultBox.className = 'result-box error show';
+        resultBox.textContent = 'Request failed: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Get Estimate';
+      }
+    }
+
+    document.getElementById('lookup-address').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') runLookup();
+    });
+
+    function toggleRaw(state) {
+      const pre = document.getElementById('raw-' + state);
+      const toggle = document.getElementById('toggle-' + state);
+      if (pre.classList.contains('show')) {
+        pre.classList.remove('show');
+        toggle.textContent = 'Show raw JSON response';
+      } else {
+        pre.classList.add('show');
+        toggle.textContent = 'Hide raw JSON response';
+      }
+    }
+
+
+    // ══════════════════════════════════════════════════════
+    // FORMULA REVIEW: Client-Side Recalculator
+    // ══════════════════════════════════════════════════════
+
+    // Parse subject from raw ATTOM data (mirrors Python parse_subject_property)
+    function parseSubject(attomData) {
+      const profile = (attomData.property_details || {}).expanded_profile || {};
+      const assessment = profile.assessment || {};
+      const building = profile.building || {};
+      const address = profile.address || {};
+      const summary = profile.summary || {};
+      const area = profile.area || {};
+      const assessed = assessment.assessed || {};
+      const market = assessment.market || {};
+
+      const state = address.countrySubd || '';
+      const currentValue = state === 'TX'
+        ? (market.mktTtlValue || assessed.assdTtlValue || 0)
+        : (assessed.assdTtlValue || 0);
+
+      const size = building.size || {};
+      const livingSize = size.livingSize || size.universalSize || size.bldgSize || 0;
+      const rooms = building.rooms || {};
+      const imprValue = parseInt(market.mktImprValue || assessed.assdImprValue || 0);
+      const landValue = parseInt(market.mktLandValue || assessed.assdLandValue || 0);
+      const condition = (building.construction || {}).condition || '';
+
+      // Extract actual tax amount for county-level effective rate
+      const tax = assessment.tax || {};
+      const taxAmt = parseFloat(tax.taxAmt || 0);
+
+      const lot = profile.lot || {};
+
+      // Garage/pool detection (only available on subject via expanded_profile)
+      const parking = building.parking || {};
+      const garageType = (parking.garageType || '').toUpperCase();
+      const prkgSpaces = parseInt(parking.prkgSpaces || 0);
+      const hasGarage = (garageType && garageType !== '' && garageType !== 'NONE' && garageType !== 'N/A' && garageType !== 'NO GARAGE') || prkgSpaces > 0;
+      const poolType = (lot.poolType || '').toUpperCase();
+      const hasPool = poolType && poolType !== '' && poolType !== 'NONE' && poolType !== 'N/A' && poolType !== 'NO POOL';
+
+      const location = profile.location || {};
+
+      // Homestead / exemption detection
+      const exemptionType = tax.exemptiontype || {};
+      const exemptions = tax.exemption || {};
+      let isHomestead = exemptionType.Homeowner === 'Y' || exemptionType.homeowner === 'Y'
+        || exemptionType.Homestead === 'Y' || exemptionType.homestead === 'Y';
+      if (!isHomestead && state === 'TX') {
+        for (const k of [...Object.keys(exemptionType), ...Object.keys(exemptions)]) {
+          if (k.toLowerCase().includes('homestead') || k.toLowerCase().includes('homeowner')) {
+            isHomestead = true; break;
+          }
+        }
+      }
+      const absenteeInd = summary.absenteeInd || '';
+      const isAbsentee = absenteeInd.toUpperCase().includes('ABSENTEE');
+
+      return {
+        address: address.oneLine || '',
+        state,
+        county: area.countrySecSubd || '',
+        currentValue: parseInt(currentValue),
+        livingSqft: parseInt(livingSize),
+        beds: parseInt(rooms.beds || 0),
+        baths: parseFloat(rooms.bathsTotal || 0),
+        yearBuilt: parseInt(summary.yearBuilt || 0),
+        propertyType: summary.propType || '',
+        subdivision: area.subdName || '',
+        lotSqft: parseInt(lot.lotSize2 || 0),
+        condition,
+        imprValue,
+        landValue,
+        taxAmt,
+        hasGarage: !!hasGarage,
+        hasPool: !!hasPool,
+        garageType: parking.garageType || '',
+        poolType: lot.poolType || '',
+        latitude: parseFloat(location.latitude || 0),
+        longitude: parseFloat(location.longitude || 0),
+        isHomestead,
+        isAbsentee,
+        assessmentHistory: parseAssessmentHistory(profile),
+      };
+    }
+
+    function parseAssessmentHistory(profile) {
+      // ATTOM expanded_profile may include assessment history in various forms
+      const history = [];
+      const assessment = profile.assessment || {};
+      const tax = assessment.tax || {};
+
+      // Current year values
+      const assessed = assessment.assessed || {};
+      const market = assessment.market || {};
+      const currentYear = parseInt(tax.taxyear || assessment.assessmentyear || new Date().getFullYear());
+      const currentTotal = parseInt(market.mktTtlValue || assessed.assdTtlValue || 0);
+      const currentImpr = parseInt(market.mktImprValue || assessed.assdImprValue || 0);
+      const currentLand = parseInt(market.mktLandValue || assessed.assdLandValue || 0);
+      const currentTax = parseFloat(tax.taxAmt || 0);
+
+      if (currentTotal > 0) {
+        history.push({ year: currentYear, total: currentTotal, impr: currentImpr, land: currentLand, tax: currentTax });
+      }
+
+      // ATTOM sometimes includes prior year assessment in 'calculations' or 'priorAssessment'
+      const calc = assessment.calculations || {};
+      const priorVal = parseInt(calc.priorAssessedValue || 0);
+      if (priorVal > 0 && currentYear > 0) {
+        history.push({ year: currentYear - 1, total: priorVal, impr: 0, land: 0, tax: 0 });
+      }
+
+      // Check for assessmenthistory array (some ATTOM responses include this)
+      const histArr = profile.assessmenthistory || assessment.history || [];
+      if (Array.isArray(histArr)) {
+        for (const h of histArr) {
+          const yr = parseInt(h.taxyear || h.assessmentyear || h.year || 0);
+          const tot = parseInt(h.mktTtlValue || h.assdTtlValue || h.totalValue || 0);
+          if (yr > 0 && tot > 0 && !history.find(e => e.year === yr)) {
+            history.push({
+              year: yr,
+              total: tot,
+              impr: parseInt(h.mktImprValue || h.assdImprValue || 0),
+              land: parseInt(h.mktLandValue || h.assdLandValue || 0),
+              tax: parseFloat(h.taxAmt || 0),
+            });
+          }
+        }
+      }
+
+      // Sort by year descending
+      history.sort((a, b) => b.year - a.year);
+      return history;
+    }
+
+    // Parse sales comps from sale/snapshot data
+    function parseSaleSnapshot(items) {
+      if (!items || !Array.isArray(items)) return [];
+      const comps = [];
+      for (const item of items) {
+        const addr = item.address || {};
+        const bldg = item.building || {};
+        const summ = item.summary || {};
+        const lot = item.lot || {};
+        const sale = item.sale || {};
+        const loc = item.location || {};
+        const asmt = item.assessment || {};
+
+        const saleAmt = parseInt((sale.amount || {}).saleamt || 0);
+        if (saleAmt <= 0) continue;
+        const sqft = parseInt((bldg.size || {}).universalsize || 0);
+        if (sqft <= 0) continue;
+
+        const mkt = asmt.market || {};
+        const asd = asmt.assessed || {};
+        const totalVal = parseInt(mkt.mktttlvalue || mkt.mktTtlValue || asd.assdttlvalue || asd.assdTtlValue || 0);
+        const rooms = bldg.rooms || {};
+
+        const imprVal = parseInt(mkt.mktimprvalue || mkt.mktImprValue || asd.assdimprvalue || asd.assdImprValue || 0);
+        const landVal = parseInt(mkt.mktlandvalue || mkt.mktLandValue || asd.assdlandvalue || asd.assdLandValue || 0);
+
+        comps.push({
+          address: addr.oneLine || addr.line1 || '',
+          distance: parseFloat(loc.distance || 0),
+          livingSqft: sqft,
+          assessedTotal: totalVal,
+          assessedPsf: sqft > 0 && totalVal > 0 ? Math.round(totalVal / sqft * 100) / 100 : 0,
+          salePrice: saleAmt,
+          salePsf: Math.round(saleAmt / sqft * 100) / 100,
+          saleDate: (sale.saleTransDate || '').substring(0, 10),
+          yearBuilt: parseInt(summ.yearbuilt || summ.yearBuilt || 0),
+          beds: parseInt(rooms.beds || 0),
+          baths: parseFloat(rooms.bathstotal || rooms.bathsTotal || 0),
+          lotSqft: parseInt(parseFloat(lot.lotSize2 || lot.lotsize2 || 0)),
+          propType: summ.proptype || summ.propType || '',
+          imprValue: imprVal > 0 ? imprVal : null,
+          landValue: landVal > 0 ? landVal : null,
+          type: 'sales',
+        });
+      }
+      return comps;
+    }
+
+    // Parse equity comps from assessment/snapshot data
+    function parseEquityComps(items) {
+      if (!items || !Array.isArray(items)) return [];
+      const comps = [];
+      for (const item of items) {
+        const addr = item.address || {};
+        const bldg = item.building || {};
+        const asmt = item.assessment || {};
+        const summ = item.summary || {};
+        const lot = item.lot || {};
+        const loc = item.location || {};
+        const asd = asmt.assessed || {};
+        const mkt = asmt.market || {};
+
+        const sqft = parseInt((bldg.size || {}).universalsize || 0);
+        if (sqft <= 0) continue;
+
+        const totalVal = parseInt(mkt.mktttlvalue || mkt.mktTtlValue || asd.assdttlvalue || asd.assdTtlValue || 0);
+        const rooms = bldg.rooms || {};
+
+        const imprVal = parseInt(mkt.mktimprvalue || mkt.mktImprValue || asd.assdimprvalue || asd.assdImprValue || 0);
+        const landVal = parseInt(mkt.mktlandvalue || mkt.mktLandValue || asd.assdlandvalue || asd.assdLandValue || 0);
+
+        comps.push({
+          address: addr.oneLine || addr.line1 || '',
+          distance: parseFloat(loc.distance || 0),
+          livingSqft: sqft,
+          assessedTotal: totalVal,
+          assessedPsf: sqft > 0 ? Math.round(totalVal / sqft * 100) / 100 : 0,
+          salePrice: null,
+          salePsf: null,
+          saleDate: null,
+          yearBuilt: parseInt(summ.yearbuilt || summ.yearBuilt || 0),
+          beds: parseInt(rooms.beds || 0),
+          baths: parseFloat(rooms.bathstotal || rooms.bathsTotal || 0),
+          lotSqft: parseInt(parseFloat(lot.lotSize2 || lot.lotsize2 || 0)),
+          propType: summ.proptype || summ.propType || '',
+          imprValue: imprVal > 0 ? imprVal : null,
+          landValue: landVal > 0 ? landVal : null,
+          type: 'equity',
+        });
+      }
+      return comps;
+    }
+
+    // Percentile calculation (linear interpolation, matches Python)
+    function percentile(values, pct) {
+      if (!values.length) return 0;
+      const sorted = [...values].sort((a, b) => a - b);
+      if (sorted.length === 1) return sorted[0];
+      const idx = (pct / 100) * (sorted.length - 1);
+      const lower = Math.floor(idx);
+      const upper = Math.ceil(idx);
+      if (lower === upper) return sorted[lower];
+      const frac = idx - lower;
+      return Math.round((sorted[lower] * (1 - frac) + sorted[upper] * frac) * 100) / 100;
+    }
+
+    // Weighted percentile (distance-weighted, matches Python)
+    function weightedPercentile(valuesWeights, pct) {
+      if (!valuesWeights.length) return 0;
+      const sorted = [...valuesWeights].sort((a, b) => a[0] - b[0]);
+      const totalWeight = sorted.reduce((s, vw) => s + vw[1], 0);
+      if (totalWeight <= 0) return 0;
+      if (sorted.length === 1) return sorted[0][0];
+      const p = pct / 100;
+      let cumWeight = 0;
+      const positions = [];
+      for (const [val, w] of sorted) {
+        const mid = (cumWeight + w / 2) / totalWeight;
+        positions.push([mid, val]);
+        cumWeight += w;
+      }
+      if (p <= positions[0][0]) return positions[0][1];
+      if (p >= positions[positions.length - 1][0]) return positions[positions.length - 1][1];
+      for (let i = 0; i < positions.length - 1; i++) {
+        const [p0, v0] = positions[i];
+        const [p1, v1] = positions[i + 1];
+        if (p0 <= p && p <= p1) {
+          const frac = p1 !== p0 ? (p - p0) / (p1 - p0) : 0;
+          return Math.round((v0 + frac * (v1 - v0)) * 100) / 100;
+        }
+      }
+      return positions[positions.length - 1][1];
+    }
+
+    // Distance weight function
+    function distanceWeight(distMiles, decay) {
+      if (decay <= 0) return 1;
+      return 1 / Math.pow(1 + distMiles, decay);
+    }
+
+    // Adjust a comp's $/sqft for differences vs subject
+    function adjustCompPsf(compPsf, comp, subject, params) {
+      let adjusted = compPsf;
+      const subSqft = subject.livingSqft;
+      const subYear = subject.yearBuilt;
+      const subBeds = subject.beds;
+      const subBaths = subject.baths;
+      const subLot = subject.lotSqft || 0;
+      const glaRate = (params.glaRate || 10) / 100;
+      const compAgeRate = (params.compAgeRate || 0.3) / 100;
+      const compAgeMax = (params.compAgeMax || 15) / 100;
+      const bedAdj = params.bedAdj || 7500;
+      const bathAdj = params.bathAdj || 12500;
+      const lotAdj = params.lotAdj || 3;
+
+      // Scale factor for absolute $ adjustments when using improvement PSF.
+      // Bed/bath/lot adjustments are calibrated for total PSF (~$150-300).
+      // When compPsf is improvement-only (much lower than total), scale them
+      // by the improvement-to-total ratio so they stay proportional.
+      const totalPsf = comp.assessedPsf || compPsf;
+      const scaleFactor = (totalPsf > 0 && compPsf < totalPsf * 0.95)
+        ? compPsf / totalPsf
+        : 1.0;
+
+      // 1. GLA size adjustment (multiplicative — no scaling needed)
+      if (comp.livingSqft > 0 && subSqft > 0) {
+        const sizeDiffPct = (comp.livingSqft - subSqft) / subSqft;
+        adjusted *= (1 + (-sizeDiffPct * glaRate));
+      }
+      // 2. Age/year-built adjustment (multiplicative — no scaling needed)
+      const compYear = comp.yearBuilt || 0;
+      if (compYear > 0 && subYear > 0) {
+        const yearDiff = compYear - subYear;
+        let ageAdj = -yearDiff * compAgeRate;
+        ageAdj = Math.max(-compAgeMax, Math.min(compAgeMax, ageAdj));
+        adjusted *= (1 + ageAdj);
+      }
+      // 3-4. Bed/bath adjustments disabled per consultant feedback — CADs don't adjust; captured by GLA
+
+      // 5. Land value adjustment — uses CAD's own land valuations (matches Python)
+      const compLand = comp.landValue || 0;
+      const subjectLand = subject.landValue || 0;
+      if (compLand > 0 && subjectLand > 0 && comp.livingSqft > 0) {
+        const landDiff = compLand - subjectLand;
+        const landAdjPerSqft = landDiff / comp.livingSqft;
+        const maxLandAdj = compPsf * 0.10;
+        const capped = Math.max(-maxLandAdj, Math.min(maxLandAdj, landAdjPerSqft));
+        adjusted -= capped;
+      }
+      // Skip trivial adjustments (<$2 difference from raw)
+      if (Math.abs(adjusted - compPsf) < 2) {
+        adjusted = compPsf;
+      }
+      // Floor
+      adjusted = Math.max(adjusted, compPsf * 0.10);
+      return Math.round(adjusted * 100) / 100;
+    }
+
+    // Read current parameter values from the UI
+    function getParams() {
+      const taxOverrideVal = document.getElementById('p-tax-override').value.trim();
+      return {
+        formulaState: currentFormulaState,
+        maxAgeMonths: parseInt(document.getElementById('p-max-age').value) || 24,
+        minSalePrice: parseInt(document.getElementById('p-min-sale').value) || 100,
+        salesSizeMin: (parseInt(document.getElementById('p-sales-size-min').value) || 50) / 100,
+        salesSizeMax: (parseInt(document.getElementById('p-sales-size-max').value) || 200) / 100,
+        equitySizeMin: (parseInt(document.getElementById('p-equity-size-min').value) || 40) / 100,
+        equitySizeMax: (parseInt(document.getElementById('p-equity-size-max').value) || 300) / 100,
+        caFloor: (parseInt(document.getElementById('p-ca-floor').value) || 50) / 100,
+        percentile: parseInt(document.getElementById('p-percentile').value) || 40,
+        depAge0: parseFloat(document.getElementById('p-dep-age-0').value) || 0,
+        depAge30: parseFloat(document.getElementById('p-dep-age-30').value) || 0,
+        depAge50: parseFloat(document.getElementById('p-dep-age-50').value) || 0,
+        depAge70: parseFloat(document.getElementById('p-dep-age-70').value) || 0,
+        depAge100: parseFloat(document.getElementById('p-dep-age-100').value) || 0,
+        depMax: parseFloat(document.getElementById('p-dep-max').value) || 15,
+        taxOverride: taxOverrideVal ? parseFloat(taxOverrideVal) / 100 : null,
+        roundStep: parseInt(document.getElementById('p-round-step').value) || 5000,
+        minReduction: parseFloat(document.getElementById('p-min-reduction').value) / 100 || 0.10,
+        // Comp adjustment params
+        glaRate: parseFloat(document.getElementById('p-gla-rate').value) || 0,
+        compAgeRate: parseFloat(document.getElementById('p-comp-age-rate').value) || 0,
+        compAgeMax: parseFloat(document.getElementById('p-comp-age-max').value) || 15,
+        bedAdj: parseFloat(document.getElementById('p-bed-adj').value) || 0,
+        bathAdj: parseFloat(document.getElementById('p-bath-adj').value) || 0,
+        lotAdj: parseFloat(document.getElementById('p-lot-adj').value) || 0,
+        distDecay: parseFloat(document.getElementById('p-dist-decay').value) || 0,
+        // Amenity (garage/pool) discounts
+        noGarageDiscount: parseFloat(document.getElementById('p-no-garage').value) || 0,
+        noPoolDiscount: parseFloat(document.getElementById('p-no-pool').value) || 0,
+      };
+    }
+
+    // Property type matching
+    function typeGroup(t) {
+      t = (t || '').toUpperCase();
+      if (t.includes('APARTMENT') || t.includes('MULTI') || t.includes('TRIPLEX') || t.includes('QUADRUPLEX')) return 'MULTI';
+      if (t.includes('SFR') || t.includes('SINGLE FAMILY')) return 'SFR';
+      if (t.includes('DUPLEX')) return 'DUPLEX';
+      if (t.includes('CONDO') || t.includes('TOWNHOUSE')) return 'CONDO';
+      return t;
+    }
+
+    function isSamePropertyType(comp, subjectType) {
+      if (!comp.propType) return false; // Exclude unknown types
+      if (!subjectType) return true;
+      return typeGroup(subjectType) === typeGroup(comp.propType);
+    }
+
+    function filterByPropertyType(comps, subjectType) {
+      if (!subjectType) return comps;
+      const same = comps.filter(c => isSamePropertyType(c, subjectType));
+      if (same.length < 3 && comps.length >= 3) return comps;
+      return same;
+    }
+
+    // Get comp PSF — improvement $/sqft if available, else total
+    function getCompPsf(comp, useImprovement) {
+      if (useImprovement && comp.imprValue && comp.imprValue > 0 && comp.livingSqft > 0) {
+        return Math.round(comp.imprValue / comp.livingSqft * 100) / 100;
+      }
+      if (comp.type === 'sales') {
+        if (comp.salePsf && comp.salePsf > 0) return comp.salePsf;
+        if (comp.salePrice && comp.livingSqft > 0) return Math.round(comp.salePrice / comp.livingSqft * 100) / 100;
+      }
+      return comp.assessedPsf || 0;
+    }
+
+    // Hybrid comp selection: 4 closest + 3 lowest (matches Python select_hybrid_comps)
+    function selectLowestComps(comps, subjectPsf, subject, params, useImprovement) {
+      const TARGET = 7;
+
+      // Get all comps with valid PSF
+      const valid = [];
+      for (const c of comps) {
+        const rawPsf = getCompPsf(c, useImprovement);
+        if (rawPsf > 0) {
+          const adjPsf = adjustCompPsf(rawPsf, c, subject, params);
+          valid.push({ comp: c, adjPsf });
+        }
+      }
+
+      if (valid.length === 0) return [];
+
+      // 4 closest by distance
+      const byDistance = [...valid].sort((a, b) => a.comp.distance - b.comp.distance);
+      const closest4 = byDistance.slice(0, 4).map(x => x.comp);
+      const closest4Addrs = new Set(closest4.map(c => c.address));
+
+      // 3 lowest by adjusted PSF (excluding already-selected)
+      const remaining = valid.filter(x => !closest4Addrs.has(x.comp.address));
+      const byPsf = [...remaining].sort((a, b) => a.adjPsf - b.adjPsf);
+      const lowest3 = byPsf.slice(0, 3).map(x => x.comp);
+
+      let selected = [...closest4, ...lowest3];
+
+      // Fill if we don't have 7
+      if (selected.length < TARGET) {
+        const selectedAddrs = new Set(selected.map(c => c.address));
+        for (const x of byDistance) {
+          if (!selectedAddrs.has(x.comp.address)) {
+            selected.push(x.comp);
+            selectedAddrs.add(x.comp.address);
+          }
+          if (selected.length >= TARGET) break;
+        }
+      }
+
+      return selected;
+    }
+
+    // Full client-side recalculation
+    function runCalc(attomData, params) {
+      const subject = parseSubject(attomData);
+      const { currentValue, livingSqft } = subject;
+      const state = params.formulaState || subject.state;
+
+      if (livingSqft <= 0 || currentValue <= 0) {
+        return { error: 'Missing property value or sqft', annual_savings: 0, confidence: 'NO_CASE', steps: {} };
+      }
+
+      // Determine if we can use improvement PSF
+      let useImprovement = subject.imprValue > 0 && subject.landValue > 0;
+      let subjectPsf = useImprovement
+        ? Math.round(subject.imprValue / livingSqft * 100) / 100
+        : Math.round(currentValue / livingSqft * 100) / 100;
+      const subjectTotalPsf = Math.round(currentValue / livingSqft * 100) / 100;
+
+      const comparisons = attomData.comparisons || {};
+
+      // Parse comps
+      let rawSales = parseSaleSnapshot(comparisons.sale_snapshot || []);
+      const rawEquity = parseEquityComps(comparisons.assessment_snapshot || []);
+
+      // Remove subject from equity
+      const subAddrLower = subject.address.toLowerCase().trim();
+      const equityNoSelf = rawEquity.filter(c => c.address.toLowerCase().trim() !== subAddrLower);
+
+      // Filter sales: age + min price
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - params.maxAgeMonths);
+      const cutoffStr = cutoffDate.toISOString().substring(0, 10);
+
+      let filteredSales = [];
+      for (const c of rawSales) {
+        if (c.livingSqft <= 0) continue;
+        const hasRealSale = c.salePrice && c.salePrice > params.minSalePrice;
+        const hasAssessed = c.assessedTotal && c.assessedTotal > params.minSalePrice;
+        if (hasRealSale) {
+          if (c.saleDate && c.saleDate < cutoffStr) continue;
+          filteredSales.push(c);
+        } else if (hasAssessed) {
+          filteredSales.push({ ...c, salePrice: c.assessedTotal, salePsf: c.assessedPsf });
+        }
+      }
+
+      // Filter equity (CA PSF floor)
+      let filteredEquity;
+      if (state === 'CA') {
+        const floor = subjectTotalPsf * params.caFloor;
+        filteredEquity = equityNoSelf.filter(c => c.assessedTotal > 0 && c.assessedPsf > floor && c.livingSqft > 0);
+      } else {
+        filteredEquity = equityNoSelf.filter(c => c.livingSqft > 0 && c.assessedTotal > 0);
+      }
+
+      // Size filtering
+      const salesMinSqft = livingSqft * params.salesSizeMin;
+      const salesMaxSqft = livingSqft * params.salesSizeMax;
+      let sizeFilteredSales = filteredSales.filter(c => c.livingSqft >= salesMinSqft && c.livingSqft <= salesMaxSqft);
+      if (sizeFilteredSales.length < 2 && filteredSales.length >= 2) sizeFilteredSales = filteredSales;
+
+      const eqMinSqft = livingSqft * params.equitySizeMin;
+      const eqMaxSqft = livingSqft * params.equitySizeMax;
+      let sizeFilteredEquity = filteredEquity.filter(c => c.livingSqft >= eqMinSqft && c.livingSqft <= eqMaxSqft);
+      if (sizeFilteredEquity.length < 3 && filteredEquity.length >= 3) sizeFilteredEquity = filteredEquity;
+
+      // Strict property type matching
+      const subjectPropType = (subject.propertyType || '').toUpperCase().trim();
+      sizeFilteredSales = filterByPropertyType(sizeFilteredSales, subjectPropType);
+      sizeFilteredEquity = filterByPropertyType(sizeFilteredEquity, subjectPropType);
+
+      // Reliability check: are improvement values consistent across comps?
+      // If any comp's improvement is <10% of its total assessed, or if the CV
+      // of improvement PSF values exceeds 0.50, the improvement/land split from
+      // ATTOM is unreliable in this area — fall back to total PSF.
+      // Also checks subject-to-comp improvement ratio alignment.
+      if (useImprovement) {
+        const allFiltered = [...sizeFilteredSales, ...sizeFilteredEquity];
+        const imprPsfValues = [];
+        const compImprRatios = [];
+        let hasUnreliable = false;
+        for (const c of allFiltered) {
+          if (!c.imprValue || c.imprValue <= 0 || c.livingSqft <= 0) continue;
+          const imprPsf = c.imprValue / c.livingSqft;
+          const totalPsf = c.assessedPsf || 0;
+          imprPsfValues.push(imprPsf);
+          if (totalPsf > 0 && imprPsf < totalPsf * 0.10) hasUnreliable = true;
+          // Track improvement ratio for subject alignment check
+          const compTotal = c.assessedTotal || 0;
+          if (compTotal > 0) compImprRatios.push(c.imprValue / compTotal);
+        }
+        let fallback = hasUnreliable;
+        if (imprPsfValues.length >= 3) {
+          const mean = imprPsfValues.reduce((a, b) => a + b, 0) / imprPsfValues.length;
+          const variance = imprPsfValues.reduce((a, v) => a + (v - mean) ** 2, 0) / imprPsfValues.length;
+          const cv = mean > 0 ? Math.sqrt(variance) / mean : 0;
+          if (cv > 0.50) fallback = true;
+        }
+        // Subject-to-comp improvement ratio alignment check
+        if (!fallback && compImprRatios.length > 0 && subject.imprValue > 0 && currentValue > 0) {
+          const subImprRatio = subject.imprValue / currentValue;
+          const sorted = [...compImprRatios].sort((a, b) => a - b);
+          const compMedianRatio = sorted[Math.floor(sorted.length / 2)];
+          if (compMedianRatio > 0) {
+            const divergence = subImprRatio / compMedianRatio;
+            if (divergence < 0.40 || divergence > 2.50) fallback = true;
+          }
+        }
+        if (fallback) {
+          console.log(`Improvement PSF unreliable (hasOutlier=${hasUnreliable}). Falling back to total PSF.`);
+          useImprovement = false;
+          subjectPsf = subjectTotalPsf;
+        }
+      }
+
+      // Sale comp improvement consistency check:
+      // If sale comps lack improvement data while equity comps have it, the
+      // scales are incompatible — disable improvement mode for consistency.
+      if (useImprovement && sizeFilteredSales.length > 0) {
+        const saleHasImpr = sizeFilteredSales.some(c => c.imprValue && c.imprValue > 0);
+        const equityHasImpr = sizeFilteredEquity.some(c => c.imprValue && c.imprValue > 0);
+        if (!saleHasImpr && equityHasImpr) {
+          console.log('Sale comps lack improvement data while equity comps have it. Falling back to total PSF.');
+          useImprovement = false;
+          subjectPsf = subjectTotalPsf;
+        }
+      }
+
+      // Select 7 lowest comps using radius expansion
+      const selectedSales = selectLowestComps(sizeFilteredSales, subjectPsf, subject, params, useImprovement);
+      const selectedEquity = selectLowestComps(sizeFilteredEquity, subjectPsf, subject, params, useImprovement);
+
+      // Mark included comps (only selected ones)
+      const salesIncluded = new Set(selectedSales.map(c => c.address));
+      const equityIncluded = new Set(selectedEquity.map(c => c.address));
+
+      // Build exclusion reasons
+      const salesExcludeReasons = {};
+      const equityExcludeReasons = {};
+      const salesMinSqftVal = livingSqft * params.salesSizeMin;
+      const salesMaxSqftVal = livingSqft * params.salesSizeMax;
+      for (const c of rawSales) {
+        if (salesIncluded.has(c.address)) continue;
+        const reasons = [];
+        if (c.livingSqft <= 0) reasons.push('No sqft data');
+        else if (c.livingSqft < salesMinSqftVal || c.livingSqft > salesMaxSqftVal) reasons.push(`Size out of range (${c.livingSqft} sqft)`);
+        const hasRealSale = c.salePrice && c.salePrice > params.minSalePrice;
+        const hasAssessed = c.assessedTotal && c.assessedTotal > params.minSalePrice;
+        if (!hasRealSale && !hasAssessed) reasons.push(`Nominal transfer ($${c.salePrice || 0})`);
+        else if (hasRealSale && c.saleDate && c.saleDate < cutoffStr) reasons.push(`Sale too old (${c.saleDate})`);
+        if (subjectPropType && c.propType && !isSamePropertyType(c, subjectPropType)) reasons.push(`Type mismatch (${c.propType})`);
+        if (!reasons.length) reasons.push('Not in 7 lowest');
+        salesExcludeReasons[c.address] = reasons.join('; ');
+      }
+      const eqMinSqftVal = livingSqft * params.equitySizeMin;
+      const eqMaxSqftVal = livingSqft * params.equitySizeMax;
+      for (const c of equityNoSelf) {
+        if (equityIncluded.has(c.address)) continue;
+        const reasons = [];
+        if (c.assessedTotal <= 0) reasons.push('$0 assessed value');
+        if (c.livingSqft <= 0) reasons.push('No sqft data');
+        else if (c.livingSqft < eqMinSqftVal || c.livingSqft > eqMaxSqftVal) reasons.push(`Size out of range (${c.livingSqft} sqft)`);
+        if (state === 'CA' && c.assessedPsf <= subjectTotalPsf * params.caFloor) reasons.push(`Below CA Prop 13 floor`);
+        if (subjectPropType && c.propType && !isSamePropertyType(c, subjectPropType)) reasons.push(`Type mismatch (${c.propType})`);
+        if (!reasons.length) reasons.push('Not in 7 lowest');
+        equityExcludeReasons[c.address] = reasons.join('; ');
+      }
+
+      // Build PSF weights from selected comps
+      const salesPsfWeights = [];
+      const salesPsfValues = [];
+      for (const c of selectedSales) {
+        const rawPsf = getCompPsf(c, useImprovement);
+        if (rawPsf > 0) {
+          const adjPsf = adjustCompPsf(rawPsf, c, subject, params);
+          const w = distanceWeight(c.distance, params.distDecay);
+          salesPsfWeights.push([adjPsf, w, rawPsf, c]);
+          salesPsfValues.push(adjPsf);
+        }
+      }
+      const equityPsfWeights = [];
+      const equityPsfValues = [];
+      for (const c of selectedEquity) {
+        const rawPsf = getCompPsf(c, useImprovement);
+        if (rawPsf > 0) {
+          const adjPsf = adjustCompPsf(rawPsf, c, subject, params);
+          const w = distanceWeight(c.distance, params.distDecay);
+          equityPsfWeights.push([adjPsf, w, rawPsf, c]);
+          equityPsfValues.push(adjPsf);
+        }
+      }
+
+      // Baseline: weighted median with outlier removal (matches Python _calc_baseline)
+      const salesFiltered = removeOutliers(salesPsfWeights);
+      const equityFiltered = removeOutliers(equityPsfWeights);
+      const salesBaseline = salesFiltered.length ? weightedMedian(salesFiltered) : null;
+      const equityBaseline = equityFiltered.length ? weightedMedian(equityFiltered) : null;
+
+      // Determine best baseline
+      let baselinePsf = null;
+      let baselineSource = 'no comparable data';
+      if (state === 'TX') {
+        // TX uses equity only (unequal appraisal §41.43), sales as fallback
+        if (equityBaseline !== null) {
+          baselinePsf = equityBaseline;
+          baselineSource = 'area equity comparables';
+        } else if (salesBaseline !== null) {
+          baselinePsf = salesBaseline;
+          baselineSource = 'sales comparables';
+        }
+      } else {
+        if (salesBaseline !== null) { baselinePsf = salesBaseline; baselineSource = 'sales comparables'; }
+        else if (equityBaseline !== null) { baselinePsf = equityBaseline; baselineSource = 'area assessment comparables'; }
+      }
+
+      if (baselinePsf === null || baselinePsf <= 0) {
+        return {
+          annual_savings: 0, confidence: 'NO_CASE', noCaseReason: 'insufficient_data', subjectPsf, baselinePsf: 0,
+          salesCount: selectedSales.length, equityCount: selectedEquity.length,
+          rawSales, rawEquity: equityNoSelf, salesIncluded, equityIncluded,
+          salesExcludeReasons, equityExcludeReasons,
+          salesPsfWeights: salesPsfWeights || [], equityPsfWeights: equityPsfWeights || [],
+          salesBaseline, equityBaseline, baselineSource,
+          salesPsfValues, equityPsfValues, useImprovement,
+          steps: { subject, subjectPsf },
+        };
+      }
+
+      // Effective baseline = weighted median directly — no subject-level deductions.
+      // All adjustments are at the comp level so the baseline matches the comp table median.
+      // (Matches Python calculator_tx.py behavior)
+      const currentYear = new Date().getFullYear();
+      const age = subject.yearBuilt > 0 ? currentYear - subject.yearBuilt : 0;
+      const totalDep = 0;
+      const ageDep = 0;
+      const amenityDiscount = 0;
+      const postDepBaseline = baselinePsf;
+      let effectiveBaseline = Math.round(baselinePsf * 100) / 100;
+
+      // Gap
+      const gapPsf = subjectPsf - effectiveBaseline;
+      const gapPct = effectiveBaseline > 0 ? Math.round((gapPsf / effectiveBaseline) * 1000) / 10 : 0;
+
+      // Gaps below 1% are noise (matches Python)
+      if (gapPct < 1.0) {
+        return {
+          annual_savings: 0, confidence: 'NO_CASE', noCaseReason: 'fairly_assessed', subjectPsf, baselinePsf: effectiveBaseline,
+          rawBaselinePsf: baselinePsf,
+          gapPct, salesCount: selectedSales.length, equityCount: selectedEquity.length,
+          rawSales, rawEquity: equityNoSelf, salesIncluded, equityIncluded,
+          salesExcludeReasons, equityExcludeReasons,
+          salesPsfWeights, equityPsfWeights,
+          salesBaseline, equityBaseline, baselineSource,
+          salesPsfValues, equityPsfValues, useImprovement,
+          currentValue, livingSqft, recommendedValue: currentValue, reductionAmount: 0,
+          totalDep, age, ageDep, amenityDiscount, postDepBaseline,
+          steps: { subject, subjectPsf, baselinePsf, effectiveBaseline, totalDep, age, ageDep, amenityDiscount, postDepBaseline },
+        };
+      }
+
+      // Tax rate
+      let taxRate;
+      const stateDefault = state === 'TX' ? 0.022 : 0.0115;
+      if (params.taxOverride !== null) {
+        taxRate = params.taxOverride;
+      } else if (subject.taxAmt > 0 && currentValue > 0) {
+        taxRate = Math.round(subject.taxAmt / currentValue * 1000000) / 1000000;
+      } else {
+        taxRate = stateDefault;
+      }
+
+      // Recommended value: improvement-based or total
+      let recommendedValue;
+      if (useImprovement) {
+        recommendedValue = (effectiveBaseline * livingSqft) + subject.landValue;
+      } else {
+        recommendedValue = effectiveBaseline * livingSqft;
+      }
+      recommendedValue = Math.floor(recommendedValue / params.roundStep) * params.roundStep;
+      let reductionAmount = currentValue - recommendedValue;
+
+      // Floor: minimum reduction
+      if (reductionAmount > 0 && reductionAmount < currentValue * 0.02) {
+        recommendedValue = Math.round(currentValue * (1 - params.minReduction));
+        recommendedValue = Math.floor(recommendedValue / params.roundStep) * params.roundStep;
+        reductionAmount = currentValue - recommendedValue;
+      }
+
+      const annualSavings = Math.round(reductionAmount * taxRate);
+
+      // Confidence
+      const compCount = selectedSales.length + selectedEquity.length;
+      let confidence;
+      if (gapPct <= 0) confidence = 'NO_CASE';
+      else if (gapPct >= 5 && compCount >= 3) confidence = 'STRONG';
+      else if (gapPct >= 3 && compCount >= 2) confidence = 'MODERATE';
+      else if (gapPct >= 1 && compCount >= 1) confidence = 'MARGINAL';
+      else if (gapPct > 0) confidence = 'MARGINAL';
+      else confidence = 'NO_CASE';
+
+      // Confidence cap: sparse data on high-value properties shouldn't claim STRONG
+      if (compCount < 3 && currentValue >= 1000000 && confidence === 'STRONG') {
+        confidence = 'MODERATE';
+      }
+
+      const dataQualityWarning = gapPct > 65.0;
+
+      return {
+        annual_savings: annualSavings,
+        confidence,
+        dataQualityWarning,
+        subjectPsf,
+        baselinePsf: effectiveBaseline,
+        rawBaselinePsf: baselinePsf,
+        gapPct,
+        salesCount: selectedSales.length,
+        equityCount: selectedEquity.length,
+        rawSales,
+        rawEquity: equityNoSelf,
+        salesIncluded,
+        equityIncluded,
+        salesExcludeReasons,
+        equityExcludeReasons,
+        salesPsfValues,
+        equityPsfValues,
+        salesPsfWeights,
+        equityPsfWeights,
+        salesBaseline,
+        equityBaseline,
+        baselineSource,
+        currentValue,
+        livingSqft,
+        recommendedValue,
+        reductionAmount,
+        taxRate,
+        totalDep,
+        age,
+        ageDep,
+        amenityDiscount,
+        postDepBaseline,
+        useImprovement,
+        steps: { subject, subjectPsf, baselinePsf, effectiveBaseline, totalDep, age, ageDep, amenityDiscount, postDepBaseline },
+      };
+    }
+
+    // Weighted median (matches Python calculator_shared.py)
+    function weightedMedian(psfWeights) {
+      if (!psfWeights.length) return 0;
+      const sorted = [...psfWeights].sort((a, b) => a[0] - b[0]);
+      const totalWeight = sorted.reduce((s, pw) => s + pw[1], 0);
+      if (totalWeight <= 0) return 0;
+      let cumWeight = 0;
+      for (const [adjPsf, w] of sorted) {
+        cumWeight += w;
+        if (cumWeight >= totalWeight / 2) {
+          return Math.round(adjPsf * 100) / 100;
+        }
+      }
+      return Math.round(sorted[sorted.length - 1][0] * 100) / 100;
+    }
+
+    // Remove outliers >2 std dev from median (matches Python)
+    function removeOutliers(psfWeights) {
+      if (psfWeights.length < 4) return psfWeights;
+      const values = psfWeights.map(pw => pw[0]).filter(v => v > 0);
+      if (!values.length) return psfWeights;
+      const sorted = [...values].sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      const mean = values.reduce((a, b) => a + b, 0) / values.length;
+      const variance = values.reduce((a, v) => a + (v - mean) ** 2, 0) / values.length;
+      const stdDev = Math.sqrt(variance);
+      if (stdDev === 0) return psfWeights;
+      return psfWeights.filter(pw => Math.abs(pw[0] - median) <= 2 * stdDev);
+    }
+
+
+    // ── Populate formula review after a lookup ──
+    function populateFormulaReview(data) {
+      const attom = data.attom_data;
+      const result = data.result;
+      const subject = parseSubject(attom);
+
+      // Auto-detect state and set toggle
+      const detectedState = subject.state === 'CA' ? 'CA' : 'TX';
+      setFormulaState(detectedState, true); // skipRecalc=true, we'll calc after populating
+      const autoTag = document.getElementById('state-auto-tag');
+      autoTag.textContent = 'Auto-detected: ' + subject.state + ' (' + subject.county + ' County)';
+      autoTag.style.display = 'inline';
+
+      // Step 1: Subject
+      const countyRate = subject.taxAmt > 0 && subject.currentValue > 0
+        ? (subject.taxAmt / subject.currentValue * 100).toFixed(3)
+        : null;
+      document.getElementById('step1-math').innerHTML =
+        `${formatMoney(subject.currentValue)} <span class="highlight">(current value)</span> ` +
+        `&divide; ${subject.livingSqft.toLocaleString()} sqft = ` +
+        `<span class="highlight">$${(subject.currentValue / subject.livingSqft).toFixed(2)}/sqft</span>` +
+        `<br><span style="font-size:13px;color:#5C666F;">` +
+        `${subject.propertyType} | Built ${subject.yearBuilt} | ${subject.beds} bed / ${subject.baths} bath | ` +
+        `${subject.county} County, ${subject.state}` +
+        (countyRate ? ` | Tax rate: ${countyRate}% (${formatMoney(subject.taxAmt)}/yr on record)` : '') +
+        `</span>` +
+        (subject.imprValue > 0 && subject.landValue > 0
+          ? `<br><span style="font-size:13px;color:#5C666F;">Improvement: ${formatMoney(subject.imprValue)} ($${Math.round(subject.imprValue / subject.livingSqft)}/sqft) | Land: ${formatMoney(subject.landValue)}</span>`
+          : '') +
+        // TX cap info
+        (subject.state === 'TX'
+          ? `<br><span style="font-size:13px;padding:4px 8px;border-radius:6px;display:inline-block;margin-top:4px;${
+              subject.isHomestead && !subject.isAbsentee
+                ? 'background:#DFFFEA;color:#0C593E;"><strong>Homestead:</strong> 10% annual cap applies (Tax Code §23.23)'
+                : subject.currentValue <= 5160000
+                  ? 'background:#E8F4FD;color:#1a6fa0;"><strong>Circuit Breaker:</strong> 20% annual cap applies (SB 2, 2024-2026)'
+                  : 'background:#f5f5f5;color:#666;">No cap applies (non-homestead, value > $5.16M)'
+            }</span>`
+          : '');
+
+      // Show county rate info in the tax rate section
+      const taxInfo = document.getElementById('p-tax-info');
+      if (countyRate) {
+        taxInfo.textContent = `${subject.county} County, ${subject.state}: ${countyRate}% effective rate (from ATTOM: ${formatMoney(subject.taxAmt)} tax on ${formatMoney(subject.currentValue)} value)`;
+      } else {
+        taxInfo.textContent = `No tax data from ATTOM. Using ${subject.state} state average.`;
+      }
+
+      // Run the calc with defaults to populate steps 2-5
+      recalculate();
+    }
+
+
+    // Build a comp table HTML with exclusion reasons and adjusted PSF
+    function _compRow(c, included, reason, type, adjPsfMap, weightMap) {
+      let html = `<tr class="${included ? '' : 'excluded'}" title="${reason}">`;
+      html += `<td>${c.address.substring(0, 30)}${c.address.length > 30 ? '...' : ''}`;
+      if (!included && reason) html += `<span class="exclude-reason">${reason}</span>`;
+      html += `</td>`;
+      html += `<td>${c.livingSqft.toLocaleString()}</td>`;
+      const imprPsf = (c.imprValue && c.livingSqft > 0) ? Math.round(c.imprValue / c.livingSqft * 100) / 100 : null;
+      if (type === 'sales') {
+        html += `<td>${c.salePrice ? '$' + c.salePrice.toLocaleString() : '—'}</td>`;
+        html += `<td>${c.salePsf ? '$' + c.salePsf.toFixed(0) : '—'}</td>`;
+        html += `<td>${imprPsf !== null ? '$' + imprPsf.toFixed(0) : '—'}</td>`;
+        const adj = adjPsfMap[c.address];
+        html += `<td>${adj ? '<span class="adj-psf">$' + adj.adj.toFixed(0) + '</span>' : '—'}</td>`;
+        html += `<td>${c.saleDate ? c.saleDate.substring(0, 7) : '—'}</td>`;
+      } else {
+        html += `<td>${c.assessedPsf ? '$' + c.assessedPsf.toFixed(0) : '—'}</td>`;
+        html += `<td>${imprPsf !== null ? '$' + imprPsf.toFixed(0) : '—'}</td>`;
+        const adj = adjPsfMap[c.address];
+        html += `<td>${adj ? '<span class="adj-psf">$' + adj.adj.toFixed(0) + '</span>' : '—'}</td>`;
+      }
+      html += `<td>${c.distance.toFixed(2)}</td>`;
+      const wt = weightMap[c.address];
+      html += `<td>${wt !== undefined ? wt.toFixed(2) : '—'}</td>`;
+      html += `<td>${c.beds || '—'}/${c.baths || '—'}</td>`;
+      html += `<td>${c.yearBuilt || '—'}</td>`;
+      html += '</tr>';
+      return html;
+    }
+
+    function _median(arr) {
+      if (!arr.length) return 0;
+      const s = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(s.length / 2);
+      return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+    }
+
+    function buildCompTable(comps, includedSet, type, excludeReasons, psfWeights, subject) {
+      if (!comps || comps.length === 0) return '<div style="color:#999;font-size:13px;">No comps available</div>';
+      excludeReasons = excludeReasons || {};
+
+      const adjPsfMap = {};
+      const weightMap = {};
+      if (psfWeights) {
+        for (const [adjPsf, w, rawPsf, comp] of psfWeights) {
+          adjPsfMap[comp.address] = { adj: adjPsf, raw: rawPsf };
+          weightMap[comp.address] = w;
+        }
+      }
+
+      const included = comps.filter(c => includedSet.has(c.address));
+      const excluded = comps.filter(c => !includedSet.has(c.address));
+
+      const headerCols = '<th>Address</th><th>Sqft</th>' +
+        (type === 'sales' ? '<th>Sale Price</th><th>Sale $/sqft</th><th>Impr $/sqft</th><th>Adj $/sqft</th><th>Sale Date</th>' :
+          '<th>Assessed $/sqft</th><th>Impr $/sqft</th><th>Adj $/sqft</th>') +
+        '<th>Dist</th><th>Wt</th><th>Beds</th><th>Yr</th>';
+      const colCount = type === 'sales' ? 11 : 9;
+
+      // Included comps table
+      let html = '<table class="comp-table"><thead><tr>' + headerCols + '</tr></thead><tbody>';
+      for (const c of included) {
+        html += _compRow(c, true, '', type, adjPsfMap, weightMap);
+      }
+
+      // Median row for included comps
+      if (included.length > 0) {
+        const medSqft = Math.round(_median(included.map(c => c.livingSqft)));
+        const medDist = _median(included.map(c => c.distance));
+        const adjVals = included.map(c => adjPsfMap[c.address]).filter(Boolean).map(a => a.adj);
+        const medAdj = adjVals.length ? _median(adjVals) : null;
+
+        html += '<tr style="font-weight:700;border-top:2px solid #0B8F52;background:#f0faf4;">';
+        html += `<td>Median (${included.length} comps)</td>`;
+        html += `<td>${medSqft.toLocaleString()}</td>`;
+        if (type === 'sales') {
+          const medPrice = Math.round(_median(included.filter(c => c.salePrice).map(c => c.salePrice)));
+          const medSalePsf = _median(included.filter(c => c.salePsf).map(c => c.salePsf));
+          const medImprPsf = _median(included.filter(c => c.imprValue && c.livingSqft > 0).map(c => c.imprValue / c.livingSqft));
+          html += `<td>$${medPrice.toLocaleString()}</td>`;
+          html += `<td>$${medSalePsf.toFixed(0)}</td>`;
+          html += `<td>${medImprPsf ? '$' + medImprPsf.toFixed(0) : '—'}</td>`;
+          html += `<td>${medAdj !== null ? '<span class="adj-psf">$' + medAdj.toFixed(0) + '</span>' : '—'}</td>`;
+          html += '<td>—</td>';
+        } else {
+          const medAssdPsf = _median(included.filter(c => c.assessedPsf).map(c => c.assessedPsf));
+          const medImprPsf = _median(included.filter(c => c.imprValue && c.livingSqft > 0).map(c => c.imprValue / c.livingSqft));
+          html += `<td>$${medAssdPsf.toFixed(0)}</td>`;
+          html += `<td>${medImprPsf ? '$' + medImprPsf.toFixed(0) : '—'}</td>`;
+          html += `<td>${medAdj !== null ? '<span class="adj-psf">$' + medAdj.toFixed(0) + '</span>' : '—'}</td>`;
+        }
+        html += `<td>${medDist.toFixed(2)}</td><td>—</td><td>—</td><td>—</td></tr>`;
+      }
+      html += '</tbody></table>';
+
+      // Excluded comps in collapsible details
+      if (excluded.length > 0) {
+        html += `<details style="margin-top:8px;">`;
+        html += `<summary style="cursor:pointer;font-size:12px;color:#999;user-select:none;">`;
+        html += `<span style="color:#0B8F52;font-weight:600;">Show ${excluded.length} excluded comps</span> &#9662;</summary>`;
+        html += '<table class="comp-table" style="margin-top:4px;"><thead><tr>' + headerCols + '</tr></thead><tbody>';
+        for (const c of excluded) {
+          html += _compRow(c, false, excludeReasons[c.address] || '', type, adjPsfMap, weightMap);
+        }
+        html += '</tbody></table></details>';
+      }
+
+      html += `<div style="font-size:12px;color:#999;margin-top:4px;">${includedSet.size} of ${comps.length} comps included. Green "Adj $/sqft" = adjusted for size/age/beds/lot differences vs subject.</div>`;
+      return html;
+    }
+
+
+    // ── Recalculate with current parameter values ──
+    function recalculate() {
+      if (!lastResponse || !lastResponse.attom_data) return;
+
+      const params = getParams();
+      const calc = runCalc(lastResponse.attom_data, params);
+      const orig = lastOriginalResult;
+      const sub = calc.steps ? calc.steps.subject : {};
+
+      // Update Step 2: comp tables with exclusion reasons and adjusted PSF
+      document.getElementById('sales-comp-table').innerHTML =
+        buildCompTable(calc.rawSales, calc.salesIncluded || new Set(), 'sales',
+          calc.salesExcludeReasons, calc.salesPsfWeights, sub);
+      document.getElementById('equity-comp-table').innerHTML =
+        buildCompTable(calc.rawEquity, calc.equityIncluded || new Set(), 'equity',
+          calc.equityExcludeReasons, calc.equityPsfWeights, sub);
+
+      // Update Step 3: adjustments summary
+      const adjParts = [];
+      const adjCount = (calc.salesPsfWeights || []).length + (calc.equityPsfWeights || []).length;
+      adjParts.push(`Adjusted <span class="highlight">${adjCount} comps</span> for differences vs subject:`);
+      if (params.glaRate > 0) adjParts.push(`&bull; GLA (size): ${params.glaRate}% PSF adjustment per 1% size difference`);
+      if (params.compAgeRate > 0) adjParts.push(`&bull; Age: ${params.compAgeRate}% per year newer/older (max ${params.compAgeMax}%)`);
+      if (params.bedAdj > 0) adjParts.push(`&bull; Bedrooms: ${formatMoney(params.bedAdj)} per bedroom difference`);
+      if (params.bathAdj > 0) adjParts.push(`&bull; Bathrooms: ${formatMoney(params.bathAdj)} per bathroom difference`);
+      if (params.lotAdj > 0) adjParts.push(`&bull; Lot size: $${params.lotAdj}/sqft of lot difference (max 10% of comp value)`);
+      if (params.distDecay > 0) adjParts.push(`&bull; Distance weighting: decay=${params.distDecay} (closer comps get more weight)`);
+      // Show example adjustment
+      if (calc.salesPsfWeights && calc.salesPsfWeights.length > 0) {
+        const ex = calc.salesPsfWeights[0];
+        adjParts.push(`<br>Example: ${ex[3].address.substring(0, 30)}... raw $${ex[2].toFixed(0)}/sqft → adjusted <span class="highlight">$${ex[0].toFixed(0)}/sqft</span> (weight: ${ex[1].toFixed(2)})`);
+      } else if (calc.equityPsfWeights && calc.equityPsfWeights.length > 0) {
+        const ex = calc.equityPsfWeights[0];
+        adjParts.push(`<br>Example: ${ex[3].address.substring(0, 30)}... raw $${ex[2].toFixed(0)}/sqft → adjusted <span class="highlight">$${ex[0].toFixed(0)}/sqft</span> (weight: ${ex[1].toFixed(2)})`);
+      }
+      document.getElementById('step3-math').innerHTML = adjParts.join('<br>');
+
+      // Update Step 4: baseline
+      const s4Parts = [];
+      const psfType = calc.useImprovement ? 'improvement' : 'total';
+      if (calc.salesBaseline !== null) s4Parts.push(`Sales baseline: <span class="highlight">$${calc.salesBaseline.toFixed(2)}/sqft</span> (weighted avg of ${(calc.salesPsfValues || []).length} lowest ${psfType} $/sqft comps)`);
+      if (calc.equityBaseline !== null) s4Parts.push(`Equity baseline: <span class="highlight">$${calc.equityBaseline.toFixed(2)}/sqft</span> (weighted avg of ${(calc.equityPsfValues || []).length} lowest ${psfType} $/sqft comps)`);
+      if (calc.rawBaselinePsf) s4Parts.push(`Chosen baseline: <span class="highlight">$${calc.rawBaselinePsf.toFixed(2)}/sqft</span> (${psfType}) from ${calc.baselineSource}`);
+      else if (calc.baselinePsf) s4Parts.push(`Chosen baseline: <span class="highlight">$${calc.baselinePsf.toFixed(2)}/sqft</span>`);
+      if (calc.useImprovement) s4Parts.push(`<span style="font-size:12px;color:#5C666F;">Using improvement $/sqft (land value of ${formatMoney(sub.landValue || 0)} added back at the end)</span>`);
+      document.getElementById('step4-math').innerHTML = s4Parts.join('<br>') || 'No baseline could be calculated';
+
+      // Update Step 5: depreciation
+      if (calc.steps && calc.steps.age !== undefined) {
+        const depPct = ((calc.totalDep || 0) * 100).toFixed(1);
+        document.getElementById('step5-math').innerHTML =
+          `Property age: <span class="highlight">${calc.age} years</span> (built ${calc.steps.subject.yearBuilt})<br>` +
+          `Age depreciation: <span class="highlight">${calc.ageDep}%</span><br>` +
+          `Total depreciation: <span class="highlight">${depPct}%</span> (capped at ${params.depMax}%)<br>` +
+          `Post-depreciation baseline: $${(calc.rawBaselinePsf || calc.baselinePsf || 0).toFixed(2)} &times; (1 - ${depPct}%) = <span class="highlight">$${(calc.postDepBaseline || calc.baselinePsf || 0).toFixed(2)}/sqft</span>`;
+      } else {
+        document.getElementById('step5-math').innerHTML = 'No depreciation data available';
+      }
+
+      // Update Step 5b: amenity discount
+      if (calc.steps && calc.steps.subject) {
+        const subj = calc.steps.subject;
+        const amenParts = [];
+        amenParts.push(`Garage: ${subj.hasGarage ? '<span style="color:#0B8F52;">&#10003; Yes</span> (' + (subj.garageType || 'detected') + ')' : '<span style="color:#c00;">&#10007; No garage</span> → ' + params.noGarageDiscount + '% discount'}`);
+        amenParts.push(`Pool: ${subj.hasPool ? '<span style="color:#0B8F52;">&#10003; Yes</span> (' + (subj.poolType || 'detected') + ')' : '<span style="color:#c00;">&#10007; No pool</span> → ' + params.noPoolDiscount + '% discount'}`);
+        const totalAmenPct = ((calc.amenityDiscount || 0) * 100).toFixed(1);
+        if (calc.amenityDiscount > 0) {
+          amenParts.push(`Total amenity discount: <span class="highlight">${totalAmenPct}%</span>`);
+          amenParts.push(`Final baseline: $${(calc.postDepBaseline || 0).toFixed(2)} &times; (1 - ${totalAmenPct}%) = <span class="highlight">$${(calc.baselinePsf || 0).toFixed(2)}/sqft</span>`);
+        } else {
+          amenParts.push(`No amenity discount applied (subject has both garage and pool)`);
+        }
+        document.getElementById('step5b-math').innerHTML = amenParts.join('<br>');
+      } else {
+        document.getElementById('step5b-math').innerHTML = '—';
+      }
+
+      // Update Step 6: gap & savings
+      if (calc.gapPct !== undefined) {
+        const taxPct = ((calc.taxRate || 0) * 100).toFixed(3);
+        const taxSource = params.taxOverride !== null
+          ? 'manual override'
+          : (sub.taxAmt > 0 ? `${sub.county} County actual` : `${sub.state} state average`);
+        document.getElementById('step6-math').innerHTML =
+          `Subject $/sqft: $${calc.subjectPsf} vs Baseline $/sqft: $${(calc.baselinePsf || 0).toFixed(2)}<br>` +
+          `Gap: <span class="highlight">${calc.gapPct}%</span><br>` +
+          `Recommended value: $${(calc.baselinePsf || 0).toFixed(2)} &times; ${(calc.livingSqft || 0).toLocaleString()} sqft${calc.useImprovement ? ' + ' + formatMoney(sub.landValue || 0) + ' land' : ''} = ${formatMoney(calc.recommendedValue || calc.currentValue)} (rounded down to $${params.roundStep.toLocaleString()})<br>` +
+          `Reduction: ${formatMoney(calc.currentValue || 0)} - ${formatMoney(calc.recommendedValue || calc.currentValue)} = <span class="highlight">${formatMoney(calc.reductionAmount || 0)}</span><br>` +
+          `Tax rate: <span class="highlight">${taxPct}%</span> (${taxSource})<br>` +
+          `Annual savings: ${formatMoney(calc.reductionAmount || 0)} &times; ${taxPct}% = <span class="highlight">${formatMoney(calc.annual_savings)}/yr</span><br>` +
+          `Confidence: <span class="confidence-badge confidence-${calc.confidence}">${calc.confidence}</span>`;
+      }
+
+      // Show comparison result
+      const recalcDiv = document.getElementById('recalc-result');
+      recalcDiv.style.display = 'block';
+      document.getElementById('recalc-original-amount').textContent = formatMoney(orig.annual_savings) + '/yr';
+      document.getElementById('recalc-variant-amount').textContent = formatMoney(calc.annual_savings) + '/yr';
+
+      const diff = calc.annual_savings - orig.annual_savings;
+      const diffEl = document.getElementById('recalc-diff');
+      if (diff > 0) {
+        diffEl.className = 'diff-tag diff-up';
+        diffEl.textContent = '+' + formatMoney(diff) + '/yr';
+      } else if (diff < 0) {
+        diffEl.className = 'diff-tag diff-down';
+        diffEl.textContent = formatMoney(diff) + '/yr';
+      } else {
+        diffEl.className = 'diff-tag diff-same';
+        diffEl.textContent = 'Same';
+      }
+
+      // Details comparison
+      document.getElementById('recalc-details').innerHTML = `
+        <div class="section-title">Side-by-Side Comparison</div>
+        <div class="stat-row"><span class="stat-label">Baseline $/sqft</span><span class="stat-value">Original: $${orig.baseline_psf} | Yours: $${(calc.baselinePsf || 0).toFixed(2)}</span></div>
+        <div class="stat-row"><span class="stat-label">Gap %</span><span class="stat-value">Original: ${orig.gap_percentage}% | Yours: ${calc.gapPct}%</span></div>
+        <div class="stat-row"><span class="stat-label">Recommended Value</span><span class="stat-value">Original: ${formatMoney(orig.recommended_value)} | Yours: ${formatMoney(calc.recommendedValue || orig.recommended_value)}</span></div>
+        <div class="stat-row"><span class="stat-label">Reduction</span><span class="stat-value">Original: ${formatMoney(orig.reduction_amount)} | Yours: ${formatMoney(calc.reductionAmount || 0)}</span></div>
+        <div class="stat-row"><span class="stat-label">Annual Savings</span><span class="stat-value">Original: ${formatMoney(orig.annual_savings)}/yr | Yours: ${formatMoney(calc.annual_savings)}/yr</span></div>
+        <div class="stat-row"><span class="stat-label">Confidence</span><span class="stat-value">Original: <span class="confidence-badge confidence-${orig.confidence}">${orig.confidence}</span> | Yours: <span class="confidence-badge confidence-${calc.confidence}">${calc.confidence}</span></span></div>
+        <div class="stat-row"><span class="stat-label">Sales Comps Used</span><span class="stat-value">Original: ${orig.sales_comp_count} | Yours: ${calc.salesCount}</span></div>
+        <div class="stat-row"><span class="stat-label">Equity Comps Used</span><span class="stat-value">Original: ${orig.equity_comp_count} | Yours: ${calc.equityCount}</span></div>
+        ${calc.noCaseReason ? `<div class="stat-row"><span class="stat-label">No Case Reason</span><span class="stat-value">${calc.noCaseReason === 'fairly_assessed' ? '✓ Fairly assessed' : '⚠ Insufficient data'}</span></div>` : ''}
+        ${calc.dataQualityWarning ? `<div class="stat-row"><span class="stat-label" style="color:#cc3333;">⚠ Data Quality</span><span class="stat-value" style="color:#cc3333;">Gap &gt;65% — verify data</span></div>` : ''}
+      `;
+    }
+
+
+    // ══════════════════════════════════════════════════════
+    // VARIANT SAVE / LOAD (localStorage)
+    // ══════════════════════════════════════════════════════
+
+    const STORAGE_KEY = 'taxdrop_formula_variants';
+
+    function getSavedVariants() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      } catch { return {}; }
+    }
+
+    function loadVariantList() {
+      const select = document.getElementById('variant-select');
+      const variants = getSavedVariants();
+      while (select.options.length > 1) select.remove(1);
+      for (const [name, v] of Object.entries(variants)) {
+        const vState = v.state || 'TX'; // legacy variants assumed TX
+        if (vState !== currentFormulaState) continue;
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      }
+    }
+
+    function saveVariant() {
+      const name = document.getElementById('variant-name').value.trim();
+      if (!name) { alert('Enter a variant name.'); return; }
+
+      const variants = getSavedVariants();
+      variants[name] = {
+        ...captureCurrentParams(),
+        state: currentFormulaState,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(variants));
+      document.getElementById('variant-name').value = '';
+      loadVariantList();
+      document.getElementById('variant-select').value = name;
+    }
+
+    function loadVariant() {
+      const name = document.getElementById('variant-select').value;
+      if (!name) { resetToDefaults(); return; }
+
+      const variants = getSavedVariants();
+      const v = variants[name];
+      if (!v) return;
+
+      applyParamValues(v);
+      recalculate();
+    }
+
+    function deleteVariant() {
+      const name = document.getElementById('variant-select').value;
+      if (!name) { alert('Select a variant to delete.'); return; }
+      if (!confirm('Delete variant "' + name + '"?')) return;
+
+      const variants = getSavedVariants();
+      delete variants[name];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(variants));
+      loadVariantList();
+      resetToDefaults();
+    }
+
+    function resetToDefaults() {
+      applyParamValues(STATE_DEFAULTS[currentFormulaState]);
+      stateParamCache[currentFormulaState] = null;
+      document.getElementById('variant-select').value = '';
+      recalculate();
+    }
+
+    function toggleHowDetails() {
+      const el = document.getElementById('how-details');
+      const toggle = el.previousElementSibling || document.querySelector('.how-toggle');
+      if (el.style.display === 'none') {
+        el.style.display = 'block';
+        document.querySelector('.how-toggle').innerHTML = 'Hide details &#9652;';
+      } else {
+        el.style.display = 'none';
+        document.querySelector('.how-toggle').innerHTML = 'Show detailed adjustments &amp; confidence levels &#9662;';
+      }
+    }
+
+    // ── Login Gate ──
+    const AUTH_KEY = 'taxdrop_test_auth';
+    function checkLogin() {
+      const pw = document.getElementById('login-password').value;
+      if (pw === 'sup') {
+        sessionStorage.setItem(AUTH_KEY, '1');
+        unlockPage();
+      } else {
+        document.getElementById('login-password').classList.add('error');
+        document.getElementById('login-error').style.display = 'block';
+        setTimeout(() => document.getElementById('login-password').classList.remove('error'), 300);
+      }
+    }
+    function unlockPage() {
+      document.getElementById('login-gate').classList.add('hidden');
+      document.getElementById('page-content').classList.add('unlocked');
+    }
+    // Auto-unlock if already authenticated this session
+    if (sessionStorage.getItem(AUTH_KEY) === '1') {
+      unlockPage();
+    }
+    // Initialize state toggle to TX
+    document.body.setAttribute('data-formula-state', 'TX');
+    loadVariantList();
+
+    // ── Google Places Autocomplete ──
+    function initAutocomplete() {
+      const input = document.getElementById('lookup-address');
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address'],
+      });
+      autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (place.formatted_address) {
+          input.value = place.formatted_address;
+          runLookup();
+        }
+      });
+    }
+    // Init when Google Maps API is ready
+    if (window.google && google.maps && google.maps.places) {
+      initAutocomplete();
+    } else {
+      window.addEventListener('load', function() {
+        if (window.google && google.maps && google.maps.places) initAutocomplete();
+      });
+    }
+
+    // ── Chat Panel ──
+    const chatHistory = []; // [{role, content}, ...]
+    let chatOpen = false;
+
+    function toggleChat() {
+      chatOpen = !chatOpen;
+      document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+      if (chatOpen) document.getElementById('chat-input').focus();
+    }
+
+    function getChatContext() {
+      if (!lastResponse) return null;
+      const subject = parseSubject(lastResponse.attom_data);
+      const result = lastResponse.result;
+      const params = getParams();
+      return { subject, result, params };
+    }
+
+    function addChatMsg(role, content) {
+      const msgArea = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + role;
+      // Simple markdown-ish: bold **text** and backticks
+      const html = content
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`(.+?)`/g, '<code style="background:#e8e8e8;padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>')
+        .replace(/\n/g, '<br>');
+      div.innerHTML = html;
+      msgArea.appendChild(div);
+      msgArea.scrollTop = msgArea.scrollHeight;
+    }
+
+    function showTyping() {
+      const msgArea = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-typing';
+      div.id = 'chat-typing-indicator';
+      div.innerHTML = '<span class="dots"><span>.</span><span>.</span><span>.</span></span> Thinking...';
+      msgArea.appendChild(div);
+      msgArea.scrollTop = msgArea.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('chat-typing-indicator');
+      if (el) el.remove();
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      input.value = '';
+      chatHistory.push({ role: 'user', content: msg });
+      addChatMsg('user', msg);
+
+      const btn = document.getElementById('chat-send');
+      btn.disabled = true;
+      showTyping();
+
+      try {
+        const resp = await fetch('/api/cad-proxy?path=/api/chat', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            messages: chatHistory,
+            context: getChatContext(),
+          }),
+        });
+        const data = await resp.json();
+        hideTyping();
+
+        if (data.success && data.reply) {
+          chatHistory.push({ role: 'assistant', content: data.reply });
+          addChatMsg('assistant', data.reply);
+        } else {
+          addChatMsg('system', 'Error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        hideTyping();
+        addChatMsg('system', 'Connection error. Check if the API is running.');
+      }
+
+      btn.disabled = false;
+      input.focus();
+    }
+
+
+    // ══════════════════════════════════════════════════════
+    // LEAFLET MAP — Subject + Comp Pins
+    // ══════════════════════════════════════════════════════
+
+    // ══════════════════════════════════════════════════════
+    // GOOGLE STREET VIEW
+    // ══════════════════════════════════════════════════════
+
+    const GOOGLE_MAPS_KEY = 'AIzaSyBtd8bzCW_lY6pd4NMYLIFDeU6vpuNYUFA';
+
+    function streetViewUrl(address, width, height) {
+      return `https://maps.googleapis.com/maps/api/streetview?size=${width}x${height}&location=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_KEY}`;
+    }
+
+    function renderStreetView(subject, salesComps, equityComps) {
+      const section = document.getElementById('streetview-section');
+      section.style.display = 'block';
+
+      // Subject Street View
+      const subjectDiv = document.getElementById('streetview-subject');
+      subjectDiv.innerHTML = `
+        <div style="position:relative;border-radius:10px;overflow:hidden;border:2px solid #0B8F52;">
+          <img src="${streetViewUrl(subject.address, 600, 300)}" alt="Street View: ${subject.address}"
+            style="width:100%;height:auto;display:block;" loading="lazy" />
+          <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:12px 16px;color:white;">
+            <strong style="font-size:14px;">${subject.address}</strong>
+            <div style="font-size:12px;opacity:0.85;">${formatMoney(subject.currentValue)} | ${subject.livingSqft.toLocaleString()} sqft | Built ${subject.yearBuilt}</div>
+          </div>
+        </div>`;
+
+      // Comp Street Views
+      const compsDiv = document.getElementById('streetview-comps');
+      const allComps = [
+        ...(salesComps || []).map(c => ({ ...c, compLabel: 'Sales' })),
+        ...(equityComps || []).map(c => ({ ...c, compLabel: 'Equity' })),
+      ];
+
+      compsDiv.innerHTML = allComps.map(c => {
+        const psf = c.salePsf || c.assessedPsf || 0;
+        const labelColor = c.compLabel === 'Sales' ? '#2563eb' : '#9333ea';
+        return `
+          <div style="border-radius:10px;overflow:hidden;border:1px solid #e0e0e0;">
+            <img src="${streetViewUrl(c.address, 400, 200)}" alt="Street View: ${c.address}"
+              style="width:100%;height:auto;display:block;" loading="lazy" />
+            <div style="padding:8px 12px;background:#fafafa;">
+              <div style="font-size:12px;font-weight:600;color:#1A1A1A;">${c.address.substring(0, 40)}${c.address.length > 40 ? '...' : ''}</div>
+              <div style="font-size:11px;color:#5C666F;">
+                <span style="background:${labelColor};color:white;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;">${c.compLabel}</span>
+                $${psf.toFixed(0)}/sqft | ${c.distance.toFixed(2)}mi${c.salePrice ? ' | Sale: $' + c.salePrice.toLocaleString() : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+
+    let compMap = null;
+    let mapMarkers = [];
+
+    function initMap(subject, salesComps, equityComps) {
+      const lat = subject.latitude;
+      const lng = subject.longitude;
+      if (!lat || !lng) return; // No coordinates available
+
+      const mapSection = document.getElementById('map-section');
+      mapSection.style.display = 'block';
+
+      // Destroy old map
+      if (compMap) { compMap.remove(); compMap = null; }
+      mapMarkers = [];
+
+      compMap = L.map('comp-map').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(compMap);
+
+      // Subject marker (green)
+      const subjectIcon = L.divIcon({
+        className: '',
+        html: '<div style="background:#0B8F52;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+      L.marker([lat, lng], { icon: subjectIcon })
+        .addTo(compMap)
+        .bindPopup(`<strong>Subject</strong><br>${subject.address}<br>$${(subject.currentValue || 0).toLocaleString()}`);
+
+      // Geocode and add comp markers
+      const allComps = [
+        ...(salesComps || []).map(c => ({ ...c, compType: 'sales' })),
+        ...(equityComps || []).map(c => ({ ...c, compType: 'equity' })),
+      ];
+
+      // Use Nominatim to geocode comps (rate limited: 1/sec)
+      geocodeComps(allComps, 0);
+    }
+
+    function geocodeComps(comps, index) {
+      if (index >= comps.length || !compMap) return;
+      const c = comps[index];
+      if (!c.address) { geocodeComps(comps, index + 1); return; }
+
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(c.address);
+      fetch(url)
+        .then(r => r.json())
+        .then(results => {
+          if (results && results.length > 0) {
+            const lat = parseFloat(results[0].lat);
+            const lon = parseFloat(results[0].lon);
+            const color = c.compType === 'sales' ? '#2563eb' : '#9333ea';
+            const icon = L.divIcon({
+              className: '',
+              html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6],
+            });
+            const psf = c.salePsf || c.assessedPsf || 0;
+            const marker = L.marker([lat, lon], { icon })
+              .addTo(compMap)
+              .bindPopup(
+                `<strong>${c.compType === 'sales' ? 'Sales' : 'Equity'} Comp</strong><br>` +
+                `${c.address.substring(0, 40)}<br>` +
+                `$${psf.toFixed(0)}/sqft | ${c.distance.toFixed(2)}mi` +
+                (c.salePrice ? `<br>Sale: $${c.salePrice.toLocaleString()}` : '')
+              );
+            mapMarkers.push(marker);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          // Rate limit: 1 request per second for Nominatim
+          setTimeout(() => geocodeComps(comps, index + 1), 1100);
+        });
+    }
+
+    // ── Init: API key hardcoded for internal test console ──
+    (function initApiKey() {
+      /* key now server-side via /api/cad-proxy; nothing to seed */
+    })();
+
+    // ══════════════════════════════════════════════════════
+    // EXPORT FUNCTIONS
+    // ══════════════════════════════════════════════════════
+
+    function showExportBar() {
+      const bar = document.getElementById('export-bar');
+      bar.style.display = 'flex';
+      const state = lastOriginalResult?.state || (lastResponse?.result?.state) || 'TX';
+      const btnText = document.getElementById('btn-report-text');
+      btnText.textContent = state === 'TX' ? 'Generate Protest Report' : 'Generate Appeal Report';
+    }
+
+    // ── Shared: gather comps with adjusted PSF for export ──
+    function getExportComps() {
+      const calcData = runCalc(lastResponse.attom_data, getParams());
+      const salesIncl = calcData.salesIncluded || new Set();
+      const equityIncl = calcData.equityIncluded || new Set();
+      const sales = (calcData.rawSales || []).filter(c => salesIncl.has(c.address));
+      const equity = (calcData.rawEquity || []).filter(c => equityIncl.has(c.address));
+      // Build adj PSF lookup from psfWeights: [adjPsf, weight, rawPsf, comp]
+      const adjPsfMap = {};
+      for (const pw of (calcData.salesPsfWeights || [])) {
+        if (pw[3]) adjPsfMap[pw[3].address] = pw[0];
+      }
+      for (const pw of (calcData.equityPsfWeights || [])) {
+        if (pw[3]) adjPsfMap[pw[3].address] = pw[0];
+      }
+      return { sales, equity, calcData, adjPsfMap };
+    }
+
+    // ── Shared: build comp notes (age comparison, PSF difference) ──
+    function compNote(comp, subject, adjPsf, rawPsf) {
+      const notes = [];
+      const ageDiff = (comp.yearBuilt && subject.yearBuilt) ? comp.yearBuilt - subject.yearBuilt : 0;
+      if (Math.abs(ageDiff) <= 3) notes.push('Similar age');
+      else if (ageDiff > 0) notes.push(ageDiff + 'yr newer');
+      else notes.push(Math.abs(ageDiff) + 'yr older');
+      const subPsf = subject.currentValue / subject.livingSqft;
+      const diff = Math.round(subPsf - rawPsf);
+      if (diff > 0) notes.push('Subject $' + diff + '/sqft higher');
+      return notes.join(', ');
+    }
+
+    // ── Shared: build detailed comp table (matches Duval St format) ──
+    function buildCompTableHTML(comps, type, state, subject, adjPsfMap) {
+      if (!comps.length) return '<p style="color:#999;font-size:13px;">No ' + type + ' comparables used.</p>';
+      const isSales = type === 'sales';
+      const prefix = isSales ? 'S' : 'E';
+      const th = 'padding:8px 10px;text-align:left;border-bottom:2px solid #DFFFEA;color:#0C593E;font-size:11px;font-weight:600;';
+      let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">';
+      html += '<thead><tr>';
+      html += '<th style="' + th + '">#</th>';
+      html += '<th style="' + th + '">Address</th>';
+      html += '<th style="' + th + 'text-align:center;">Dist</th>';
+      html += '<th style="' + th + 'text-align:center;">Sq Ft</th>';
+      html += '<th style="' + th + 'text-align:center;">Year</th>';
+      if (isSales) {
+        html += '<th style="' + th + 'text-align:center;">Sale Date</th>';
+        html += '<th style="' + th + 'text-align:right;">Sale Price</th>';
+      } else {
+        html += '<th style="' + th + 'text-align:right;">Appraised Value</th>';
+      }
+      html += '<th style="' + th + 'text-align:right;">$/Sq Ft</th>';
+      html += '<th style="' + th + 'text-align:right;">Adj $/Sq Ft</th>';
+      html += '<th style="' + th + '">Notes</th>';
+      html += '</tr></thead><tbody>';
+
+      const psfValues = [];
+      comps.forEach((c, i) => {
+        const rawPsf = isSales ? (c.salePsf || 0) : (c.assessedPsf || 0);
+        const adjPsf = (adjPsfMap && adjPsfMap[c.address]) ? adjPsfMap[c.address] : rawPsf;
+        const notes = subject ? compNote(c, subject, adjPsf, rawPsf) : '';
+        psfValues.push(rawPsf);
+        const td = 'padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top;';
+        html += '<tr>';
+        html += '<td style="' + td + 'font-weight:700;color:#0C593E;">' + prefix + (i+1) + '</td>';
+        html += '<td style="' + td + 'font-size:12px;max-width:180px;">' + (c.address || '') + '</td>';
+        html += '<td style="' + td + 'text-align:center;">' + (c.distance || 0).toFixed(2) + ' mi</td>';
+        html += '<td style="' + td + 'text-align:center;">' + (c.livingSqft || 0).toLocaleString() + '</td>';
+        html += '<td style="' + td + 'text-align:center;">' + (c.yearBuilt || '?') + '</td>';
+        if (isSales) {
+          html += '<td style="' + td + 'text-align:center;">' + (c.saleDate || '').substring(0, 7) + '</td>';
+          html += '<td style="' + td + 'text-align:right;">' + formatMoney(c.salePrice || 0) + '</td>';
+        } else {
+          html += '<td style="' + td + 'text-align:right;">' + formatMoney(c.assessedTotal || 0) + '</td>';
+        }
+        html += '<td style="' + td + 'text-align:right;">$' + rawPsf.toFixed(2) + '</td>';
+        html += '<td style="' + td + 'text-align:right;font-weight:600;">$' + adjPsf.toFixed(2) + '</td>';
+        html += '<td style="' + td + 'font-size:11px;color:#5C666F;max-width:120px;">' + notes + '</td>';
+        html += '</tr>';
+      });
+
+      // Summary row
+      const avg = psfValues.length ? Math.round(psfValues.reduce((a,b) => a+b, 0) / psfValues.length) : 0;
+      const sorted = [...psfValues].sort((a,b) => a-b);
+      const median = sorted.length ? Math.round(sorted[Math.floor(sorted.length/2)]) : 0;
+      const subPsf = subject ? Math.round(subject.currentValue / subject.livingSqft) : 0;
+      const diffPct = median > 0 ? ((subPsf - median) / median * 100).toFixed(1) : '0';
+      const label = isSales ? 'Sales' : 'Appraised';
+      html += '</tbody></table>';
+      html += '<div style="margin-top:10px;padding:10px 12px;background:#f8f8f8;border-radius:6px;font-size:12px;color:#5C666F;">';
+      html += '<strong>Average $/SF (' + label + '):</strong> $' + avg;
+      html += ' &nbsp;&nbsp; <strong>Median $/SF:</strong> $' + median;
+      html += ' &nbsp;&nbsp; <strong>Subject $/SF:</strong> $' + subPsf;
+      html += ' &nbsp;&nbsp; <strong>Difference:</strong> +' + diffPct + '% above comparable ' + (isSales ? 'sales' : 'appraisals');
+      html += '</div>';
+      return html;
+    }
+
+    // ── Shared: build street view grid (3-col, with labels matching comp table) ──
+    function buildStreetViewHTML(subject, comps, type) {
+      const isSales = type === 'sales';
+      const prefix = isSales ? 'S' : 'E';
+      const pinColor = isSales ? '#2563eb' : '#0C593E';
+      let html = '';
+      // Comps grid (3 columns like Duval St)
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+      comps.forEach((c, i) => {
+        const psf = isSales ? (c.salePsf || 0) : (c.assessedPsf || 0);
+        const valueLabel = isSales ? ('Sale &middot; $' + psf.toFixed(2) + '/sqft &middot; ' + formatMoney(c.salePrice || 0))
+                                   : ('Appraised &middot; $' + psf.toFixed(2) + '/sqft &middot; ' + formatMoney(c.assessedTotal || 0));
+        html += '<div style="border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">';
+        html += '<div style="position:relative;">';
+        html += '<img src="' + streetViewUrl(c.address, 400, 200) + '" style="width:100%;height:auto;display:block;" loading="lazy" />';
+        html += '<span style="position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:' + pinColor + ';color:white;font-size:12px;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,0.3);">' + prefix + (i+1) + '</span>';
+        html += '</div>';
+        html += '<div style="padding:8px 10px;font-size:12px;">';
+        html += '<strong>' + prefix + (i+1) + ' — ' + (c.address || '') + '</strong>';
+        html += '<div style="color:#5C666F;font-size:11px;">' + valueLabel + '</div>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+      return html;
+    }
+
+    // ── Shared: static map with numbered pins ──
+    function buildStaticMapUrl(subject, salesComps, equityComps) {
+      let markers = 'markers=color:green%7Clabel:S%7C' + encodeURIComponent(subject.address);
+      equityComps.forEach((c, i) => {
+        if (c.address) markers += '&markers=color:purple%7Clabel:' + (i+1) + '%7C' + encodeURIComponent(c.address);
+      });
+      salesComps.forEach((c, i) => {
+        if (c.address) markers += '&markers=color:blue%7Clabel:' + (i+1) + '%7C' + encodeURIComponent(c.address);
+      });
+      return 'https://maps.googleapis.com/maps/api/staticmap?size=700x400&maptype=roadmap&' + markers + '&key=AIzaSyCxv3yJzOu2fvLyjfyOy6uyo8McABVQbSE';
+    }
+
+    // ── Report page styles ──
+    const REPORT_STYLES = `
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family: 'Inter', -apple-system, sans-serif; padding: 32px 40px; color: #1A1A1A; max-width: 900px; margin: 0 auto; line-height:1.5; font-size:14px; }
+      h1 { font-family: 'Space Grotesk', sans-serif; color: #1A1A1A; font-size: 26px; margin-bottom: 2px; }
+      h2.section { font-size: 13px; font-weight: 700; color: #1A1A1A; text-transform: uppercase; letter-spacing: 0.5px; margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
+      .sub { color: #5C666F; font-size: 13px; margin-bottom: 20px; }
+      .subject-card { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; padding: 20px; background: #fafafa; border-radius: 10px; border: 1px solid #e8e8e8; }
+      .subject-card .details { font-size: 13px; line-height: 1.8; }
+      .subject-card .details strong { color: #0C593E; }
+      .subject-card .details .label { color: #5C666F; }
+      .subject-card img { width: 100%; border-radius: 8px; border: 1px solid #e0e0e0; }
+      .values-row { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0; margin: 16px 0; border-top: 2px solid #e0e0e0; border-bottom: 2px solid #e0e0e0; }
+      .values-row .val-block .label { font-size: 12px; color: #5C666F; }
+      .values-row .val-block .amount { font-size: 24px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+      .values-row .val-block .psf { font-size: 12px; color: #5C666F; }
+      .protest-row { display: flex; gap: 40px; padding: 12px 0; font-size: 13px; }
+      .protest-row .item { }
+      .protest-row .item .label { color: #5C666F; font-size: 11px; }
+      .protest-row .item .value { font-weight: 600; }
+      .badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+      .badge-STRONG { background:#DFFFEA; color:#0C593E; }
+      .badge-MODERATE { background:#E8F4FD; color:#1a6fa0; }
+      .badge-MARGINAL { background:#FFF8E1; color:#8a6d00; }
+      .badge-NO_CASE { background:#f5f5f5; color:#666; }
+      .narrative { font-size: 14px; line-height: 1.7; margin: 12px 0; }
+      .narrative p { margin-bottom: 12px; }
+      .map-img { width:100%; border-radius:10px; border:1px solid #e0e0e0; margin:12px 0; }
+      .legend { font-size:11px; color:#999; margin-bottom:16px; }
+      .legend span { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:3px; vertical-align:middle; }
+      .adj-note { margin-top:12px; padding:12px; background:#f8f8f8; border-radius:6px; font-size:11px; color:#5C666F; line-height:1.6; }
+      .adj-note table { width:100%; border-collapse:collapse; margin-top:8px; }
+      .adj-note td { padding:4px 8px; border-bottom:1px solid #e8e8e8; font-size:11px; }
+      .adj-note td:first-child { font-weight:600; width:120px; }
+      .footer { margin-top:32px; padding-top:14px; border-top:1px solid #e0e0e0; font-size:11px; color:#999; text-align:right; }
+      @media print {
+        body { padding:16px; }
+        .badge, .badge-STRONG, .badge-MODERATE, .badge-MARGINAL { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        .no-print { display:none; }
+      }
+    `;
+
+    // ── Adjustment methodology note ──
+    const ADJ_NOTE = `
+      <div class="adj-note">
+        <strong>$/Sq Ft</strong> is each comparable's raw value per square foot. <strong>Adj $/Sq Ft</strong> accounts for differences between each comparable and the subject:
+        <table>
+          <tr><td>Size (GLA)</td><td>Larger comp = value adjusted down (10% rate per size difference)</td></tr>
+          <tr><td>Age</td><td>Newer comp = adjusted down; Older = adjusted up (0.3%/year, max 15%)</td></tr>
+          <tr><td>Land Value</td><td>Adjusted for differences in CAD land valuations (max 10% of comp $/sqft)</td></tr>
+          <tr><td>Distance Weight</td><td>Closer comps weighted more heavily: Weight = 1/(1+distance)&sup2;</td></tr>
+          <tr><td>Adjustment Cap</td><td>No comp adjusted more than 30% from its raw $/sqft</td></tr>
+        </table>
+        The <strong>requested value</strong> is derived from the distance-weighted median of all adjusted $/sqft values, applied to the subject's living area.
+      </div>`;
+
+    // ══════════════════════════════════════════
+    // Export PDF — formal protest report (matches Duval St format)
+    // ══════════════════════════════════════════
+    // ── Shared: build the full report HTML (used by both Export PDF and Generate Report) ──
+    function buildReportHTML(narrative) {
+      const r = lastOriginalResult;
+      const subject = parseSubject(lastResponse.attom_data);
+      const state = r.state || subject.state;
+      const term = state === 'TX' ? 'Protest' : 'Appeal';
+      const valueTerm = state === 'TX' ? 'Appraised' : 'Assessed';
+      const districtName = r.county + (state === 'TX' ? ' Central Appraisal District' : ' County Assessor');
+      const basisLabel = state === 'TX' ? 'UA &sect;41.43<br>Unequal Appraisal' : 'Prop 8<br>Decline in Value';
+      const { sales, equity, adjPsfMap } = getExportComps();
+      const showSales = state === 'CA' ? sales : [];
+      const showEquity = equity;
+
+      const subPsf = Math.round(r.current_value / r.living_sqft);
+      const recPsf = Math.round(r.recommended_value / r.living_sqft);
+
+      const mapUrl = buildStaticMapUrl(subject, showSales, showEquity);
+      const equityTable = showEquity.length ? buildCompTableHTML(showEquity, 'equity', state, subject, adjPsfMap) : '';
+      const salesTable = showSales.length ? buildCompTableHTML(showSales, 'sales', state, subject, adjPsfMap) : '';
+      const equitySV = showEquity.length ? buildStreetViewHTML(subject, showEquity, 'equity') : '';
+      const salesSV = showSales.length ? buildStreetViewHTML(subject, showSales, 'sales') : '';
+
+      return `<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <title>${r.address} — ${state} Property Tax ${term}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+        <style>${REPORT_STYLES}</style>
+      </head><body>
+
+        <h1>Property Tax ${term} — ${r.address}</h1>
+        <p class="sub">${districtName} | Tax Year ${r.tax_year || new Date().getFullYear()} | ${new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})}</p>
+
+        <div class="subject-card">
+          <div class="details">
+            <strong>Subject Property</strong><br>
+            <span class="label">Address:</span> ${r.address}<br>
+            ${r.owner_name ? '<span class="label">Owner:</span> ' + r.owner_name + '<br>' : ''}
+            <span class="label">County:</span> ${r.county}, ${state}<br>
+            ${r.parcel_id ? '<span class="label">Account #:</span> ' + r.parcel_id + '<br>' : ''}
+            <span class="label">Type:</span> ${r.property_type}<br>
+            <span class="label">Current Value:</span> ${formatMoney(r.current_value)}<br>
+            <span class="label">Year Built:</span> ${r.year_built}<br>
+            <span class="label">Living Sqft:</span> ${r.living_sqft.toLocaleString()}<br>
+            <span class="label">Beds / Baths:</span> ${r.beds || '—'} / ${r.baths}<br>
+            <span class="label">Estimated Tax Rate:</span> ${(r.effective_tax_rate * 100).toFixed(3)}%
+          </div>
+          <img src="${streetViewUrl(r.address, 500, 350)}" alt="Subject Property" />
+        </div>
+
+        <div class="values-row">
+          <div class="val-block">
+            <div class="label">Current ${valueTerm} Value:</div>
+            <div class="amount">${formatMoney(r.current_value)}</div>
+            <div class="psf">($${subPsf}/sqft)</div>
+          </div>
+          <div class="val-block" style="text-align:right;">
+            <div class="label">Requested Value:</div>
+            <div class="amount">${formatMoney(r.recommended_value)} <span style="font-size:14px;font-weight:400;color:#5C666F;">($${recPsf}/sqft)</span></div>
+          </div>
+        </div>
+
+        <div class="protest-row">
+          <div class="item"><div class="label">${term} Basis:</div><div class="value">${basisLabel}</div></div>
+          <div class="item"><div class="label">Appraisal Gap:</div><div class="value">${r.gap_percentage}%</div></div>
+          <div class="item"><div class="label">Evidence Strength:</div><div class="value"><span class="badge badge-${r.confidence}">${r.confidence}</span></div></div>
+        </div>
+
+        ${narrative ? '<h2 class="section">Summary</h2><div class="narrative">' + narrative.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</div>' : ''}
+
+        ${equityTable ? '<h2 class="section">Appraisal Comparables — Equal &amp; Uniform Evidence (' + showEquity.length + ' Used)</h2>' + equityTable + ADJ_NOTE : ''}
+
+        ${equitySV ? '<div style="margin-top:16px;">' + equitySV + '</div>' : ''}
+
+        ${salesTable ? '<h2 class="section">Sales Comparables (' + showSales.length + ' Used)</h2>' + salesTable : ''}
+
+        ${salesSV ? '<div style="margin-top:16px;">' + salesSV + '</div>' : ''}
+
+        <h2 class="section">Comparable Properties Map</h2>
+        <img class="map-img" src="${mapUrl}" alt="Comparable Properties Map" />
+        <div class="legend">
+          Green = Subject
+          ${showEquity.length ? ' | Purple (1-' + showEquity.length + ') = Appraisal Comps (E1-E' + showEquity.length + ')' : ''}
+          ${showSales.length ? ' | Blue (1-' + showSales.length + ') = Sales Comps (S1-S' + showSales.length + ')' : ''}
+        </div>
+
+        <div class="footer">Generated ${new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})}</div>
+      </body></html>`;
+    }
+
+    // ── Shared: call /api/generate-report for CAD-facing narrative ──
+    async function fetchCADNarrative() {
+      const r = lastOriginalResult;
+      const subject = parseSubject(lastResponse.attom_data);
+      const state = r.state || subject.state;
+      const { calcData } = getExportComps();
+
+      const salesPayload = (calcData.rawSales || []).map(c => ({
+        address: c.address, distance: c.distance, livingSqft: c.livingSqft,
+        yearBuilt: c.yearBuilt, salePrice: c.salePrice, salePsf: c.salePsf, saleDate: c.saleDate,
+      }));
+      const equityPayload = (calcData.rawEquity || []).map(c => ({
+        address: c.address, distance: c.distance, livingSqft: c.livingSqft,
+        yearBuilt: c.yearBuilt, assessedTotal: c.assessedTotal, assessedPsf: c.assessedPsf,
+      }));
+
+      const resp = await fetch('/api/cad-proxy?path=/api/generate-report', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          state,
+          subject: {
+            address: subject.address, county: subject.county, livingSqft: subject.livingSqft,
+            yearBuilt: subject.yearBuilt, beds: subject.beds, baths: subject.baths,
+            propertyType: subject.propertyType, condition: subject.condition,
+          },
+          calc_result: {
+            current_value: r.current_value, recommended_value: r.recommended_value,
+            reduction_amount: r.reduction_amount, annual_savings: r.annual_savings,
+            gap_percentage: r.gap_percentage, confidence: r.confidence,
+            baseline_psf: r.baseline_psf, subject_psf: r.subject_psf,
+            baseline_source: r.baseline_source, effective_tax_rate: r.effective_tax_rate,
+          },
+          sales_comps: salesPayload,
+          equity_comps: equityPayload,
+        }),
+      });
+
+      const data = await resp.json();
+      if (data.success && data.narrative) return data.narrative;
+      throw new Error(data.error || 'Narrative generation failed');
+    }
+
+    // ══════════════════════════════════════════
+    // Export PDF — print-ready protest report for CAD
+    // Calls LLM for appraiser-facing narrative, opens in new tab
+    // ══════════════════════════════════════════
+    async function exportPDF() {
+      if (!lastOriginalResult) { alert('Run a lookup first.'); return; }
+
+      const btn = document.getElementById('btn-export-pdf');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      try {
+        const narrative = await fetchCADNarrative();
+        const html = buildReportHTML(narrative);
+        const win = window.open('', '_blank');
+        if (!win) { alert('Popup blocked — please allow popups for this site and try again.'); return; }
+        win.document.write(html);
+        win.document.close();
+        // Auto-trigger Save as PDF dialog after images load
+        win.onload = () => setTimeout(() => win.print(), 600);
+      } catch (err) {
+        alert('Report generation failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+
+    // Export JSON
+    function exportJSON() {
+      if (!lastResponse) { alert('Run a lookup first.'); return; }
+      const blob = new Blob([JSON.stringify(lastResponse, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (lastOriginalResult?.address || 'taxdrop-result').replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ══════════════════════════════════════════
+    // Generate Protest Report — editable .html download (rename to .doc for Word)
+    // Calls same LLM, downloads as file instead of opening tab
+    // ══════════════════════════════════════════
+    async function generateReport() {
+      if (!lastResponse || !lastOriginalResult) { alert('Run a lookup first.'); return; }
+
+      const btn = document.getElementById('btn-generate-report');
+      const btnText = document.getElementById('btn-report-text');
+      const origText = btnText.textContent;
+      btn.disabled = true;
+      btn.classList.add('generating');
+      btnText.textContent = 'Generating...';
+
+      try {
+        const narrative = await fetchCADNarrative();
+        const html = buildReportHTML(narrative);
+
+        // Add Word XML namespace so .doc opens without warnings
+        const wordHtml = html.replace('<html>', '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">');
+        const blob = new Blob(['\ufeff' + wordHtml], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const r = lastOriginalResult;
+        const state = r.state || 'TX';
+        const term = state === 'TX' ? 'Protest' : 'Appeal';
+        a.href = url;
+        a.download = r.address.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_') + '_' + term + '_Report.doc';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Report generation failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('generating');
+        btnText.textContent = origText;
+      }
+    }
+  </script>
+
+  <!-- Chat FAB + Panel -->
+  <button class="chat-fab" onclick="toggleChat()" title="Formula Assistant">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  </button>
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <div>
+        <h4>Formula Assistant</h4>
+        <span>Ask about the formula, results, or parameter changes</span>
+      </div>
+      <button class="chat-close" onclick="toggleChat()">&times;</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg system">Ask me anything about the savings formula, a specific property's results, or what parameters to adjust.</div>
+    </div>
+    <div class="chat-input-bar">
+      <input type="text" id="chat-input" placeholder="Ask about the formula..."
+        onkeydown="if(event.key==='Enter' && !event.shiftKey) sendChat()" />
+      <button id="chat-send" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+
+  </div><!-- end page-content -->
+
+</body>
+</html>
