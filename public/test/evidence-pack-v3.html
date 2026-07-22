@@ -928,6 +928,21 @@
     });
   }
 
+  // Non-blocking stale-year notice for agent edit mode. Reuses the .ed-banner
+  // class, which is already hidden in @media print (line ~659), so it shows
+  // on-screen for the reviewing agent but never lands in an exported PDF.
+  function showStaleBanner(ty) {
+    const root = $('state-report');
+    if (!root || root.querySelector('.stale-note')) return;
+    const b = document.createElement('div');
+    b.className = 'ed-banner stale-note';
+    b.setAttribute('contenteditable', 'false');
+    b.style.cssText = 'background:#fff4d6;border-color:#e8c766;color:#7a5b00;font-weight:600;';
+    b.textContent = '⚠︎ The engine returned ' + ty + ' data for this property (a known duplicate-row issue), not '
+      + CURRENT_TAX_YEAR + '. Review the figures before you export.';
+    root.insertBefore(b, root.firstChild);
+  }
+
   // ────────── Search + fetch ──────────
   async function submitSearch() {
     const addr = ($('addr-input').value || '').trim();
@@ -989,7 +1004,14 @@
       // error and dead-ends the lookup (the 2026-06-24 regression).
       const ty = Number(data && data.subject && data.subject.tax_year);
       const isAttom = data && data.data_source === 'ATTOM';
-      if (!isAttom && ty && ty < CURRENT_TAX_YEAR) {
+      const staleYear = (!isAttom && ty && ty < CURRENT_TAX_YEAR) ? ty : 0;
+      // Agent edit mode (?edit=1) is a trusted power-user surface: a stale
+      // duplicate-row year must NOT dead-end the lookup — the agent needs the
+      // report rendered so they can review and hand-correct it before exporting.
+      // So in edit mode we render anyway and drop a non-blocking amber banner;
+      // the customer-facing path (no edit=1) keeps the hard block below.
+      const _editMode = /^(1|true)$/.test(new URLSearchParams(window.location.search).get('edit') || '');
+      if (staleYear && !_editMode) {
         $('error-detail').innerHTML =
           '<p><b>Engine returned stale ' + ty + ' data for this property.</b></p>' +
           '<p>We have ' + CURRENT_TAX_YEAR + ' data on file. This is a known stale-record ' +
@@ -999,6 +1021,7 @@
       }
       renderReport(data);
       showState('report');
+      if (staleYear && _editMode) showStaleBanner(staleYear);
     } catch (e) {
       const msg = (e.message || String(e)).toLowerCase();
       const isNetwork = msg.includes('failed to fetch') || msg.includes('network') || msg.includes('abort');
