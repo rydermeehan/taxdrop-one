@@ -2123,7 +2123,14 @@
       </div>
     `;
 
-    $('state-report').innerHTML = headerHtml + section1Html + section2Html + summaryHtml + notesHtml + section3Html + section4Html + section5Html + section6Html + footerHtml;
+    // Adjustments Summary (section5) now renders AFTER Sales Comparison
+    // (section6) so the methodology detail sits last. Then renumber the section
+    // headers in document order, so numbering stays sequential regardless of the
+    // reorder or which optional sections render. (Ryder 2026-07-22.)
+    let reportHtml = headerHtml + section1Html + section2Html + summaryHtml + notesHtml + section3Html + section4Html + section6Html + section5Html + footerHtml;
+    let _secN = 0;
+    reportHtml = reportHtml.replace(/<span class="section-num">[^<]*<\/span>/g, () => '<span class="section-num">' + (++_secN) + '.</span>');
+    $('state-report').innerHTML = reportHtml;
 
     // Strip an empty Notes box from PDF exports (window.print). Bound once; uses
     // live textContent so it's correct whether or not the agent typed notes.
