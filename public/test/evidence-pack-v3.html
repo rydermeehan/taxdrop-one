@@ -1738,6 +1738,9 @@
       // not CAD account number. Same value, clearer label.
       ['PID #', fmtAccount(s.parcel_id, s.county)],
       ['Land size', landSizeVal],
+      // Ryder 2026-07-22: show the building's living area alongside the lot size
+      // (both in sqft, distinct labels) — it was previously deferred to Section 3.
+      ['Living area', subjSqft ? fmtNum(subjSqft) + ' sqft' : null],
       ['CAD ' + (s.tax_year || 2026) + ' noticed land value', s.land_value ? fmtMoney(s.land_value) : null],
       ['CAD ' + (s.tax_year || 2026) + ' noticed improvement value', s.improvement_value ? fmtMoney(s.improvement_value) : null],
       ['CAD ' + (s.tax_year || 2026) + ' noticed market value', subjVal ? ('<b>' + fmtMoney(subjVal) + '</b>' + (subjSqft ? ' (' + fmtPsf(subjPsf) + ')' : '')) : null],
