@@ -527,7 +527,7 @@ const isSupportedFile = (f) =>
 // render from the county packet when the engine row is stale/missing. Value +
 // comps come from the packet; geo/county come from the engine row (`engineGeo`,
 // which even when stale still carries correct location) when we have one.
-function cadToPackData(cadRaw, engineGeo, addressFallback) {
+function cadToPackData(cad, cadRaw, engineGeo, addressFallback) {
   const subj = (cadRaw && cadRaw.subject) || {};
   const g = (engineGeo && engineGeo.subject) || {};
   const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
@@ -540,17 +540,34 @@ function cadToPackData(cadRaw, engineGeo, addressFallback) {
     appraisal_district: g.appraisal_district || null,
     us_state: g.us_state || g.state || g.site_state || null,
     lat: num(g.lat), lng: num(g.lng),
-    land_value: num(g.land_value),
+    improvement_value: num(subj.improvementValue),
+    land_value: num(subj.landValue) != null ? num(subj.landValue) : num(g.land_value),
   };
+  // The packet's comps are already fully adjusted by the CAD — c.value is the
+  // FINAL indicated value (extract.js schema). Carry it as `indicated` (and as
+  // total_market so any incidental read is at least in-range); the pack's CAD
+  // render uses `indicated` directly and does NOT re-adjust.
   const comps = ((cadRaw && cadRaw.comps) || [])
     .map((c) => ({
       total_market: num(c.value),
+      indicated: num(c.value),
       living_sqft: num(c.sqft),
       address: c.address || "",
+      net_adjustment: num(c.netAdjustment),
+      sale_price: num(c.salePrice),
+      sale_date: c.saleDate || "",
+      year_built: num(c.yearBuilt),
       distance_mi: num(c.distanceMi),
     }))
-    .filter((c) => c.total_market && c.total_market > 0 && c.living_sqft && c.living_sqft > 0);
-  return { subject, comps, sales_comps: [], data_source: 'CAD' };
+    .filter((c) => c.indicated && c.indicated > 0);
+  return {
+    subject, comps, sales_comps: [], data_source: 'CAD',
+    preAdjusted: true,
+    // The packet's own subject medians (sales grid / equity grid). The pack uses
+    // the lower defensible of these below the subject as the opinion of value.
+    cadSalesMedian: num(cad && cad.salesMedian),
+    cadEquityMedian: num(cad && (cad.equityMedian != null ? cad.equityMedian : cad.weightedMedian)),
+  };
 }
 
 const HANDOFF_KEY = "taxdrop-analyzer-handoff";
@@ -669,7 +686,7 @@ function AgentApp() {
     // packet, build a pack-ready report from the packet so the exportable report
     // shows the packet's current-year notice + comps instead of stale engine data.
     const useCadForPack = !!(cadRawLocal && !cadRawLocal.demo && !our);
-    const cadPackData = useCadForPack ? cadToPackData(cadRawLocal, engineGeo, lookupAddr) : null;
+    const cadPackData = useCadForPack ? cadToPackData(cad, cadRawLocal, engineGeo, lookupAddr) : null;
     return { ok: true, r, cad, our, cadRaw: cadRawLocal, cadMethod: cadMethodLocal, lookupAddr, cadPackData };
   }, [address, files]);
 

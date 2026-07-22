@@ -1586,6 +1586,26 @@
     const opinionReduction = opinionVal ? (subjVal - opinionVal) : 0;
     const opinionReductionPct = opinionVal && subjVal ? (opinionReduction / subjVal) : 0;
 
+    // CAD-packet render mode (data_source:'CAD', ?source=cad). The packet is the
+    // county's own fully-worked analysis: c.value is each comp's FINAL indicated
+    // value and the packet states its own medians. So we do NOT re-run the pack's
+    // size adjustment — the opinion of value is the packet's median (lower
+    // defensible of sales vs equity below the subject), and the comp grid shows
+    // the indicated values as-is (Sections 3/4/5/6 branch on this below). These
+    // resolved aliases are what Sections 1, 2 and the summary read; on the engine
+    // path they equal the existing consts, so engine reports are unchanged.
+    const preAdjusted = !!(data && data.preAdjusted);
+    let opinionKeyR = opinionKey, opinionValR = opinionVal, opinionNoCaseR = opinionNoCase;
+    if (preAdjusted) {
+      const meds = [];
+      if (data.cadEquityMedian) meds.push({ key: 'equity', value: Number(data.cadEquityMedian) });
+      if (data.cadSalesMedian)  meds.push({ key: 'sales',  value: Number(data.cadSalesMedian) });
+      const below = meds.filter(m => m.value && subjVal && m.value < subjVal).sort((a, b) => a.value - b.value);
+      opinionKeyR = below.length ? below[0].key : null;
+      opinionValR = below.length ? below[0].value : null;
+      opinionNoCaseR = !opinionValR;
+    }
+
     // For the "Indicated value by approach" block: show every DEVELOPED approach
     // with its indicated value (even if not the lowest / not defensible), and
     // mark the opinion. Equity's indicated value is its median (or the anchored
@@ -1718,8 +1738,8 @@
       // Opinion of value moved into Section 1 (Ryder, 2026-07-22) — it lands in
       // the grid cell next to the noticed market value. Dropped by the hasVal
       // filter below when there's no supported reduction.
-      ['Opinion of value', (!opinionNoCase && opinionVal)
-        ? ('<b>' + fmtMoney(opinionVal) + '</b>' + (subjSqft ? ' (' + fmtPsf(opinionVal / subjSqft) + ')' : ''))
+      ['Opinion of value', (!opinionNoCaseR && opinionValR)
+        ? ('<b>' + fmtMoney(opinionValR) + '</b>' + (subjSqft ? ' (' + fmtPsf(opinionValR / subjSqft) + ')' : ''))
         : null],
       // Mike's V3 markup (La Vista, 2026-06-18): show YoY change directly
       // UNDER the prior-year notice in the same cell, rather than as a
@@ -1759,7 +1779,7 @@
     // Section 2 uses the reconciled OPINION (lowest defensible of equity vs
     // sales), not just the equity value — the customer's ask is the opinion.
     let section2Html;
-    if (opinionNoCase) {
+    if (opinionNoCaseR) {
       section2Html = `
         <h2><span class="section-num">2.</span> Owner's Requested ${s.tax_year || 2026} Market Value</h2>
         <div class="state-card" style="text-align:left;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);padding:18px 22px;margin:12px 0;">
@@ -1778,8 +1798,8 @@
           </div>
           <div class="rv-block requested">
             <div class="rv-label">Requested Market Value</div>
-            <div class="rv-amount">${fmtMoney(opinionVal)}</div>
-            <div class="rv-psf">${subjSqft ? fmtPsfBare(opinionVal / subjSqft) + '/sqft' : ''}${opinionKey === 'sales' ? ' &middot; sales comparison' : ''}</div>
+            <div class="rv-amount">${fmtMoney(opinionValR)}</div>
+            <div class="rv-psf">${subjSqft ? fmtPsfBare(opinionValR / subjSqft) + '/sqft' : ''}${opinionKeyR === 'sales' ? ' &middot; sales comparison' : ''}</div>
           </div>
         </div>
       `;
@@ -1917,7 +1937,54 @@
     // paragraph underneath is gone entirely. The ARB and the assessor already
     // know what an equity analysis is and where noticed values come from —
     // explaining it reads as amateur and pads the brief.
-    const section3Html = `
+    // CAD-packet mode: the packet already carries each comp's FINAL indicated
+    // value, so we present those directly (no re-adjustment) with the packet's
+    // median as the reconciled opinion. Columns collapse to what the extractor
+    // captures — living area, sale price, net adjustment, indicated value.
+    function buildCadSection3() {
+      const list = (data.comps || []).filter(c => Number(c.indicated) > 0);
+      const anySale = list.some(c => Number(c.sale_price) > 0);
+      const anyAdj = list.some(c => c.net_adjustment != null && Number(c.net_adjustment) !== 0);
+      const th = 'style="padding:6px 8px;text-align:right;font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--gray-300);"';
+      const thL = th.replace('text-align:right', 'text-align:left');
+      const td = 'style="padding:6px 8px;text-align:right;font-size:12px;border-bottom:1px solid var(--gray-200);"';
+      const tdL = td.replace('text-align:right', 'text-align:left');
+      const head =
+        `<th ${thL}>Comparable</th><th ${th}>Living area</th>` +
+        (anySale ? `<th ${th}>Sale price</th>` : '') +
+        (anyAdj ? `<th ${th}>Net adj.</th>` : '') +
+        `<th ${th}>Indicated value</th>`;
+      const rows = list.map((c, i) => {
+        const addr = titleCase(String(c.address || ('Comparable ' + (i + 1))));
+        return `<tr>` +
+          `<td ${tdL}>${addr}</td>` +
+          `<td ${td}>${c.living_sqft ? fmtNum(c.living_sqft) + ' sqft' : '&mdash;'}</td>` +
+          (anySale ? `<td ${td}>${Number(c.sale_price) > 0 ? fmtMoney(c.sale_price) : '&mdash;'}</td>` : '') +
+          (anyAdj ? `<td ${td}>${c.net_adjustment != null ? fmtMoney(c.net_adjustment) : '&mdash;'}</td>` : '') +
+          `<td ${td}><b>${fmtMoney(c.indicated)}</b></td>` +
+        `</tr>`;
+      }).join('');
+      const colSpan = 1 + (anySale ? 1 : 0) + (anyAdj ? 1 : 0);
+      const medianRow = opinionValR
+        ? `<tr><td ${tdL} colspan="${colSpan + 1}"><b>Median indicated value (opinion of value)</b></td><td ${td}><b>${fmtMoney(opinionValR)}</b></td></tr>`
+        : '';
+      return `
+        <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
+        <div style="display:inline-block;background:var(--mint);color:var(--emerald-dark);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid var(--emerald-light);margin:0 0 14px;">
+          Equity Analysis &middot; Unequal Appraisal
+        </div>
+        <div class="location-map">
+          <img src="${mapUrl}" alt="Property location map" onerror="this.style.display='none';this.nextElementSibling.style.display='none';">
+          <div class="map-caption"><div class="map-legend">${mapLegend}</div></div>
+        </div>
+        <table class="property-table" style="width:100%;border-collapse:collapse;margin-top:8px;">
+          <thead><tr>${head}</tr></thead>
+          <tbody>${rows}${medianRow}</tbody>
+        </table>
+        <p class="methodology-note" style="margin-top:12px;">Indicated values are the appraisal district&rsquo;s own adjusted figures from the ${s.tax_year || 2026} evidence packet for this property; the opinion of value is their median.</p>
+      `;
+    }
+    const section3Html = preAdjusted ? buildCadSection3() : `
       <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
       <div style="display:inline-block;background:var(--mint);color:var(--emerald-dark);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid var(--emerald-light);margin:0 0 14px;">
         Equity Analysis &middot; Unequal Appraisal
@@ -1935,7 +2002,18 @@
     `;
 
     // ── Section 4: Analysis (two-methodology framing) ──
-    const section4Html = renderAnalysisSection(s, best, methodology, psf, reduction, reductionPct, requestedVal, comps, engine);
+    // CAD-packet mode: the district already did the adjustment work, so we don't
+    // narrate the engine's size/land method — we state the median-of-indicated
+    // conclusion and keep the non-appraisal disclaimer.
+    const section4Html = preAdjusted ? `
+      <h2><span class="section-num">4.</span> Analysis</h2>
+      <div class="analysis-summary" style="margin-top:14px;">
+        <p>${opinionNoCaseR
+          ? `The appraisal district&rsquo;s ${s.tax_year || 2026} evidence packet does not develop a median indicated value below the subject&rsquo;s noticed value of ${fmtMoney(subjVal)}.`
+          : `The appraisal district&rsquo;s ${s.tax_year || 2026} evidence packet develops an indicated value for the subject from each comparable, already adjusted for size, condition, and land. The median of those indicated values &mdash; <b>${fmtMoney(opinionValR)}</b> &mdash; is the requested value: ${fmtMoney(subjVal - opinionValR)} below the subject&rsquo;s noticed value of ${fmtMoney(subjVal)}.`}</p>
+        <p class="methodology-note" style="margin-top:12px;">Non-appraisal disclaimer: this report is not a USPAP-compliant appraisal. It is prepared solely to support a property tax protest under Texas Property Tax Code &sect;41.43, using the appraisal district&rsquo;s own published evidence for this property.</p>
+      </div>
+    ` : renderAnalysisSection(s, best, methodology, psf, reduction, reductionPct, requestedVal, comps, engine);
 
     // ── Section 5: Adjustment Methodology ──
     // Documents how the engine normalizes each comp's $/sqft to the subject
@@ -1944,7 +2022,7 @@
     // update both. The pool/garage row is marked county-gated because
     // POOL_GARAGE_ROLLOUT_COUNTIES is {"collin"} as of 2026-06-10; the
     // engine silently skips it for other counties.
-    const section5Html = renderMethodologySection(s, comps);
+    const section5Html = preAdjusted ? '' : renderMethodologySection(s, comps);
 
     // ── Section 6: Sales Comparison Analysis (Clear Capital MLS closed sales) ──
     // Ryder 2026-07-21: revived as a competing market approach. Renders from the
@@ -1955,6 +2033,7 @@
     // grid). ATTOM Section 7 stays retired — Clear Capital is the sole sales
     // source now.
     const section6Html = (() => {
+      if (preAdjusted) return '';   // CAD packet comps are already the grid in Section 3
       if (!salesComps.length) return '';
       const th = 'style="padding:6px 8px;text-align:right;font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--gray-300);"';
       const thL = th.replace('text-align:right', 'text-align:left');
@@ -2013,13 +2092,13 @@
     // Section 1 subject grid, and these two blocks after Section 2 — an auto-
     // generated opinion summary, then the agent notes box (only when notes were
     // actually added; the old cover always printed an empty box).
-    const sumRedAmt = (!opinionNoCase && subjVal && opinionVal != null) ? (subjVal - opinionVal) : 0;
+    const sumRedAmt = (!opinionNoCaseR && subjVal && opinionValR != null) ? (subjVal - opinionValR) : 0;
     const sumRedPct = (sumRedAmt > 0 && subjVal) ? (sumRedAmt / subjVal * 100) : 0;
     const summaryHtml = `
       <div class="opinion-summary" style="margin:14px 0 20px;padding:14px 18px;border-left:3px solid var(--emerald-dark);background:#f2fbf6;font-size:13.5px;line-height:1.7;color:#1A1A1A;">
-        ${opinionNoCase
+        ${opinionNoCaseR
           ? `The comparable evidence does not support a reduction below the subject&rsquo;s noticed value of <b>${fmtMoney(subjVal)}</b> this cycle.`
-          : `The subject is noticed at <b>${fmtMoney(subjVal)}</b>. The comparable evidence supports an opinion of value of <b>${fmtMoney(opinionVal)}</b>&mdash;a reduction of <b>${fmtMoney(sumRedAmt)}</b> (${sumRedPct.toFixed(1)}% below the noticed value).`}
+          : `The subject is noticed at <b>${fmtMoney(subjVal)}</b>. The comparable evidence supports an opinion of value of <b>${fmtMoney(opinionValR)}</b>&mdash;a reduction of <b>${fmtMoney(sumRedAmt)}</b> (${sumRedPct.toFixed(1)}% below the noticed value).`}
       </div>
     `;
     const notesHtml = reportNotes ? `
