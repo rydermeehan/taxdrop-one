@@ -442,22 +442,33 @@
     font-size: 11px;
     color: var(--gray-500);
   }
-  .location-map .map-legend > span { white-space: nowrap; }
+  .location-map .map-legend > span {
+    white-space: nowrap;
+    /* Ryder 2026-07-21: the pin is a 16px circle inside an 11px text line, so
+       at the default line-height its box overflowed into the caption line
+       below it. Match the line box to the pin. */
+    display: inline-flex;
+    align-items: center;
+    line-height: 18px;
+  }
   .location-map .map-legend .legend-pin {
     display: inline-block;
-    width: 16px;
+    flex: 0 0 auto;
+    min-width: 16px;
     height: 16px;
-    border-radius: 50%;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: 8px;
     color: white;
     font-weight: 700;
     font-size: 10px;
     line-height: 16px;
     text-align: center;
-    margin-right: 4px;
-    vertical-align: middle;
+    margin-right: 5px;
   }
   .location-map .map-legend .pin-subject { background: #2E7D32; }
   .location-map .map-legend .pin-comp { background: #6A1B9A; }
+  .location-map .map-legend .pin-sales { background: #E65100; }
   table.equity-grid tfoot td {
     background: var(--mint);
     color: var(--emerald-dark);
@@ -604,13 +615,32 @@
   }
   .footer .data-source { margin-top: 4px; color: var(--gray-400); font-size: 9.5px; }
 
+  /* Ryder 2026-07-21: the report is handed to ARBs and assessors and must not
+     read as TaxDrop-branded. Chrome/Safari draw the date / document title /
+     source URL / page number into the @page MARGIN box — the only way to
+     suppress them from CSS is to leave no margin box to draw into. Page
+     whitespace is reinstated below via body padding (left/right, applied to
+     every page) plus h2 padding-top (so a section that starts a new page
+     doesn't butt against the sheet edge).
+     Residual caveat: a user who overrides margins to "Default" in the print
+     dialog gets the browser headers back — the dialog's own "Headers and
+     footers" checkbox wins over CSS. */
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
   @media print {
-    body { padding: 20px; max-width: none; font-size: 12px; }
+    body { padding: 0.5in; max-width: none; font-size: 12px; }
     .search-shell { display: none !important; }
     .export-bar { display: none !important; }
-    h2 { page-break-after: avoid; }
+    h2 { page-break-after: avoid; padding-top: 0.3in; }
+    .cover-summary h2:first-child { padding-top: 0; }
+    .footer { padding-bottom: 0.35in; }
     .location-map img { max-width: 580px; }
-    .location-map .map-legend { font-size: 9px; gap: 8px; }
+    .location-map .map-legend { font-size: 9px; column-gap: 12px; row-gap: 5px; margin-bottom: 10px; }
+    .location-map .map-legend > span { line-height: 16px; }
+    .location-map .map-legend .legend-pin { min-width: 14px; height: 14px; line-height: 14px; font-size: 9px; }
     .requested-value, .analysis-summary { page-break-inside: avoid; }
     /* Mike's V3 markup (La Vista, 2026-06-18): "make the comps table all
        fit on one page". Tightened padding, font, and label column width
@@ -624,7 +654,49 @@
     table.equity-grid tbody td.photo-cell .no-photo { width: 80px; height: 48px; }
     table.equity-grid tbody tr.section-header td { font-size: 8.5px; padding: 2px 6px; }
     table.equity-grid tfoot td { padding: 4px 6px; font-size: 10px; }
+    /* Editor chrome never prints (belt-and-suspenders; it's also stripped from
+       the saved overlay and removed before an editor-initiated print). */
+    .ed-toolbar, .ed-banner, .ed-ctl { display: none !important; }
+    [contenteditable] { outline: none !important; }
   }
+
+  /* ── WYSIWYG report editor chrome (agent-only, ?edit=1) ───────────────── */
+  body.ed-on { padding-top: 92px; }           /* clear the fixed toolbar */
+  .ed-toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 16px; background: #0C593E; color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: 13px;
+  }
+  .ed-toolbar .ed-title { font-weight: 700; margin-right: 6px; }
+  .ed-toolbar button {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.12);
+    color: #fff; padding: 7px 13px;
+  }
+  .ed-toolbar button.primary { background: #C4FF64; color: #0C593E; border-color: #C4FF64; }
+  .ed-toolbar button:disabled { opacity: .5; cursor: default; }
+  .ed-toolbar .ed-status { margin-left: auto; font-size: 12px; opacity: .9; }
+  .ed-banner {
+    background: #FFF8E1; border: 1px solid #F0E2BB; color: #7a5a20;
+    border-radius: 8px; padding: 9px 13px; margin: 0 0 16px; font-size: 12.5px;
+  }
+  /* Editable regions get a soft affordance; delete controls a red pill. */
+  body.ed-on #state-report [contenteditable="true"]:hover { outline: 1px dashed #0B8F52; outline-offset: 2px; }
+  body.ed-on #state-report [contenteditable="true"]:focus { outline: 2px solid #0B8F52; outline-offset: 2px; }
+  .ed-ctl {
+    cursor: pointer; user-select: none; display: inline-flex; align-items: center;
+    justify-content: center; font-weight: 700; line-height: 1;
+  }
+  .ed-ctl.ed-col, .ed-ctl.ed-row {
+    width: 16px; height: 16px; border-radius: 50%; font-size: 12px;
+    background: #fdecea; color: #B42318; border: 1px solid #f3c0ba; margin-left: 6px;
+  }
+  .ed-ctl.ed-sec {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-left: 8px;
+    background: #fdecea; color: #B42318; border: 1px solid #f3c0ba; vertical-align: middle;
+  }
+  .ed-ctl:hover { background: #B42318; color: #fff; }
 </style>
 </head>
 <body>
@@ -644,7 +716,7 @@
 
 <!-- Empty state -->
 <div class="state-card" id="state-empty">
-  <h2>§41.43(b)(3) Equity Analysis Generator</h2>
+  <h2>Equity Analysis Generator</h2>
   <div class="lede">Enter a Texas property address above to generate a property-owner evidence submission for an unequal-appraisal protest.</div>
   <div class="examples">
     Examples: <a href="#" onclick="loadAddress('20022 Atasca Villas Dr, Humble, TX 77346')">Harris</a>
@@ -867,7 +939,9 @@
     const url = new URL(window.location.href);
     url.searchParams.set('address', addr);
     window.history.replaceState({}, '', url.toString());
-    document.title = 'Property Appraisal Report — ' + addr;
+    // Provisional title; renderReport() overwrites it with the final
+    // `{Address}-Value-Evidence` export filename once the subject loads.
+    document.title = titleCase(addr.split(',')[0].trim()).replace(/[^A-Za-z0-9]+/g, '_') + '-Value-Evidence';
 
     showState('loading');
     try {
@@ -1157,20 +1231,33 @@
     return obj;
   }
 
-  function renderReport(data) {
+  function renderReport(data, opts) {
+    // `curated` = this draft was reviewed by a human agent in /review (opened
+    // with ?review=1). When true, the agent's checked comp set is authoritative
+    // and the automated comp culls below are skipped — see the guard before the
+    // filter block. Live, un-reviewed lookups pass curated=false and get the
+    // full automatic filtering.
+    const curated = !!(opts && opts.curated);
     const s = data.subject;
     let comps = data.comps || [];
     const _origComps = comps.slice();  // preserve for exclusion accounting
     const _origBest = comps[data.best_match_comp_index || 0] || null;
+    // Reviewer's customer-facing note for the cover Notes box (from
+    // overrides.reportNotes, attached to `our` server-side by applyOverrides).
+    // escapeDeep has already HTML-escaped it on the reviewed path; absent on
+    // live lookups. Distinct from the agent-only internal notes, which never
+    // reach the pack.
+    const reportNotes = (data.reportNotes == null ? '' : String(data.reportNotes)).trim();
 
-    // Filename = `TD-{PID}-{Address}.pdf` (Mike's 2026-06-19 request).
-    // Address is title-cased (CAD data is uppercase) so the saved file is
-    // legible as "TD-...-738-Pinehill-Ln.pdf" not "...-738-PINEHILL-LN".
+    // Filename = `{Address}-Value-Evidence.pdf` (Ryder, 2026-07-21). The
+    // report is delivered to ARBs and assessors and must not read as
+    // TaxDrop-branded, so the old "TD-{PID}-" prefix is gone. Address is
+    // title-cased (CAD data is uppercase) and spaces become underscores:
+    // "6101 LAKE SHORE DR" -> "6101_Lake_Shore_Dr-Value-Evidence.pdf".
     try {
-      const rawAddr = (s.full_address || s.site_address || '').split(',')[0].trim() || (document.title || '');
-      const safeAddr = titleCase(rawAddr).replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const safePid = (s.parcel_id || '').toString().replace(/[^A-Za-z0-9]+/g, '');
-      document.title = safePid ? `TD-${safePid}-${safeAddr}` : `TD-${safeAddr}`;
+      const rawAddr = (s.full_address || s.site_address || '').split(',')[0].trim();
+      const safeAddr = titleCase(rawAddr).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      document.title = safeAddr ? `${safeAddr}-Value-Evidence` : 'Value-Evidence';
     } catch (_) { /* title update is cosmetic; never let it block rendering */ }
 
     // ── v3 comp filtering (2026-06-17): renovation outlier + statistical
@@ -1186,6 +1273,39 @@
     const excludedRenovation = [];
     const excludedOutlier = [];
 
+    // compDistance — miles from the subject: prefer the engine's own
+    // `distance_mi` (no geocode, always present on real comps), else haversine
+    // from lat/lng, else null when neither is available. Used by both the hard
+    // floor (always) and the soft progressive cap (curated-skippable).
+    const _subjLatH = parseFloat(s.latitude), _subjLonH = parseFloat(s.longitude);
+    const compDistance = (c) => {
+      if (c.distance_mi != null && isFinite(Number(c.distance_mi))) return Number(c.distance_mi);
+      const cLat = parseFloat(c.latitude), cLon = parseFloat(c.longitude);
+      if (isFinite(_subjLatH) && isFinite(_subjLonH) && isFinite(cLat) && isFinite(cLon))
+        return _haversineMiles({ lat: _subjLatH, lng: _subjLonH }, { lat: cLat, lng: cLon });
+      return null;
+    };
+
+    // ── HARD far-distance floor (Ryder 2026-07-21) — ALWAYS runs, even on a
+    // curated/reviewed report. A comp >15 mi from the subject is categorically
+    // indefensible at ARB; no agent curation makes a 41-mile comp valid, so this
+    // floor sits OUTSIDE the !curated guard below. The softer, judgment-call
+    // culls (renovation, statistical outlier, cap-7/odd) stay agent-
+    // discretionary. Comps of unknown distance are kept (can't prove they're
+    // far). This also keeps the location map tight — a far comp can't blow the
+    // auto-fit viewport out to a multi-state view because it never reaches it.
+    const FAR_FLOOR_MI = 15;
+    comps = comps.filter(c => { const d = compDistance(c); return d == null || d <= FAR_FLOOR_MI; });
+
+    // Ryder 2026-07-21: on a REVIEWED draft (?review=1) a human agent has
+    // already curated the comp set in /review, and /api/report?applied=1 has
+    // dropped everything they unchecked — so `comps` here already IS their
+    // final checked set. Re-running these four automated culls would ship a
+    // DIFFERENT set than the boxes the agent saw ("agent picks 4, county gets
+    // 3"). Skip them when curated; they run only on live, un-reviewed lookups.
+    // The /review console now shows per-comp distance so the human can make the
+    // same call the distance cap used to make automatically.
+    if (!curated) {
     if (subjEffYear > 0) {
       comps = comps.filter(c => {
         const cEff = c.effective_year_built || c.year_built || 0;
@@ -1226,14 +1346,33 @@
       }
     }
 
-    // David (consultant) 2026-06-25: "I would recommend using an odd number of
-    // comparable properties, with no more than seven total." These briefs are
-    // often shown on TVs/projectors in hearing rooms and need to read fast.
-    // comps arrive sorted by living-area proximity (closest first); cap at 7,
-    // then drop the last (largest size-delta) survivor to land on an odd
-    // count. Most cases already return 5, so this only fires on even pools.
+    // ── Distance cap (Ryder, 2026-07-21) ──────────────────────────────────
+    // Mike's Lake Shore markup: "No comps this far away." Comp #1 sat 41.2 mi
+    // from the subject — indefensible at hearing regardless of how well it fit
+    // the size/vintage windows, and it blew the location map out to a
+    // four-state view. Distance was previously a tiebreaker only (see the
+    // applyEngineFilters note further down); it is now a hard filter here.
+    //
+    // Progressive widening, same shape as COMP_TIERS: take the tightest radius
+    // that still leaves COMP_MIN_KEEP comps. Comps with unknown distance are
+    // always kept — we can't prove they're far, and dropping them would gut the
+    // pool in counties whose rolls omit coordinates. Anything past the hard
+    // floor (15 mi) is already gone above, so no far-comp backstop is needed.
+    const DISTANCE_TIERS_MI = [1, 3, 5, 10];
+    if (comps.length) {
+      const withDist = comps.map(c => ({ comp: c, d: compDistance(c) }));
+      for (const radius of DISTANCE_TIERS_MI) {
+        const kept = withDist.filter(x => x.d == null || x.d <= radius);
+        if (kept.length >= COMP_MIN_KEEP) { comps = kept.map(x => x.comp); break; }
+      }
+    }
+
+    // Cap at 7 comps (Ryder 2026-07-21: keep 5–7 available, ideally 7, so the
+    // agent has room to add/remove in the editor). The old rule also dropped a
+    // comp to force an ODD count — removed, since it threw away a usable comp
+    // (6→5) that the agent may want; an even count is fine.
     if (comps.length > 7) comps = comps.slice(0, 7);
-    if (comps.length % 2 === 0 && comps.length > 1) comps = comps.slice(0, comps.length - 1);
+    } // end if (!curated) — reviewed drafts render the agent's exact comp set
 
     // Reindex bestIdx after filtering — if the original best comp survived,
     // find its new index; otherwise fall back to 0.
@@ -1380,6 +1519,81 @@
     const reduction = requestedVal ? (subjVal - requestedVal) : 0;
     const reductionPct = requestedVal && subjVal ? (reduction / subjVal) : 0;
 
+    // ── Sales-comparison approach (Clear Capital MLS closed sales) ──────────
+    // Ryder 2026-07-21: sales/market data is a competing MODEL approach. Sales
+    // comps are baked into the draft at intake (data.sales_comps, from the
+    // engine's /api/clear-capital/lookup) — never re-fetched live, so a reviewed
+    // report's opinion can't drift. We take the lowest-PSF closed sales, derive
+    // a sales-indicated value (median sale $/sqft × subject sqft), and let it
+    // COMPETE with the equity value: the lowest DEFENSIBLE approach becomes the
+    // opinion of value. Both approaches render their own table.
+    const salesComps = (Array.isArray(data.sales_comps) ? data.sales_comps : [])
+      .map(c => {
+        const price = Number(c.sale_price) || 0;
+        const sf = Number(c.living_sqft || c.sqft) || 0;
+        const closed = price > 0 && (c.sale_date || c.sale_dt) && (c.event_type === 'Sale' || !c.event_type);
+        return (closed && sf) ? Object.assign({}, c, { _price: price, _sf: sf, _psf: price / sf }) : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a._psf - b._psf)
+      .slice(0, 7);   // 7 lowest-PSF closed sales — mirrors the equity strategy
+
+    let salesMedPsf = null, salesIndicated = null, salesVal = null;
+    if (salesComps.length >= 3 && subjSqft) {
+      const psfs = salesComps.map(c => c._psf).sort((a, b) => a - b);
+      const n = psfs.length;
+      salesMedPsf = n % 2 === 1 ? psfs[Math.floor(n / 2)] : (psfs[n / 2 - 1] + psfs[n / 2]) / 2;
+      salesIndicated = Math.round(salesMedPsf * subjSqft);
+      const redPct = subjVal ? (subjVal - salesIndicated) / subjVal : 0;
+      if (salesIndicated < subjVal && redPct >= MEDIAN_REDUCTION_THRESHOLD) salesVal = salesIndicated;
+    }
+
+    // Reconcile the opinion of value = lowest DEFENSIBLE value across developed
+    // approaches. `requestedVal`/`methodology` above stay the EQUITY result
+    // (Section 4 narrates equity); the cover + Section 2 use the reconciled
+    // opinion. Equity is defensible unless methodology==='no_case'.
+    const equityVal = (methodology !== 'no_case') ? requestedVal : null;
+    const _defensible = [];
+    if (equityVal) _defensible.push({ key: 'equity', value: equityVal });
+    if (salesVal) _defensible.push({ key: 'sales', value: salesVal });
+    _defensible.sort((a, b) => a.value - b.value);
+    const opinionKey = _defensible.length ? _defensible[0].key : null;
+    const opinionVal = _defensible.length ? _defensible[0].value : null;
+    const opinionNoCase = !opinionVal;
+    const opinionReduction = opinionVal ? (subjVal - opinionVal) : 0;
+    const opinionReductionPct = opinionVal && subjVal ? (opinionReduction / subjVal) : 0;
+
+    // For the "Indicated value by approach" block: show every DEVELOPED approach
+    // with its indicated value (even if not the lowest / not defensible), and
+    // mark the opinion. Equity's indicated value is its median (or the anchored
+    // requestedVal); sales' is salesIndicated.
+    const equityIndicatedShow = (methodology !== 'no_case') ? requestedVal : (v3MedianIndicated || null);
+    const _shownApproaches = [];
+    if (equityIndicatedShow) _shownApproaches.push({ key: 'equity', label: 'Equity &mdash; unequal appraisal', value: equityIndicatedShow });
+    if (salesIndicated) _shownApproaches.push({ key: 'sales', label: 'Sales comparison (market)', value: salesIndicated });
+
+    // Emit the freshly-computed opinion to the /review console (parent frame) so
+    // its scorecard shows EXACTLY what this report shows — the pack is the single
+    // source of truth for comp→value math, so the two never drift as an agent
+    // toggles comps live. `approach` + both indicated values let the scorecard
+    // explain WHY the number stops moving: the delivered opinion is the lowest
+    // DEFENSIBLE of {equity, sales}, and the sales value is fixed at intake — so
+    // once sales is the floor, editing equity comps can't lower it. Same-origin
+    // only. (2026-07-21 — Ryder: comp removal must update the scorecard.)
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'td-report-values',
+          notice: subjVal,
+          opinion: opinionVal,
+          noCase: opinionNoCase,
+          approach: opinionKey,               // 'equity' | 'sales' | null — the binding approach
+          equity: equityIndicatedShow || null, // moves as comps change
+          sales: salesIndicated || null,       // fixed at intake
+        }, window.location.origin);
+      }
+    } catch (_) { /* cross-frame post is best-effort; never block rendering */ }
+
     // ── Section A: doc header (with export buttons) ──
     const headerHtml = `
       <div class="doc-header">
@@ -1421,7 +1635,10 @@
       fortbend: 'Fort Bend Central Appraisal District',
       galveston: 'Galveston Central Appraisal District',
       montgomery: 'Montgomery Central Appraisal District',
-    })[s.county] || (titleCase(s.county || '') + ' Central Appraisal District');
+    })[s.county] || (s.county ? titleCase(s.county) + ' Central Appraisal District' : null);
+    // Ryder 2026-07-21: when the payload carries no county the old fallback
+    // rendered a headless " Central Appraisal District" on the cover and in
+    // the footer. Emit null instead so the row/footer segment is omitted.
 
     // Top-of-page filing-info block removed 2026-06-03 — it duplicated
     // Section 1 (Subject Property). Notice date was the only unique field;
@@ -1510,14 +1727,15 @@
     // Layout: 2026 Notice Value (left, neutral) → Requested Market Value
     // (right, emphasized in emerald). Reduction $ + percent moved out of
     // this section per design — they appear in Section 5 Summary instead.
+    // Section 2 uses the reconciled OPINION (lowest defensible of equity vs
+    // sales), not just the equity value — the customer's ask is the opinion.
     let section2Html;
-    if (methodology === 'no_case') {
+    if (opinionNoCase) {
       section2Html = `
         <h2><span class="section-num">2.</span> Owner's Requested ${s.tax_year || 2026} Market Value</h2>
         <div class="state-card" style="text-align:left;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);padding:18px 22px;margin:12px 0;">
-          <b>No reduction defensible from the comparable set.</b>
-          After size, age, land, and feature adjustments, every one of the ${comps.length} comparables yields an indicated value at or above the subject's noticed value of ${fmtMoney(subjVal)}.
-          A &sect;41.43(b)(3) unequal-appraisal claim requires at least one adjusted comp to fall below the subject &mdash; that is not the case here.
+          <b>No reduction defensible from the available evidence.</b>
+          Neither the unequal-appraisal comparables nor the market sales yield an indicated value below the subject's noticed value of ${fmtMoney(subjVal)} by a defensible margin.
         </div>
       `;
     } else {
@@ -1531,36 +1749,101 @@
           </div>
           <div class="rv-block requested">
             <div class="rv-label">Requested Market Value</div>
-            <div class="rv-amount">${fmtMoney(requestedVal)}</div>
-            <div class="rv-psf">${(() => {
-              // David (consultant) 2026-06-25: the "% of CAD Notice" statistic
-              // "doesn't add value to the printed evidence packet." Removed —
-              // the requested value and its $/sqft stand on their own.
-              return fmtPsfBare(requestedVal / subjSqft) + '/sqft';
-            })()}</div>
+            <div class="rv-amount">${fmtMoney(opinionVal)}</div>
+            <div class="rv-psf">${subjSqft ? fmtPsfBare(opinionVal / subjSqft) + '/sqft' : ''}${opinionKey === 'sales' ? ' &middot; sales comparison' : ''}</div>
           </div>
         </div>
       `;
     }
 
     // ── Section 3: Comparable Property Analysis (location map + equity grid) ──
+    // Marker placement: prefer per-property lat/lng (exact) over address
+    // geocoding. Static Maps mis-resolves comp addresses to the wrong match
+    // across town (a different "Palmer Dr" / "Hudson Sail Cir"), which scattered
+    // this map 20 miles wide even though every comp is within half a mile. BUT
+    // the DB sometimes stores only a subdivision CENTROID shared by every comp —
+    // those would all stack on one pin — so only switch to lat/lng when the
+    // comps carry at least two DISTINCT coordinates; otherwise fall back to
+    // addresses. (Ryder 2026-07-21.)
+    // Read coords under either key: CAD/equity comps carry latitude/longitude;
+    // Clear Capital sales comps carry lat/lng (see api/index.py clear_capital_lookup
+    // → "lat"/"lng"). Without this, sales pins never found their coords and fell
+    // back to ambiguous address geocoding. (Ryder 2026-07-22.)
+    const _lat = (o) => parseFloat(o && (o.latitude != null ? o.latitude : o.lat));
+    const _lng = (o) => parseFloat(o && (o.longitude != null ? o.longitude : o.lng));
+    const _subjLa = _lat(s), _subjLo = _lng(s);
+    const _compCoordKey = (c) => { const la = _lat(c), lo = _lng(c); return (isFinite(la) && isFinite(lo)) ? la.toFixed(5) + ',' + lo.toFixed(5) : null; };
+    // A coordinate is usable only if finite AND near the subject. A stray 0,0 or
+    // a mis-stored coord must never reach the viewport math or a marker — that's
+    // what dragged the frame out to a multi-state view. ~1° ≈ 55–69 mi, well
+    // past the 15-mi comp floor, so real comps always pass.
+    const _saneCoord = (la, lo) => isFinite(la) && isFinite(lo) &&
+      (!isFinite(_subjLa) || !isFinite(_subjLo) || (Math.abs(la - _subjLa) < 1 && Math.abs(lo - _subjLo) < 1));
+    // Trust lat/lng only when the comps carry ≥2 DISTINCT sane coords (else the
+    // DB may hold one shared subdivision centroid that would stack every pin).
+    const _distinctCompCoords = new Set([...comps, ...salesComps].map(_compCoordKey).filter(Boolean)).size;
+    const _useLatLng = _distinctCompCoords > 1;
+    // Fully-qualify a comp address for geocoding: prefer a field that already
+    // carries a city/state/ZIP; if it's street-only, borrow the subject's
+    // city/state/ZIP. A bare "6017 Lakeside Dr, TX" resolves to the wrong street
+    // across the state and was what scattered the map. (Ryder 2026-07-21.)
+    const _subjLocale = (() => { const fa = String(s.full_address || ''); const i = fa.indexOf(','); return i > -1 ? fa.slice(i + 1).trim() : 'TX'; })();
+    const qualifyAddr = (o) => {
+      const raw = String(o.full_address || o.address || o.site_address || '').trim();
+      if (!raw) return _subjLocale;
+      if (/,/.test(raw) && /\b(TX|Texas)\b|\b\d{5}\b/.test(raw)) return raw;   // already has city + state/ZIP
+      return raw + ', ' + _subjLocale;                                        // street-only → borrow subject locale
+    };
+    const markerFor = (o) => {
+      const la = _lat(o), lo = _lng(o);
+      if (_useLatLng && _saneCoord(la, lo)) return la + ',' + lo;   // exact coords (comma is URL-safe here)
+      return encodeAddr(qualifyAddr(o));                            // qualified geocode fallback
+    };
+    // The map follows the approach(es) actually used: equity comparables plot as
+    // purple pins (E# in the legend), sales comparables as orange pins (S#). When
+    // both approaches are developed, both sets show. Google Static Maps labels
+    // are a single character, so the pin shows the number and color encodes the
+    // approach; the legend spells out E#/S#. (Ryder 2026-07-21.)
     const mapMarkers = [
-      `markers=color:green%7Clabel:S%7C${encodeAddr(subjAddrMaps)}`,
-      ...comps.map((c, i) => `markers=color:purple%7Clabel:${i + 1}%7C${encodeAddr(buildCompAddrForMaps(c, s))}`),
+      `markers=color:green%7Clabel:S%7C${markerFor(s)}`,
+      ...comps.map((c, i) => `markers=color:purple%7Clabel:${i + 1}%7C${markerFor(c)}`),
+      ...salesComps.map((c, i) => `markers=color:orange%7Clabel:${i + 1}%7C${markerFor(c)}`),
     ].join('&');
-    // Omit center+zoom so Google Static Maps auto-fits the viewport to include
-    // every marker (subject + all comparables). The previous hardcoded
-    // zoom=16 centered on the subject was clipping comps when they were more
-    // than ~0.3 mi away. (2026-06-03.)
-    // Hybrid maptype = satellite imagery + roads/labels. Mike's Bay Hollow
-    // request: aerial shows pools, lake views, large-lot issues that
-    // street-view + roadmap don't surface. Hybrid keeps the road labels
-    // so the consultant can still orient quickly. (2026-06-02 audit.)
-    const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=720x340&scale=2&maptype=hybrid` +
-      `&${mapMarkers}&key=${MAPS_KEY}`;
+    // Hybrid maptype = satellite + road labels (Mike's Bay Hollow request: aerial
+    // shows pools / lake views / large lots). Frame with an EXPLICIT center+zoom
+    // derived only from SANE coords (subject + comps with trustworthy lat/lng),
+    // NOT Google's marker auto-fit: an address-geocoded comp that resolves
+    // off-target then clips at the edge instead of blowing the whole map out to a
+    // multi-state view (the "too zoomed / comps way too far" bug). Auto-fit is
+    // used only as a fallback when we have no sane coords at all. (Ryder 2026-07-21.)
+    const _goodPts = [];
+    if (_saneCoord(_subjLa, _subjLo)) _goodPts.push([_subjLa, _subjLo]);
+    [...comps, ...salesComps].forEach(c => { const la = _lat(c), lo = _lng(c); if (_saneCoord(la, lo)) _goodPts.push([la, lo]); });
+    let viewParam = '';
+    if (_goodPts.length) {
+      const lats = _goodPts.map(p => p[0]), los = _goodPts.map(p => p[1]);
+      let minLa = Math.min(...lats), maxLa = Math.max(...lats), minLo = Math.min(...los), maxLo = Math.max(...los);
+      const cLa = (minLa + maxLa) / 2, cLo = (minLo + maxLo) / 2;
+      const padLa = Math.max((maxLa - minLa) * 0.35, 0.004), padLo = Math.max((maxLo - minLo) * 0.35, 0.004);
+      minLa -= padLa; maxLa += padLa; minLo -= padLo; maxLo += padLo;
+      const WORLD = 256, MAPW = 720, MAPH = 360;
+      const _latRad = (lat) => { const sn = Math.sin(lat * Math.PI / 180); const r = Math.log((1 + sn) / (1 - sn)) / 2; return Math.max(Math.min(r, Math.PI), -Math.PI) / 2; };
+      const latFrac = Math.abs(_latRad(maxLa) - _latRad(minLa)) / Math.PI;
+      let lngDiff = maxLo - minLo; if (lngDiff < 0) lngDiff += 360;
+      const lngFrac = lngDiff / 360;
+      const latZoom = Math.floor(Math.log2(MAPH / WORLD / Math.max(latFrac, 1e-9)));
+      const lngZoom = Math.floor(Math.log2(MAPW / WORLD / Math.max(lngFrac, 1e-9)));
+      let zoom = Math.min(latZoom, lngZoom, 16);
+      if (!isFinite(zoom)) zoom = 14;
+      zoom = Math.max(10, Math.min(16, zoom));   // never past metro level, never absurdly tight
+      viewParam = `&center=${cLa.toFixed(6)},${cLo.toFixed(6)}&zoom=${zoom}`;
+    }
+    const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=720x360&scale=2&maptype=hybrid` +
+      `&${mapMarkers}${viewParam}&key=${MAPS_KEY}`;
     const mapLegend = [
       `<span><span class="legend-pin pin-subject">S</span>Subject (${titleCase(s.site_address || '')})</span>`,
-      ...comps.map((c, i) => `<span><span class="legend-pin pin-comp">${i + 1}</span>${titleCase(c.site_address || '')}</span>`),
+      ...comps.map((c, i) => `<span><span class="legend-pin pin-comp">E${i + 1}</span>${titleCase(c.site_address || '')}</span>`),
+      ...salesComps.map((c, i) => `<span><span class="legend-pin pin-sales">S${i + 1}</span>${titleCase(c.site_address || c.address || '')}</span>`),
     ].join('\n');
 
     const ingestionDate = s.notice_date ? isoToLongDate(s.notice_date) : '';
@@ -1598,22 +1881,24 @@
     // clearly identify whether it is an Equity Analysis or a Sales Analysis."
     // This grid is built entirely from CAD-noticed values (not MLS/recorded
     // sales), so it is an equity / unequal-appraisal analysis under
-    // §41.43(b)(3). Labeled explicitly with a badge under the section header.
+    // an equity / unequal-appraisal analysis. Labeled with a badge under the
+    // section header.
+    //
+    // Ryder 2026-07-21: no statute citation in the badge, and the explainer
+    // paragraph underneath is gone entirely. The ARB and the assessor already
+    // know what an equity analysis is and where noticed values come from —
+    // explaining it reads as amateur and pads the brief.
     const section3Html = `
       <h2><span class="section-num">3.</span> Comparable Property Analysis</h2>
-      <div style="display:inline-block;background:var(--mint);color:var(--emerald-dark);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid var(--emerald-light);margin:0 0 10px;">
-        Equity Analysis &middot; Unequal Appraisal (§41.43(b)(3))
+      <div style="display:inline-block;background:var(--mint);color:var(--emerald-dark);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid var(--emerald-light);margin:0 0 14px;">
+        Equity Analysis &middot; Unequal Appraisal
       </div>
-      <p style="font-size:13px;color:var(--gray-500);margin:4px 0 12px;">
-        This is an <b>equity analysis</b> &mdash; comparables are valued from the appraisal district's own noticed values, not from market sales. ${comparablesIntro}
-        ${classText}${schoolText}.
-      </p>
 
       <div class="location-map">
         <img src="${mapUrl}" alt="Property location map" onerror="this.style.display='none';this.nextElementSibling.style.display='none';">
         <div class="map-caption">
           <div class="map-legend">${mapLegend}</div>
-          <div style="margin-top:6px;">Pin numbers correspond to comparable column numbers in the table below. Map data &copy; Google.</div>
+          <div style="margin-top:6px;">Purple pins (E#) are equity comparables; orange pins (S#) are sales comparables. Pin numbers correspond to the row/column numbers in the analysis tables. Map data &copy; Google.</div>
         </div>
       </div>
 
@@ -1632,15 +1917,66 @@
     // engine silently skips it for other counties.
     const section5Html = renderMethodologySection(s, comps);
 
-    // Sections 6 (Clear Capital MLS sales) + 7 (ATTOM closed-sales) were
-    // removed from v2 on 2026-06-03. The render templates, fetch calls,
-    // and footer attribution are stripped from this file; the helper
-    // functions further down (fetchSalesComps, renderSalesCompTable,
-    // fetchAttomSales, renderAttomSalesCompTable, and the shared
-    // engine-style comp filter at line ~1093) are kept inert so v3 can
-    // restore the sections by re-adding the render templates + fetch
-    // calls back into innerHTML. The full sales-comps version is
-    // preserved at evidence-pack-v3.html.
+    // ── Section 6: Sales Comparison Analysis (Clear Capital MLS closed sales) ──
+    // Ryder 2026-07-21: revived as a competing market approach. Renders from the
+    // draft's baked-in sales_comps (never re-fetched). When it produces the
+    // lowest defensible value it becomes the opinion of value (reconciled on the
+    // cover); otherwise it stands as supporting evidence. Row-per-comp table
+    // (market sales read more naturally that way than the transposed equity
+    // grid). ATTOM Section 7 stays retired — Clear Capital is the sole sales
+    // source now.
+    const section6Html = (() => {
+      if (!salesComps.length) return '';
+      const th = 'style="padding:6px 8px;text-align:right;font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--gray-300);"';
+      const thL = th.replace('text-align:right', 'text-align:left');
+      const td = 'style="padding:6px 8px;text-align:right;font-size:12px;border-bottom:1px solid var(--gray-200);"';
+      const tdL = td.replace('text-align:right', 'text-align:left');
+      const rows = salesComps.map((c, i) => {
+        const addr = titleCase(c.address || c.site_address || c.full_address || ('Sale ' + (i + 1)));
+        const saleDate = (() => { const raw = c.sale_date || c.sale_dt || ''; try { return isoToLongDate(raw) || String(raw); } catch (_) { return String(raw); } })();
+        const dist = (c.distance_mi != null && isFinite(Number(c.distance_mi))) ? Number(c.distance_mi).toFixed(2) + ' mi' : '—';
+        return `<tr>
+          <td ${tdL}>${addr}</td>
+          <td ${td}>${saleDate}</td>
+          <td ${td}>${fmtMoney(c._price)}</td>
+          <td ${td}>${fmtNum(c._sf)}</td>
+          <td ${td}><b>${fmtPsf(c._psf)}</b></td>
+          <td ${td}>${c.year_built || '—'}</td>
+          <td ${td}>${dist}</td>
+        </tr>`;
+      }).join('');
+      const isOpinion = opinionKey === 'sales';
+      const salesLine = salesIndicated
+        ? `<div class="calc-line">
+             Median sale $/sqft (${salesComps.length} closed sales): <b>${fmtPsf(salesMedPsf)}</b><br>
+             Subject's living area: ${fmtNum(subjSqft)} sqft<br>
+             Sales-indicated market value: <b>${fmtMoney(salesIndicated)}</b>${subjSqft ? ' (' + fmtPsf(salesIndicated / subjSqft) + ')' : ''}<br>
+             Subject's current notice: ${fmtMoney(subjVal)}<br>
+             ${salesIndicated < subjVal
+               ? 'Indicated reduction: <b>' + fmtMoney(subjVal - salesIndicated) + '</b> (' + (((subjVal - salesIndicated) / subjVal) * 100).toFixed(2) + '% of current notice)'
+               : 'The sales-indicated value is at or above the subject&rsquo;s notice, so this approach does not support a reduction.'}
+           </div>`
+        : `<p class="methodology-note">Fewer than three qualifying closed sales were available, so a sales-indicated value was not developed.</p>`;
+      return `
+        <h2><span class="section-num">6.</span> Sales Comparison Analysis</h2>
+        <div style="display:inline-block;background:var(--sky-blue,#C6F0FF);color:#0b4a63;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:4px;border:1px solid #9bd8ee;margin:0 0 12px;">
+          Market Approach &middot; Closed Sales${isOpinion ? ' &middot; Opinion of Value' : ''}
+        </div>
+        <div class="equity-grid-wrapper" style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;min-width:560px;">
+            <thead><tr>
+              <th ${thL}>Sale address</th><th ${th}>Sale date</th><th ${th}>Sale price</th>
+              <th ${th}>Living area (SF)</th><th ${th}>$/SF</th><th ${th}>Year built</th><th ${th}>Distance</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="analysis-summary" style="margin-top:14px;">
+          ${salesLine}
+          <p class="methodology-note" style="margin-top:12px;">Closed MLS sales from Clear Capital, filtered to the ${salesComps.length} lowest $/sqft transactions in the subject&rsquo;s size and vintage range. Market sales support a §41.43(b)(1) market-value argument; they are shown alongside the unequal-appraisal (equity) analysis, and the opinion of value reflects the lower defensible of the two approaches.</p>
+        </div>
+      `;
+    })();
 
     // ── Cover / Summary page (David, consultant, 2026-06-25) ──
     // "The first page should serve as an executive summary of the property...
@@ -1651,31 +1987,31 @@
     // the opinion of value is seen first and the supporting evidence (Sections
     // 1–5) builds from there. Most of this data already lives downstream; the
     // cover consolidates it onto one page.
-    const opinionValueDisplay = (methodology === 'no_case')
+    const opinionValueDisplay = opinionNoCase
       ? 'No reduction supported'
-      : fmtMoney(requestedVal);
+      : fmtMoney(opinionVal);
 
-    // Values indicated by each valuation approach. Only the equity (unequal-
-    // appraisal) approach is developed in this analysis; the others are listed
-    // so the ARB sees they were considered, not silently omitted.
-    const approachRows = [
-      ['Equity &mdash; unequal appraisal (§41.43(b)(3))',
-        (methodology === 'no_case') ? '<span class="na">No reduction supported</span>' : '<b>' + fmtMoney(requestedVal) + '</b>'],
-      ['Sales comparison (market)', '<span class="na">Not developed</span>'],
-      ['Income', '<span class="na">Not developed</span>'],
-      ['Cost', '<span class="na">Not developed</span>'],
-    ].map(([k, v]) => `<tr><td class="label">${k}</td><td class="value" style="text-align:right;">${v}</td></tr>`).join('');
+    // Values indicated by each DEVELOPED approach (equity + sales comparison),
+    // with the lowest-defensible one marked as the opinion of value. Only
+    // developed approaches are listed — no "Not developed" filler rows.
+    const approachRows = _shownApproaches.map(a => {
+      const isOpinion = a.key === opinionKey;
+      const badge = isOpinion ? ' <span style="color:var(--emerald-dark);font-weight:700;font-size:9.5px;letter-spacing:.05em;">· OPINION</span>' : '';
+      const val = isOpinion ? '<b>' + fmtMoney(a.value) + '</b>' : fmtMoney(a.value);
+      return `<tr><td class="label">${a.label}${badge}</td><td class="value" style="text-align:right;">${val}</td></tr>`;
+    }).join('');
 
     // Value history — David: "showing the previous three years of values can
-    // also be helpful." We surface every year on file (current notice + prior
-    // notice today; a full 3-year history needs additional CAD history data,
-    // see note in the implementation summary). Only render the prior year when
-    // it's present.
-    const historyRows = [
-      [`${s.tax_year || 2026} CAD noticed market value`, subjVal ? fmtMoney(subjVal) : null],
-      [`${(s.tax_year || 2026) - 1} CAD noticed market value`, subjPrior ? fmtMoney(subjPrior) : null],
-    ].filter(([_, v]) => hasVal(v))
-     .map(([k, v]) => `<tr><td class="label">${k}</td><td class="value" style="text-align:right;">${v}</td></tr>`).join('');
+    // also be helpful." Ryder 2026-07-21: only when the current notice is
+    // HIGHER than the prior year. A flat or falling history is not evidence
+    // for us; printing it hands the panel the "you already got a reduction"
+    // rebuttal. Same rule as the Section 1 prior-year row. If there is no
+    // prior year on file, or it isn't an increase, the whole block is dropped.
+    const historyIsIncrease = !!(subjPrior && subjVal && subjVal > subjPrior);
+    const historyRows = !historyIsIncrease ? '' : [
+      [`${s.tax_year || 2026} CAD noticed market value`, fmtMoney(subjVal)],
+      [`${(s.tax_year || 2026) - 1} CAD noticed market value`, fmtMoney(subjPrior)],
+    ].map(([k, v]) => `<tr><td class="label">${k}</td><td class="value" style="text-align:right;">${v}</td></tr>`).join('');
 
     const coverHtml = `
       <div class="cover-summary" style="page-break-after:always;">
@@ -1688,9 +2024,9 @@
             <div class="rv-psf">${subjSqft ? fmtPsfBare(subjPsf) + '/sqft' : ''}</div>
           </div>
           <div class="rv-block requested">
-            <div class="rv-label">Final Opinion of Value</div>
+            <div class="rv-label">Opinion of Value</div>
             <div class="rv-amount">${opinionValueDisplay}</div>
-            <div class="rv-psf">${(methodology !== 'no_case' && subjSqft) ? fmtPsfBare(requestedVal / subjSqft) + '/sqft' : ''}</div>
+            <div class="rv-psf">${(!opinionNoCase && subjSqft) ? fmtPsfBare(opinionVal / subjSqft) + '/sqft' : ''}</div>
           </div>
         </div>
 
@@ -1706,8 +2042,9 @@
             </table>
           </div>
           <div>
+            ${approachRows ? `
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Indicated value by approach</div>
-            <table class="property-table" style="margin:0;">${approachRows}</table>
+            <table class="property-table" style="margin:0;">${approachRows}</table>` : ''}
             ${historyRows ? `
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin:16px 0 6px;">Value history</div>
             <table class="property-table" style="margin:0;">${historyRows}</table>` : ''}
@@ -1716,7 +2053,11 @@
 
         <div style="margin-top:20px;">
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Notes</div>
-          <div style="border:1px solid var(--gray-300);border-radius:6px;min-height:120px;background:repeating-linear-gradient(transparent,transparent 27px,var(--gray-200) 27px,var(--gray-200) 28px);"></div>
+          <!-- One padded box for both states: padding keeps text off the border,
+               white-space:pre-wrap preserves the agent's line breaks (Enter now
+               produces real new lines in the editor), min-height gives a visible
+               notes area even when empty. (Ryder 2026-07-21.) -->
+          <div style="border:1px solid var(--gray-300);border-radius:6px;padding:16px 18px;min-height:110px;font-size:13px;line-height:1.85;color:#1A1A1A;white-space:pre-wrap;">${reportNotes || ''}</div>
         </div>
       </div>
     `;
@@ -1724,18 +2065,31 @@
     // ── Footer ──
     const footerHtml = `
       <div class="footer">
-        ${cadName} &middot; Tax Year ${s.tax_year || 2026} &middot; Account ${fmtAccount(s.parcel_id, s.county)}
+        ${[cadName, `Tax Year ${s.tax_year || 2026}`, `Account ${fmtAccount(s.parcel_id, s.county)}`]
+          .filter(Boolean).join(' &middot; ')}
       </div>
     `;
 
-    $('state-report').innerHTML = headerHtml + coverHtml + section1Html + section2Html + section3Html + section4Html + section5Html + footerHtml;
+    $('state-report').innerHTML = headerHtml + coverHtml + section1Html + section2Html + section3Html + section4Html + section5Html + section6Html + footerHtml;
 
-    // Kick off async distance enrichment for the equity grid. DB only
-    // stores subdivision-centroid lat/lng so we have to geocode each
-    // comp's actual address through Google Maps to get per-property
-    // distances. Runs after the main render so the page isn't blocked
-    // on a multi-comp geocode round-trip.
-    enrichCompDistances(s, comps).catch(err => console.warn('[distance] enrichment failed:', err));
+    // WYSIWYG overlay (Ryder 2026-07-21): when an agent has hand-edited this
+    // report in the on-page editor, the saved HTML snapshot REPLACES the freshly
+    // rendered sections — that edited version is the deliverable, for both the
+    // agent preview and the customer's copy. The overlay is authored only by a
+    // sup-gated agent (the save endpoint is sup-only), so it's trusted HTML and
+    // injected raw. When an overlay is applied we skip distance enrichment — it
+    // would overwrite the agent's frozen cells.
+    const overlayHtml = opts && typeof opts.overlayHtml === 'string' ? opts.overlayHtml : '';
+    if (overlayHtml) {
+      $('state-report').innerHTML = overlayHtml;
+    } else {
+      // Kick off async distance enrichment for the equity grid. DB only
+      // stores subdivision-centroid lat/lng so we have to geocode each
+      // comp's actual address through Google Maps to get per-property
+      // distances. Runs after the main render so the page isn't blocked
+      // on a multi-comp geocode round-trip.
+      enrichCompDistances(s, comps).catch(err => console.warn('[distance] enrichment failed:', err));
+    }
 
     // Auto-export hook: when TaxDrop One embeds this page in a hidden
     // iframe with ?export=pdf|docx, fire the matching export ONCE all
@@ -1768,6 +2122,20 @@
           }, 300);
         });
       }
+    } catch (_) { /* no-op */ }
+
+    // Agent edit mode (address path): /test/evidence-pack-v3?address=…&edit=1
+    // turns the freshly-analyzed report into the in-place WYSIWYG editor with no
+    // jti. Save is hidden (nothing to persist to); Export reads the live DOM.
+    // Review mode initializes the editor via renderFromStored with a real jti,
+    // so it is excluded here; export mode wins if both edit=1 and export are set.
+    try {
+      const _p = new URLSearchParams(window.location.search);
+      const _wantEdit = /^(1|true)$/.test(_p.get('edit') || '');
+      const _isReview = _p.get('review') === '1' || _p.get('review') === 'true';
+      const _exp = (_p.get('export') || '').toLowerCase();
+      const _isExport = _exp === 'pdf' || _exp === 'docx';
+      if (_wantEdit && !_isReview && !_isExport) initReportEditor(null);
     } catch (_) { /* no-op */ }
   }
 
@@ -2533,7 +2901,7 @@
       const askValue = baselineValue;  // statute-aligned: median of visible comps × subject sqft
       const recPsf = subjSqft && askValue ? (askValue / subjSqft) : null;
       const source = useAdjusted
-        ? 'median of comparable properties in Section 3 after §41.43(b)(3) feature adjustments'
+        ? 'median of comparable properties in Section 3 after feature adjustments'
         : 'median of comparable properties in Section 3';
       const lowCompPsfFmt = psf.lowest_comp_psf ? fmtPsf(psf.lowest_comp_psf) : '—';
       // Recompute reduction / pct since we replaced askValue.
@@ -2571,7 +2939,7 @@
         const adjPsf = psf.median_adjusted_psf;
         const adjValue = psf.median_adjusted_value;
         adjustmentsHtml = `
-          <p style="margin-top:14px;"><b>§41.43(b)(3) "appropriately adjusted" — feature adjustments applied:</b></p>
+          <p style="margin-top:14px;"><b>Feature adjustments applied:</b></p>
           <ul style="margin:6px 0 14px;padding-left:20px;font-size:13px;">${summary}</ul>
           ${adjPsf ? `
           <p>After adjustments, the median comparable PSF moves from <b>${fmtPsf(baselinePsf)}</b> to <b>${fmtPsf(adjPsf)}</b>${adjValue ? `, indicating an adjusted market value of <b>${fmtMoney(adjValue)}</b>` : ''}. Adjustment values are TX-default flat-$ figures (pool $25K, garage $10K/space) consistent with published HCAD and DCAD methodology.</p>
@@ -2581,7 +2949,7 @@
       return `
         <h2><span class="section-num">4.</span> Analysis</h2>
         <div class="analysis-summary">
-          <p>Tex. Property Tax Code &sect;41.43(b)(3) provides that the appraised value of the property must be equal to or less than the median appraised value of a reasonable number of comparable properties${useAdjusted ? ' <i>appropriately adjusted</i>' : ''}. The ${compsCount} comparables in Section 3 are the same-subdivision peers used for this analysis; their <b>${useAdjusted ? 'adjusted ' : ''}median noticed value per square foot</b> is the statutory baseline.</p>
+          <p>The ${compsCount} comparables in Section 3 are the peers used for this analysis; their <b>${useAdjusted ? 'adjusted ' : ''}median noticed value per square foot</b> is the baseline for the requested value.</p>
 
           <div class="calc-line">
             ${useAdjusted ? 'Adjusted median PSF' : 'Median PSF'} of comparables in Section 3: <b>${baselinePsf ? fmtPsf(baselinePsf) : '—'}</b><br>
@@ -2716,14 +3084,14 @@
         : `&mdash; only ${medianRedPct.toFixed(2)}% below the subject's noticed value of ${fmtMoney(subjVal)}, below the 3% threshold needed to anchor on the median.`;
 
       const yoyParagraph = yoyHigh ? `
-        <p><b>Year-over-year jump:</b> the subject's noticed value rose ${(yoyPct * 100).toFixed(1)}% from ${fmtMoney(subjPrior)} (${s.tax_year ? s.tax_year - 1 : 2025}) to ${fmtMoney(subjVal)} (${s.tax_year || 2026}). A jump of this magnitude in a single year is itself a §41.43(b)(1) market-value signal, independent of the unequal-appraisal argument below.</p>
+        <p><b>Year-over-year jump:</b> the subject's noticed value rose ${(yoyPct * 100).toFixed(1)}% from ${fmtMoney(subjPrior)} (${s.tax_year ? s.tax_year - 1 : 2025}) to ${fmtMoney(subjVal)} (${s.tax_year || 2026}). A jump of this magnitude in a single year is itself a market-value signal, independent of the unequal-appraisal argument below.</p>
       ` : '';
 
       return `
         <h2><span class="section-num">4.</span> Analysis</h2>
         <div class="analysis-summary">
           ${yoyParagraph}
-          <p>The ${compsCount} comparables in Section 3, after size, age, land, and feature adjustments, produce a median adjusted value of ${fmtMoney(medOfComps)} ${medianContextSentence} <b>${belowCount} of ${compsCount}</b> adjusted comparables fall below the subject, supporting a single-comp argument under §41.43(b)(3).</p>
+          <p>The ${compsCount} comparables in Section 3, after size, age, land, and feature adjustments, produce a median adjusted value of ${fmtMoney(medOfComps)} ${medianContextSentence} <b>${belowCount} of ${compsCount}</b> adjusted comparables fall below the subject, supporting a single-comp unequal-appraisal argument.</p>
 
           <p>The ${anchorLabel} carries an adjusted property value of <b>${fmtMoney(requestedVal)}</b>${impliedPsf > 0 ? ' (' + fmtPsfBare(impliedPsf) + '/sqft on subject footprint)' : ''}. This is the anchor for the requested value &mdash; the absolute lowest is not used in order to keep the ask defensible at ARB.</p>
 
@@ -2826,6 +3194,181 @@
     })[county] || 'the CAD';
   }
 
+  // ────────── WYSIWYG report editor (agent-only, ?edit=1) ──────────
+  // Turns the rendered report into an in-place editor: every text region is
+  // contentEditable, and per-column / per-row / per-section delete controls let
+  // the agent remove a bad comp or a whole block. Saving snapshots the cleaned
+  // report HTML to the review's overrides.reportHtml; that overlay then renders
+  // for both the agent preview and the customer's delivered copy. Export reads
+  // the live DOM, so edits flow into PDF/DOCX whether or not they're saved yet.
+  function initReportEditor(jti) {
+    const root = $('state-report');
+    if (!root) return;
+    // Agent (address) mode calls this with jti=null: no stored review row, so
+    // Save is hidden and Revert just reloads. Review mode passes a real jti and
+    // is unchanged.
+    const hasJti = !!jti;
+    // Idempotent: a live comp update re-renders the report and re-inits the
+    // editor. Remove any prior toolbar so they don't stack, and bind the
+    // beforeunload guard only once. (2026-07-21.)
+    document.querySelectorAll('.ed-toolbar').forEach((el) => el.remove());
+    document.body.classList.add('ed-on');
+
+    // 1) Text editing — the whole report is editable. Delete controls below are
+    //    marked contenteditable=false so they aren't caught up in typing.
+    root.setAttribute('contenteditable', 'true');
+    root.setAttribute('spellcheck', 'false');
+
+    // 2) In-report banner (stripped on save + in print).
+    const banner = document.createElement('div');
+    banner.className = 'ed-banner ed-ctl';
+    banner.setAttribute('contenteditable', 'false');
+    banner.innerHTML = hasJti
+      ? 'Editing mode — click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, a row, or a section. <b>Save</b> when done; the edited report is what the customer and the ARB receive.'
+      : 'Editing mode — click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, a row, or a section. <b>Export PDF or DOCX</b> when done — the export reflects your edits.';
+    root.insertBefore(banner, root.firstChild);
+
+    // 3) Delete controls.
+    const mkCtl = (cls, label, title, onClick) => {
+      const b = document.createElement('span');
+      b.className = 'ed-ctl ' + cls;
+      b.setAttribute('contenteditable', 'false');
+      b.title = title;
+      b.textContent = label;
+      b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClick(); if (window.markDirty) window.markDirty(); });
+      return b;
+    };
+
+    // 3a) Comp COLUMN + ROW deletes on the equity grid.
+    root.querySelectorAll('table.equity-grid').forEach((table) => {
+      const headRow = table.tHead && table.tHead.rows[0];
+      if (headRow) {
+        // Column 0 is the attribute-label; column 1 is the subject. Comp columns
+        // start at index 2 — only those get a delete control.
+        for (let ci = 2; ci < headRow.cells.length; ci++) {
+          (function (colIndex) {
+            const th = headRow.cells[colIndex];
+            th.appendChild(mkCtl('ed-col', '✕', 'Delete this comparable column', () => {
+              const cell = headRow.cells[colIndex];
+              const idx = cell.cellIndex;
+              Array.from(table.rows).forEach((r) => { if (idx < r.cells.length) r.deleteCell(idx); });
+            }));
+          })(ci);
+        }
+      }
+      // Row delete on each body row (skip section-header rows).
+      Array.from(table.tBodies).forEach((tb) => {
+        Array.from(tb.rows).forEach((r) => {
+          if (r.classList.contains('section-header')) return;
+          const first = r.cells[0];
+          if (first) first.appendChild(mkCtl('ed-row', '✕', 'Delete this row', () => r.remove()));
+        });
+      });
+    });
+
+    // 3b) SECTION deletes — a control on each <h2> removes that heading and every
+    //     following sibling up to the next <h2> (sections aren't wrapped, so we
+    //     walk siblings). The cover "Summary" h2 is left un-deletable.
+    root.querySelectorAll('h2').forEach((h2) => {
+      if (/summary & opinion of value/i.test(h2.textContent || '')) return;
+      h2.appendChild(mkCtl('ed-sec', 'Delete section', 'Delete this whole section', () => {
+        const kill = [h2];
+        let n = h2.nextElementSibling;
+        while (n && n.tagName !== 'H2') { kill.push(n); n = n.nextElementSibling; }
+        kill.forEach((el) => el.remove());
+      }));
+    });
+
+    // 4) Toolbar. When embedded in the review console (iframe), window.print()
+    // would target the PARENT document, so hide the export buttons here and let
+    // the console's own PDF/DOCX links (which open a clean standalone tab) do the
+    // export. Standalone tab keeps its own export buttons.
+    const embedded = window.self !== window.top;
+    const bar = document.createElement('div');
+    bar.className = 'ed-toolbar';
+    bar.innerHTML =
+      '<span class="ed-title">✎ Editing report</span>' +
+      (hasJti ? '<button class="primary" id="ed-save">Save</button>' : '') +
+      (embedded ? '' : '<button id="ed-pdf">Export PDF</button><button id="ed-docx">Export DOCX</button>') +
+      '<button id="ed-revert">Revert to original</button>' +
+      '<span class="ed-status" id="ed-status">' + (embedded ? 'Save, then use the PDF / DOCX links above to export.' : '') + '</span>';
+    document.body.appendChild(bar);
+
+    const status = () => document.getElementById('ed-status');
+    const setStatus = (t) => { const s = status(); if (s) s.textContent = t; };
+    window.__edDirty = false;
+    window.markDirty = () => { window.__edDirty = true; setStatus('Unsaved changes'); };
+    root.addEventListener('input', () => window.markDirty());
+    // Bind once — initReportEditor can re-run after a live comp re-render.
+    if (!window.__edBeforeUnloadBound) {
+      window.addEventListener('beforeunload', (e) => { if (window.__edDirty) { e.preventDefault(); e.returnValue = ''; } });
+      window.__edBeforeUnloadBound = true;
+    }
+
+    // Serialize the report with all editor chrome stripped — this is exactly
+    // what will re-render for the customer, so it must be clean HTML.
+    function cleanReportHtml() {
+      const clone = root.cloneNode(true);
+      clone.querySelectorAll('.ed-ctl').forEach((e) => e.remove());
+      clone.querySelectorAll('[contenteditable]').forEach((e) => e.removeAttribute('contenteditable'));
+      clone.querySelectorAll('[spellcheck]').forEach((e) => e.removeAttribute('spellcheck'));
+      return clone.innerHTML;
+    }
+
+    async function saveOverlay() {
+      const btn = document.getElementById('ed-save');
+      btn.disabled = true; setStatus('Saving…');
+      try {
+        // Merge into the CURRENT overrides so structured edits (notice, comps,
+        // notes) aren't clobbered — fetch the raw row, then re-save.
+        const cur = await fetch('/api/report?jti=' + encodeURIComponent(jti), { headers: { Accept: 'application/json' } }).then((r) => r.json()).catch(() => ({}));
+        const overrides = Object.assign({}, (cur && cur.review && cur.review.overrides) || {});
+        overrides.reportHtml = cleanReportHtml();
+        const res = await fetch('/api/review-approve', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jti, save: true, overrides }),
+        });
+        if (!res.ok) throw new Error('save failed (' + res.status + ')');
+        window.__edDirty = false; setStatus('Saved ✓');
+      } catch (e) {
+        setStatus('Save failed — ' + (e.message || e));
+      } finally { btn.disabled = false; }
+    }
+
+    async function revertOverlay() {
+      if (!confirm('Discard all manual edits and revert to the original generated report?')) return;
+      setStatus('Reverting…');
+      try {
+        const cur = await fetch('/api/report?jti=' + encodeURIComponent(jti), { headers: { Accept: 'application/json' } }).then((r) => r.json()).catch(() => ({}));
+        const overrides = Object.assign({}, (cur && cur.review && cur.review.overrides) || {});
+        delete overrides.reportHtml;
+        const res = await fetch('/api/review-approve', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jti, save: true, overrides }),
+        });
+        if (!res.ok) throw new Error('revert failed (' + res.status + ')');
+        window.__edDirty = false;
+        location.reload();
+      } catch (e) { setStatus('Revert failed — ' + (e.message || e)); }
+    }
+
+    // Agent mode: no stored overrides to clear — just reload, which re-analyzes
+    // fresh from the address and drops the in-DOM edits.
+    function revertLocal() {
+      if (!confirm('Discard all manual edits and revert to the original generated report?')) return;
+      window.__edDirty = false;
+      location.reload();
+    }
+
+    const edSave = document.getElementById('ed-save');
+    if (edSave) edSave.addEventListener('click', saveOverlay);
+    const edRevert = document.getElementById('ed-revert');
+    if (edRevert) edRevert.addEventListener('click', hasJti ? revertOverlay : revertLocal);
+    const edPdf = document.getElementById('ed-pdf'); if (edPdf) edPdf.addEventListener('click', () => exportPDF());
+    const edDocx = document.getElementById('ed-docx'); if (edDocx) edDocx.addEventListener('click', () => exportDocx());
+    if (!embedded) setStatus('Ready');
+  }
+
   // ────────── Export buttons ──────────
   function exportPDF() { window.print(); }
 
@@ -2847,14 +3390,14 @@
         blob = new Blob(['﻿' + wordHtml], { type: 'application/msword' });
         ext = 'doc';
       }
-      // Filename = `TD-{PID}-{Address}.{ext}` (Mike's 2026-06-19 request).
-      // Use the document.title (which renderReport already sets to the
-      // properly-cased TD-... name) so PDF + DOCX filenames match exactly.
-      const cleanTitle = (document.title || '').replace(/[^A-Za-z0-9\-]+/g, '-')
-        .replace(/-+/g, '-').replace(/^-|-$/g, '');
-      const filename = (cleanTitle && cleanTitle.startsWith('TD-')
+      // Filename = `{Address}-Value-Evidence.{ext}` (Ryder, 2026-07-21).
+      // Use document.title (which renderReport already sets to the
+      // properly-cased name) so PDF + DOCX filenames match exactly.
+      const cleanTitle = (document.title || '').replace(/[^A-Za-z0-9_\-]+/g, '_')
+        .replace(/_+/g, '_').replace(/^[_\-]|[_\-]$/g, '');
+      const filename = (cleanTitle.endsWith('-Value-Evidence')
         ? cleanTitle
-        : 'TD-Property-Appraisal-Report') + '.' + ext;
+        : 'Value-Evidence') + '.' + ext;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = filename;
@@ -2888,6 +3431,29 @@
   //   - Customer (td_link cookie):  GET /api/report        → { status, report }
   //   - Agent (td_sup cookie + jti): GET /api/report?jti=… → { review }
   // Both carry the stored engine data at draft.our, which renderReport consumes.
+  // Populated by renderFromStored (review mode) with the unescaped base draft,
+  // the WYSIWYG overlay, and the edit/jti context — so the live-comps handler
+  // below can re-run renderReport against a different kept-comp set.
+  let _live = null;
+
+  // Live comp control from the /review console (parent frame). The console owns
+  // the checkbox state (the agent's kept set), so it posts the exact kept comps
+  // here; we merge them over the base draft and re-render. The pack stays the
+  // authority for the opinion-of-value math and posts the new value back up via
+  // the emit inside renderReport. Same-origin only. (2026-07-21.)
+  window.addEventListener('message', (e) => {
+    if (e.origin !== window.location.origin) return;
+    const m = e.data;
+    if (!m || m.type !== 'td-live-comps' || !_live) return;
+    const forRender = Object.assign({}, _live.base);
+    if (Array.isArray(m.comps)) forRender.comps = m.comps;            // equity comps
+    if (Array.isArray(m.salesComps)) forRender.sales_comps = m.salesComps;  // sales comps
+    delete forRender.reportHtml;
+    renderReport(escapeDeep(forRender), { curated: true, overlayHtml: _live.overlay });
+    showState('report');
+    if (_live.editMode) initReportEditor(_live.jti);
+  });
+
   async function renderFromStored() {
     showState('loading');
     try {
@@ -2918,9 +3484,27 @@
       }
       // Untrusted stored draft (client-computed, persisted verbatim by
       // /api/intake) — escape every string field before it reaches the
-      // innerHTML sinks in renderReport.
-      renderReport(escapeDeep(data));
+      // innerHTML sinks in renderReport. The agent-authored WYSIWYG overlay
+      // (data.reportHtml) is the exception: it's written only through the
+      // sup-gated save path, so it's trusted and passed RAW (escaping it would
+      // corrupt the HTML). Pull it off before escapeDeep so we don't waste work
+      // escaping a large blob we inject verbatim.
+      const rawOverlay = (data && typeof data.reportHtml === 'string') ? data.reportHtml : '';
+      const dataForRender = Object.assign({}, data);
+      delete dataForRender.reportHtml;
+      renderReport(escapeDeep(dataForRender), { curated: true, overlayHtml: rawOverlay });
       showState('report');
+
+      // Agent edit mode: /test/evidence-pack-v3?review=1&edit=1&jti=… turns the
+      // rendered report into an on-page WYSIWYG editor. Only meaningful for a
+      // sup agent (the save endpoint is sup-gated); customers never get here.
+      const editMode = /^(1|true)$/.test(params.get('edit') || '');
+      if (editMode) initReportEditor(jti);
+
+      // Stash everything the live-comps handler needs so the /review console can
+      // drive an instant re-render as the agent toggles comps — without a save +
+      // reload round-trip. (2026-07-21 — Ryder: comp removal updates the report.)
+      _live = { base: dataForRender, overlay: rawOverlay, editMode, jti };
     } catch (e) {
       $('error-detail').innerHTML =
         '<p><b>Error loading the reviewed report.</b></p><p>Message: <code>' + (e.message || String(e)) + '</code></p>';
