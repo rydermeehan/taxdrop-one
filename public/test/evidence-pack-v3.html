@@ -1715,6 +1715,12 @@
       ['CAD ' + (s.tax_year || 2026) + ' noticed land value', s.land_value ? fmtMoney(s.land_value) : null],
       ['CAD ' + (s.tax_year || 2026) + ' noticed improvement value', s.improvement_value ? fmtMoney(s.improvement_value) : null],
       ['CAD ' + (s.tax_year || 2026) + ' noticed market value', subjVal ? ('<b>' + fmtMoney(subjVal) + '</b>' + (subjSqft ? ' (' + fmtPsf(subjPsf) + ')' : '')) : null],
+      // Opinion of value moved into Section 1 (Ryder, 2026-07-22) — it lands in
+      // the grid cell next to the noticed market value. Dropped by the hasVal
+      // filter below when there's no supported reduction.
+      ['Opinion of value', (!opinionNoCase && opinionVal)
+        ? ('<b>' + fmtMoney(opinionVal) + '</b>' + (subjSqft ? ' (' + fmtPsf(opinionVal / subjSqft) + ')' : ''))
+        : null],
       // Mike's V3 markup (La Vista, 2026-06-18): show YoY change directly
       // UNDER the prior-year notice in the same cell, rather than as a
       // separate grid item that lands in the left column on its own row.
@@ -2001,89 +2007,26 @@
       `;
     })();
 
-    // ── Cover / Summary page (David, consultant, 2026-06-25) ──
-    // "The first page should serve as an executive summary of the property...
-    // clearly display all pertinent property information, the CAD's preliminary
-    // market value, the values indicated by each valuation approach (Equity,
-    // Market, Income, Cost, etc.), and the final opinion of value... Move the
-    // summary page to the very beginning of the packet." It leads the packet so
-    // the opinion of value is seen first and the supporting evidence (Sections
-    // 1–5) builds from there. Most of this data already lives downstream; the
-    // cover consolidates it onto one page.
-    const opinionValueDisplay = opinionNoCase
-      ? 'No reduction supported'
-      : fmtMoney(opinionVal);
-
-    // Values indicated by each DEVELOPED approach (equity + sales comparison),
-    // with the lowest-defensible one marked as the opinion of value. Only
-    // developed approaches are listed — no "Not developed" filler rows.
-    const approachRows = _shownApproaches.map(a => {
-      const isOpinion = a.key === opinionKey;
-      const badge = isOpinion ? ' <span style="color:var(--emerald-dark);font-weight:700;font-size:9.5px;letter-spacing:.05em;">· OPINION</span>' : '';
-      const val = isOpinion ? '<b>' + fmtMoney(a.value) + '</b>' : fmtMoney(a.value);
-      return `<tr><td class="label">${a.label}${badge}</td><td class="value" style="text-align:right;">${val}</td></tr>`;
-    }).join('');
-
-    // Value history — David: "showing the previous three years of values can
-    // also be helpful." Ryder 2026-07-21: only when the current notice is
-    // HIGHER than the prior year. A flat or falling history is not evidence
-    // for us; printing it hands the panel the "you already got a reduction"
-    // rebuttal. Same rule as the Section 1 prior-year row. If there is no
-    // prior year on file, or it isn't an increase, the whole block is dropped.
-    const historyIsIncrease = !!(subjPrior && subjVal && subjVal > subjPrior);
-    const historyRows = !historyIsIncrease ? '' : [
-      [`${s.tax_year || 2026} CAD noticed market value`, fmtMoney(subjVal)],
-      [`${(s.tax_year || 2026) - 1} CAD noticed market value`, fmtMoney(subjPrior)],
-    ].map(([k, v]) => `<tr><td class="label">${k}</td><td class="value" style="text-align:right;">${v}</td></tr>`).join('');
-
-    const coverHtml = `
-      <div class="cover-summary" style="page-break-after:always;">
-        <h2 style="margin-top:8px;"><span class="section-num">&mdash;</span> Summary &amp; Opinion of Value</h2>
-
-        <div class="requested-value" style="margin-top:8px;">
-          <div class="rv-block notice">
-            <div class="rv-label">${s.tax_year || 2026} CAD Notice Value</div>
-            <div class="rv-amount">${fmtMoney(subjVal)}</div>
-            <div class="rv-psf">${subjSqft ? fmtPsfBare(subjPsf) + '/sqft' : ''}</div>
-          </div>
-          <div class="rv-block requested">
-            <div class="rv-label">Opinion of Value</div>
-            <div class="rv-amount">${opinionValueDisplay}</div>
-            <div class="rv-psf">${(!opinionNoCase && subjSqft) ? fmtPsfBare(opinionVal / subjSqft) + '/sqft' : ''}</div>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px;">
-          <div>
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Property</div>
-            <table class="property-table" style="margin:0;">
-              ${kvRow('Address', formatStreetAddress(s))}
-              ${kvRow('PID #', fmtAccount(s.parcel_id, s.county))}
-              ${kvRow('Appraisal district', cadName)}
-              ${kvRow('Living area', subjSqft ? fmtNum(subjSqft) + ' sqft' : null)}
-              ${kvRow('Year built', yearBuiltVal)}
-            </table>
-          </div>
-          <div>
-            ${approachRows ? `
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Indicated value by approach</div>
-            <table class="property-table" style="margin:0;">${approachRows}</table>` : ''}
-            ${historyRows ? `
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin:16px 0 6px;">Value history</div>
-            <table class="property-table" style="margin:0;">${historyRows}</table>` : ''}
-          </div>
-        </div>
-
-        <div style="margin-top:20px;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Notes</div>
-          <!-- One padded box for both states: padding keeps text off the border,
-               white-space:pre-wrap preserves the agent's line breaks (Enter now
-               produces real new lines in the editor), min-height gives a visible
-               notes area even when empty. (Ryder 2026-07-21.) -->
-          <div style="border:1px solid var(--gray-300);border-radius:6px;padding:16px 18px;min-height:110px;font-size:13px;line-height:1.85;color:#1A1A1A;white-space:pre-wrap;">${reportNotes || ''}</div>
-        </div>
+    // ── Summary block + agent notes (replaces the old cover page) ──
+    // The redundant cover/summary page was removed (Ryder, 2026-07-22); its
+    // useful pieces moved into Sections 1–2: the opinion of value into the
+    // Section 1 subject grid, and these two blocks after Section 2 — an auto-
+    // generated opinion summary, then the agent notes box (only when notes were
+    // actually added; the old cover always printed an empty box).
+    const sumRedAmt = (!opinionNoCase && subjVal && opinionVal != null) ? (subjVal - opinionVal) : 0;
+    const sumRedPct = (sumRedAmt > 0 && subjVal) ? (sumRedAmt / subjVal * 100) : 0;
+    const summaryHtml = `
+      <div class="opinion-summary" style="margin:14px 0 20px;padding:14px 18px;border-left:3px solid var(--emerald-dark);background:#f2fbf6;font-size:13.5px;line-height:1.7;color:#1A1A1A;">
+        ${opinionNoCase
+          ? `The comparable evidence does not support a reduction below the subject&rsquo;s noticed value of <b>${fmtMoney(subjVal)}</b> this cycle.`
+          : `The subject is noticed at <b>${fmtMoney(subjVal)}</b>. The comparable evidence supports an opinion of value of <b>${fmtMoney(opinionVal)}</b>&mdash;a reduction of <b>${fmtMoney(sumRedAmt)}</b> (${sumRedPct.toFixed(1)}% below the noticed value).`}
       </div>
     `;
+    const notesHtml = reportNotes ? `
+      <div style="margin:0 0 20px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Notes</div>
+        <div style="border:1px solid var(--gray-300);border-radius:6px;padding:16px 18px;font-size:13px;line-height:1.85;color:#1A1A1A;white-space:pre-wrap;">${reportNotes}</div>
+      </div>` : '';
 
     // ── Footer ──
     const footerHtml = `
@@ -2093,7 +2036,7 @@
       </div>
     `;
 
-    $('state-report').innerHTML = headerHtml + coverHtml + section1Html + section2Html + section3Html + section4Html + section5Html + section6Html + footerHtml;
+    $('state-report').innerHTML = headerHtml + section1Html + section2Html + summaryHtml + notesHtml + section3Html + section4Html + section5Html + section6Html + footerHtml;
 
     // WYSIWYG overlay (Ryder 2026-07-21): when an agent has hand-edited this
     // report in the on-page editor, the saved HTML snapshot REPLACES the freshly
