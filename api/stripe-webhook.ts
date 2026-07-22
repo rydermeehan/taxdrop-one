@@ -61,14 +61,15 @@ async function sendLinkEmail(to: string, link: string, state?: string): Promise<
     body: JSON.stringify({
       personalizations: [{ to: [{ email: to }] }],
       from: { email: SENDGRID_FROM, name: 'TaxDrop One' },
-      subject: 'Your TaxDrop One report link',
+      subject: 'Start your TaxDrop One report',
       content: [{
         type: 'text/html',
         value:
-          `<p>Thanks for your purchase. Your TaxDrop One report is ready to generate.</p>` +
+          `<p>Thanks for your purchase. Here's your private link to get started on your ${protestWord}.</p>` +
+          `<p>Open it, confirm your property, and upload your county evidence packet. A TaxDrop tax expert reviews every report before it's sent — we'll email your finished report, typically within <strong>24&ndash;48 hours, Monday&ndash;Friday</strong>.</p>` +
           `<p><a href="${link}" style="background:#0C593E;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block">Start your ${protestWord}</a></p>` +
           `<p>Or open this link: <br>${link}</p>` +
-          `<p style="color:#5C666F;font-size:13px">This link covers one property. The first address you run locks it in.</p>`,
+          `<p style="color:#5C666F;font-size:13px">This link covers one property. The first address you submit locks it in.</p>`,
       }],
     }),
   });

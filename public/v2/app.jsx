@@ -1025,6 +1025,25 @@ function App() {
     setStatus("analyzing"); setStep(0); setError(""); setSubmitError("");
     try {
       const d = await computeDraft(setStep);
+      // Sales-comparison approach: pull Clear Capital MLS closed sales for the
+      // review draft and bake them in (frozen — the report reads our.sales_comps
+      // and never re-fetches, so a reviewed report's opinion can't drift). Only
+      // in the review flow (not the instant analyze path), and best-effort: on
+      // any failure the report simply omits the sales section.
+      if (d.ok && d.our && d.our.subject) {
+        try {
+          const ccResp = await fetch("/api/cad-proxy?path=/api/clear-capital/lookup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: d.lookupAddr || address.trim() }),
+          });
+          if (ccResp.ok) {
+            const cc = await ccResp.json().catch(() => ({}));
+            const comps = Array.isArray(cc && cc.comps) ? cc.comps : [];
+            if (comps.length) d.our.sales_comps = comps;
+          }
+        } catch (e) { /* no sales comps — Section 6 is omitted */ }
+      }
       // If the customer attached files, they MUST land in Blob or the reviewer
       // never sees them. A silent failure here previously submitted a
       // packet-less report that looked intentional ("No county evidence

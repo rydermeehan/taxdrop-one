@@ -1,4 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#0C593E"/>
-  <path d="M10 8L24 16L10 24V8Z" fill="#C4FF64"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="td-roof" x1="4" y1="3" x2="44" y2="22" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4FB8F0"/><stop offset="1" stop-color="#27AEC6"/>
+    </linearGradient>
+    <linearGradient id="td-body" x1="24" y1="18" x2="24" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#13A45E"/><stop offset="1" stop-color="#0B5C3F"/>
+    </linearGradient>
+  </defs>
+  <!-- roof -->
+  <path d="M24 3.5 45.5 21.5 H2.5 Z" fill="url(#td-roof)"/>
+  <!-- chimney / window -->
+  <rect x="30" y="11.5" width="5" height="8" rx="1.2" fill="#1E86B4"/>
+  <!-- house body tapering to the "drop" point -->
+  <path d="M6 21.5 H42 V26.5 L24 45.5 6 26.5 Z" fill="url(#td-body)"/>
+  <!-- dollar mark -->
+  <path d="M24 24 V37.5 M28 28c0-2-1.9-3.3-4-3.3s-4 1.2-4 3c0 4.3 8 2.2 8 6.5 0 1.9-1.9 3.1-4 3.1s-4-1.3-4-3.3"
+        stroke="#EAFBF0" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

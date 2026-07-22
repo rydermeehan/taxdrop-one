@@ -54,7 +54,7 @@
        (which has no bundler) can stream evidence files straight to Blob for the
        review queue, bypassing the serverless request-body size limit. -->
   <script type="module">
-    import { upload } from 'https://esm.sh/@vercel/blob@2.6.1/client';
+    import { upload } from '/vendor/blob-client-2.6.1.js';
     window.blobClientUpload = upload;
     // Signal readiness — app.jsx's waitForBlobClient() listens for this so a
     // customer who submits before this module resolves still gets their

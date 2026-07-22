@@ -9,27 +9,9 @@
 // savings-engine uses). Table is namespaced `one_*` so it can't collide with
 // engine tables.
 
-import { Pool } from 'pg';
+import { getPool } from './_db.js';
 
-let pool: Pool | null = null;
 let schemaReady: Promise<void> | null = null;
-
-function getPool(): Pool {
-  if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) throw new Error('DATABASE_URL not set');
-    pool = new Pool({
-      connectionString,
-      max: 3,
-      // Managed Postgres (Neon/Supabase/Vercel) terminates TLS; don't fail on
-      // the provider cert chain in a serverless function.
-      ssl: connectionString.includes('sslmode=disable')
-        ? undefined
-        : { rejectUnauthorized: false },
-    });
-  }
-  return pool;
-}
 
 function ensureSchema(): Promise<void> {
   if (!schemaReady) {

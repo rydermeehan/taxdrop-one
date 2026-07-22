@@ -19,8 +19,10 @@ import { rewrite, next } from '@vercel/edge';
 
 export const config = {
   // Skip the middleware on Vercel internals + favicons (static assets that
-  // would otherwise be 404'd unnecessarily under /pro/).
-  matcher: ['/((?!_vercel/|favicon.ico).*)'],
+  // would otherwise be rewritten under /pro/ and 404 / serve HTML). Must list
+  // favicon.svg explicitly — the fallback rewrite turns /favicon.svg into
+  // /pro/favicon.svg and serves the SPA shell instead of the icon.
+  matcher: ['/((?!_vercel/|favicon.ico|favicon.svg|forms/|vendor/).*)'],
 };
 
 // Access control master switch (mirrors cad-proxy.ts). Off until set, so the
@@ -31,27 +33,39 @@ export const config = {
 // static shell but no data.
 const ACCESS_ON = /^(1|true|yes)$/i.test(process.env.ACCESS_CONTROL_ENABLED || '');
 
-// Human-navigable internal entry pages that require the sup password when
-// access control is on. Asset sub-paths (e.g. /v2/app.jsx) are intentionally
-// NOT listed so both the customer app and the internal app can load assets.
+// Human-navigable entry pages gated at the edge when access control is on.
+// While the product is pre-launch, the WHOLE customer surface (root + /v2) is
+// password-gated so the public can't see the WIP — but a real customer arriving
+// via their /r/<token> link (which sets td_link) still gets in, so a refresh
+// doesn't lock them out. The gate is presence-only (edge can't run node:crypto);
+// the API endpoints do the real cryptographic verification. `/agent` is the door.
 const INTERNAL_ENTRIES = new Set([
   '/', '/index.html',
   '/v2', '/v2/', '/v2/index.html',
   '/pro', '/pro/', '/pro/index.html',
+  // Reviewer queue for the review-before-delivery flow — agent-only.
+  '/review', '/review/', '/review/index.html',
 ]);
 
 function hasSupCookie(req: Request): boolean {
   return /(?:^|;\s*)td_sup=[^;]+/.test(req.headers.get('cookie') || '');
 }
+// A paid customer holds a td_link (set by the /r/<token> middleware). They may
+// only reach the customer app (root/v2), never the agent-only pages.
+function hasLinkCookie(req: Request): boolean {
+  return /(?:^|;\s*)td_link=[^;]+/.test(req.headers.get('cookie') || '');
+}
+const AGENT_ONLY = new Set(['/pro', '/pro/', '/pro/index.html', '/review', '/review/', '/review/index.html']);
 
 export default function middleware(req: Request) {
   const host = req.headers.get('host') || '';
 
-  // Sup login must work on EVERY taxdrop host, not just one.taxdrop.com:
+  // Agent login must work on EVERY taxdrop host, not just one.taxdrop.com:
   // gated report paths also live on studio.taxdrop.com, so an agent has to be
-  // able to reach /sup there too. Handle it before the host gate below.
+  // able to reach the login there too. `/agent` is the canonical door; `/sup`
+  // stays as a backward-compatible alias. Both serve the same login page.
   const earlyUrl = new URL(req.url);
-  if (earlyUrl.pathname === '/sup') {
+  if (earlyUrl.pathname === '/agent' || earlyUrl.pathname === '/sup') {
     earlyUrl.pathname = '/sup.html';
     return rewrite(earlyUrl);
   }
@@ -86,11 +100,17 @@ export default function middleware(req: Request) {
   }
   if (path === '/sup.html' || path === '/api/sup-login') return next();
 
-  // --- Sup gate (presence-only; off unless ACCESS_ON) -----------------------
-  if (ACCESS_ON && INTERNAL_ENTRIES.has(path) && !hasSupCookie(req)) {
-    const login = new URL('/sup', req.url);
-    login.searchParams.set('next', path);
-    return Response.redirect(login.toString(), 307);
+  // --- Edge gate (presence-only; off unless ACCESS_ON) ----------------------
+  // Agent-only pages (/pro, /review) require the agent cookie. The customer app
+  // (root, /v2) accepts EITHER the agent cookie OR a paid customer's td_link, so
+  // the public hits the password but customers (and refreshes) pass.
+  if (ACCESS_ON && INTERNAL_ENTRIES.has(path)) {
+    const allowed = AGENT_ONLY.has(path) ? hasSupCookie(req) : (hasSupCookie(req) || hasLinkCookie(req));
+    if (!allowed) {
+      const login = new URL('/agent', req.url);
+      login.searchParams.set('next', path);
+      return Response.redirect(login.toString(), 307);
+    }
   }
 
   // API + /pro pass through unchanged (resolve from filesystem normally).
@@ -117,6 +137,14 @@ export default function middleware(req: Request) {
   if (path === '/evidence-analyzer' || path === '/evidence-analyzer/') {
     url.pathname = '/evidence-analyzer/index.html';
     return rewrite(url);
+  }
+  // Reviewer queue (agent-gated above). Single static file + inline JS.
+  if (path === '/review' || path === '/review/') {
+    url.pathname = '/review/index.html';
+    return rewrite(url);
+  }
+  if (path.startsWith('/review/')) {
+    return next();
   }
   // Anything under /test/ or /evidence-analyzer/ (assets, sub-paths) passes
   // through directly — those files already live at the right paths.

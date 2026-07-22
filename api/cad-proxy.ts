@@ -6,7 +6,8 @@ import { claimOrVerifyProperty } from './_entitlements.js';
 export const config = { maxDuration: 60 };
 
 const UPSTREAM = 'https://savings-engine-database.vercel.app';
-const API_KEY = process.env.TAXDROP_CAD_API_KEY || 'XbWyOCeZPacIAT-npy7Wyjvjd4Hm5O7MlVp13eMyvZM';
+// Server-side only. Set TAXDROP_CAD_API_KEY in Vercel env — no hardcoded fallback.
+const API_KEY = process.env.TAXDROP_CAD_API_KEY || '';
 
 // --- Access control (off until ACCESS_CONTROL_ENABLED is set) --------------
 // Master switch. While unset/falsey the proxy behaves exactly as it did before
