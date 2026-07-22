@@ -657,6 +657,8 @@
     /* Editor chrome never prints (belt-and-suspenders; it's also stripped from
        the saved overlay and removed before an editor-initiated print). */
     .ed-toolbar, .ed-banner, .ed-ctl { display: none !important; }
+    /* Empty Notes box is stripped from PDF exports (beforeprint flags it). */
+    .notes-block.notes-print-hide { display: none !important; }
     [contenteditable] { outline: none !important; }
   }
 
@@ -697,6 +699,10 @@
     background: #fdecea; color: #B42318; border: 1px solid #f3c0ba; vertical-align: middle;
   }
   .ed-ctl:hover { background: #B42318; color: #fff; }
+  /* Notes box: hidden when empty outside the editor (customer view); in the
+     editor it always shows with a placeholder so the agent can add notes. */
+  body:not(.ed-on) .notes-block.notes-empty { display: none; }
+  body.ed-on .notes-body:empty::before { content: 'Add notes (optional)\2026'; color: var(--gray-400); pointer-events: none; }
 </style>
 </head>
 <body>
@@ -2101,11 +2107,16 @@
           : `The subject is noticed at <b>${fmtMoney(subjVal)}</b>. The comparable evidence supports an opinion of value of <b>${fmtMoney(opinionValR)}</b>&mdash;a reduction of <b>${fmtMoney(sumRedAmt)}</b> (${sumRedPct.toFixed(1)}% below the noticed value).`}
       </div>
     `;
-    const notesHtml = reportNotes ? `
-      <div style="margin:0 0 20px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Notes</div>
-        <div style="border:1px solid var(--gray-300);border-radius:6px;padding:16px 18px;font-size:13px;line-height:1.85;color:#1A1A1A;white-space:pre-wrap;">${reportNotes}</div>
-      </div>` : '';
+    // Notes: ALWAYS rendered so the agent has an editable box in the WYSIWYG
+    // editor. It's hidden when empty outside the editor (customer view, CSS) and
+    // stripped from exports when empty (beforeprint for PDF; clone-strip for
+    // DOCX). The .notes-empty class is kept in sync as the agent types
+    // (initReportEditor input handler).
+    const notesHtml = `
+      <div class="notes-block${reportNotes ? '' : ' notes-empty'}" style="margin:0 0 20px;">
+        <div class="notes-label" style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--emerald-dark);font-weight:700;margin-bottom:6px;">Notes</div>
+        <div class="notes-body" style="border:1px solid var(--gray-300);border-radius:6px;padding:16px 18px;min-height:56px;font-size:13px;line-height:1.85;color:#1A1A1A;white-space:pre-wrap;">${reportNotes}</div>
+      </div>`;
 
     // ── Footer ──
     const footerHtml = `
@@ -2116,6 +2127,22 @@
     `;
 
     $('state-report').innerHTML = headerHtml + section1Html + section2Html + summaryHtml + notesHtml + section3Html + section4Html + section5Html + section6Html + footerHtml;
+
+    // Strip an empty Notes box from PDF exports (window.print). Bound once; uses
+    // live textContent so it's correct whether or not the agent typed notes.
+    // DOCX handles this in exportDocx (clone strip); customer on-screen via CSS.
+    if (!window.__notesPrintBound) {
+      window.addEventListener('beforeprint', () => {
+        document.querySelectorAll('.notes-block').forEach((b) => {
+          const body = b.querySelector('.notes-body');
+          b.classList.toggle('notes-print-hide', !(body && body.textContent.trim()));
+        });
+      });
+      window.addEventListener('afterprint', () => {
+        document.querySelectorAll('.notes-block').forEach((b) => b.classList.remove('notes-print-hide'));
+      });
+      window.__notesPrintBound = true;
+    }
 
     // WYSIWYG overlay (Ryder 2026-07-21): when an agent has hand-edited this
     // report in the on-page editor, the saved HTML snapshot REPLACES the freshly
@@ -3344,6 +3371,14 @@
     window.__edDirty = false;
     window.markDirty = () => { window.__edDirty = true; setStatus('Unsaved changes'); };
     root.addEventListener('input', () => window.markDirty());
+    // Keep the Notes box's empty marker in sync as the agent types, so the saved
+    // overlay and the customer on-screen view show/hide it correctly.
+    root.addEventListener('input', (e) => {
+      const body = e.target && e.target.closest && e.target.closest('.notes-body');
+      if (!body) return;
+      const blk = body.closest('.notes-block');
+      if (blk) blk.classList.toggle('notes-empty', !body.textContent.trim());
+    });
     // Bind once — initReportEditor can re-run after a live comp re-render.
     if (!window.__edBeforeUnloadBound) {
       window.addEventListener('beforeunload', (e) => { if (window.__edDirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -3425,6 +3460,11 @@
       const docClone = document.documentElement.cloneNode(true);
       ['#search-shell', '#state-empty', '#state-loading', '#state-error', '.export-bar']
         .forEach(sel => docClone.querySelectorAll(sel).forEach(el => el.remove()));
+      // Drop an empty Notes box from the DOCX (agent added none).
+      docClone.querySelectorAll('.notes-block').forEach((b) => {
+        const body = b.querySelector('.notes-body');
+        if (!(body && body.textContent.trim())) b.remove();
+      });
       const html = '<!DOCTYPE html><html>' + docClone.innerHTML + '</html>';
       let blob, ext;
       if (window.htmlDocx && typeof window.htmlDocx.asBlob === 'function') {
