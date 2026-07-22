@@ -1741,12 +1741,6 @@
       ['CAD ' + (s.tax_year || 2026) + ' noticed land value', s.land_value ? fmtMoney(s.land_value) : null],
       ['CAD ' + (s.tax_year || 2026) + ' noticed improvement value', s.improvement_value ? fmtMoney(s.improvement_value) : null],
       ['CAD ' + (s.tax_year || 2026) + ' noticed market value', subjVal ? ('<b>' + fmtMoney(subjVal) + '</b>' + (subjSqft ? ' (' + fmtPsf(subjPsf) + ')' : '')) : null],
-      // Opinion of value moved into Section 1 (Ryder, 2026-07-22) — it lands in
-      // the grid cell next to the noticed market value. Dropped by the hasVal
-      // filter below when there's no supported reduction.
-      ['Opinion of value', (!opinionNoCaseR && opinionValR)
-        ? ('<b>' + fmtMoney(opinionValR) + '</b>' + (subjSqft ? ' (' + fmtPsf(opinionValR / subjSqft) + ')' : ''))
-        : null],
       // Mike's V3 markup (La Vista, 2026-06-18): show YoY change directly
       // UNDER the prior-year notice in the same cell, rather than as a
       // separate grid item that lands in the left column on its own row.
@@ -2103,8 +2097,8 @@
     const summaryHtml = `
       <div class="opinion-summary" style="margin:14px 0 20px;padding:14px 18px;border-left:3px solid var(--emerald-dark);background:#f2fbf6;font-size:13.5px;line-height:1.7;color:#1A1A1A;">
         ${opinionNoCaseR
-          ? `The comparable evidence does not support a reduction below the subject&rsquo;s noticed value of <b>${fmtMoney(subjVal)}</b> this cycle.`
-          : `The subject is noticed at <b>${fmtMoney(subjVal)}</b>. The comparable evidence supports an opinion of value of <b>${fmtMoney(opinionValR)}</b>&mdash;a reduction of <b>${fmtMoney(sumRedAmt)}</b> (${sumRedPct.toFixed(1)}% below the noticed value).`}
+          ? `The comparable evidence does not support a reduction below the subject&rsquo;s noticed value this cycle.`
+          : `The comparable evidence supports a reduction of <b>${fmtMoney(sumRedAmt)}</b> &mdash; ${sumRedPct.toFixed(1)}% below the noticed value.`}
       </div>
     `;
     // Notes: ALWAYS rendered so the agent has an editable box in the WYSIWYG
