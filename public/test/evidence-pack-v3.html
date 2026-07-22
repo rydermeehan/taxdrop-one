@@ -681,7 +681,7 @@
   .ed-toolbar .ed-status { margin-left: auto; font-size: 12px; opacity: .9; }
   .ed-banner {
     background: #FFF8E1; border: 1px solid #F0E2BB; color: #7a5a20;
-    border-radius: 8px; padding: 9px 13px; margin: 0 0 16px; font-size: 12.5px;
+    border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; font-size: 12.5px; line-height: 1.6;
   }
   /* Editable regions get a soft affordance; delete controls a red pill. */
   body.ed-on #state-report [contenteditable="true"]:hover { outline: 1px dashed #0B8F52; outline-offset: 2px; }
@@ -3296,8 +3296,8 @@
     banner.className = 'ed-banner ed-ctl';
     banner.setAttribute('contenteditable', 'false');
     banner.innerHTML = hasJti
-      ? 'Editing mode — click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, a row, or a section. <b>Save</b> when done; the edited report is what the customer and the ARB receive.'
-      : 'Editing mode — click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, a row, or a section. <b>Export PDF or DOCX</b> when done — the export reflects your edits.';
+      ? '<b>Editing mode.</b> Click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, row, or section. Save when you\'re done — the edited report is what the customer and the ARB receive.'
+      : '<b>Editing mode.</b> Click any text to edit it, or use the red ✕ / “Delete section” controls to remove a comp column, row, or section. Export PDF or DOCX when done — the export reflects your edits.';
     root.insertBefore(banner, root.firstChild);
 
     // 3) Delete controls.
@@ -3636,6 +3636,12 @@
   // ────────── Page boot ──────────
   (function init() {
     const params = new URLSearchParams(window.location.search);
+    // Hide the address search when this is a loaded report — the /review console
+    // iframe (embedded), a CAD handoff, or reviewed-report mode. There's nothing
+    // to search in those; the report is already loaded.
+    if (window.self !== window.top || params.get('review') === '1' || params.get('review') === 'true' || params.get('source') === 'cad') {
+      const _ss = $('search-shell'); if (_ss) _ss.style.display = 'none';
+    }
     $('addr-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); submitSearch(); }
     });
