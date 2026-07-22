@@ -3477,6 +3477,42 @@
     if (_live.editMode) initReportEditor(_live.jti);
   });
 
+  // ────────── CAD-packet path (agent handoff) ──────────
+  // /agent hands a report built from the uploaded county packet to the pack via
+  // localStorage when the engine row is stale/missing (?source=cad). Render from
+  // that instead of an address lookup. The data is agent-authored but derived
+  // from an uploaded file, so escape it (like the review path) before it reaches
+  // renderReport's innerHTML sinks. curated:true skips distance enrichment /
+  // far-comp culling that would need coordinates the CAD comps don't carry.
+  function showPacketBanner() {
+    const root = $('state-report');
+    if (!root || root.querySelector('.packet-note')) return;
+    const b = document.createElement('div');
+    b.className = 'ed-banner packet-note';   // .ed-banner ⇒ hidden in @media print
+    b.setAttribute('contenteditable', 'false');
+    b.style.cssText = 'background:#e7f4ec;border-color:#9ccfb0;color:#0C593E;font-weight:600;';
+    b.textContent = 'Built from your uploaded county evidence packet (' + CURRENT_TAX_YEAR
+      + '). Review the figures before you export.';
+    root.insertBefore(b, root.firstChild);
+  }
+
+  function renderFromHandoff() {
+    showState('loading');
+    let payload = null;
+    try { payload = JSON.parse(localStorage.getItem('taxdrop-pack-handoff') || 'null'); } catch (_) {}
+    const data = payload && payload.data;
+    if (!data || !data.subject) {
+      $('error-detail').innerHTML =
+        '<p><b>Couldn\'t load the packet data.</b></p>' +
+        '<p>Re-run the analysis in the agent tool, then reopen the report.</p>';
+      showState('error');
+      return;
+    }
+    renderReport(escapeDeep(data), { curated: true });
+    showState('report');
+    showPacketBanner();
+  }
+
   async function renderFromStored() {
     showState('loading');
     try {
@@ -3544,6 +3580,10 @@
     // Reviewed-report mode takes precedence over the address search path.
     if (params.get('review') === '1' || params.get('review') === 'true') {
       renderFromStored();
+      return;
+    }
+    if (params.get('source') === 'cad') {
+      renderFromHandoff();
       return;
     }
     const addr = params.get('address');

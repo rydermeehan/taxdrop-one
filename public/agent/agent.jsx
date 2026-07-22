@@ -522,7 +522,41 @@ const isSupportedFile = (f) =>
 /* ═══════════════════════════ Agent tool (agent-specific UI) ═══════════════════════════
    Everything above is the shared logic layer copied from app.jsx. Below is the
    stripped agent surface: one screen, analyze + assessment + the four exports. */
+// Adapter: turn the parsed CAD packet (raw extracted evidence) into the engine-
+// shaped `data` object evidence-pack-v3's renderReport consumes, so the pack can
+// render from the county packet when the engine row is stale/missing. Value +
+// comps come from the packet; geo/county come from the engine row (`engineGeo`,
+// which even when stale still carries correct location) when we have one.
+function cadToPackData(cadRaw, engineGeo, addressFallback) {
+  const subj = (cadRaw && cadRaw.subject) || {};
+  const g = (engineGeo && engineGeo.subject) || {};
+  const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+  const subject = {
+    total_market: num(subj.assessedValue),
+    living_sqft: num(subj.sqft),
+    tax_year: CURRENT_TAX_YEAR,
+    address: subj.address || addressFallback || g.address || "",
+    county_name: g.county_name || g.appraisal_district || g.cad_name || null,
+    appraisal_district: g.appraisal_district || null,
+    us_state: g.us_state || g.state || g.site_state || null,
+    lat: num(g.lat), lng: num(g.lng),
+    land_value: num(g.land_value),
+  };
+  const comps = ((cadRaw && cadRaw.comps) || [])
+    .map((c) => ({
+      total_market: num(c.value),
+      living_sqft: num(c.sqft),
+      address: c.address || "",
+      distance_mi: num(c.distanceMi),
+    }))
+    .filter((c) => c.total_market && c.total_market > 0 && c.living_sqft && c.living_sqft > 0);
+  return { subject, comps, sales_comps: [], data_source: 'CAD' };
+}
+
 const HANDOFF_KEY = "taxdrop-analyzer-handoff";
+// Distinct from HANDOFF_KEY (which feeds the evidence-analyzer exports) so a CAD
+// pack handoff and a CAD Analyzer Pack handoff never clobber each other.
+const PACK_HANDOFF_KEY = "taxdrop-pack-handoff";
 const C = { ink: "#16241c", sub: "#5d6f64", line: "#e2e8e2", bg: "#eef2ef", green: "#1d6b41", greenDeep: "#15512e", gold: "#8a6311" };
 
 function StatTile({ label, value, accent, sub }) {
@@ -544,6 +578,7 @@ function AgentApp() {
   const [result, setResult] = useState(null);
   const [cadRaw, setCadRaw] = useState(null);
   const [cadMethod, setCadMethod] = useState("");
+  const [cadPackData, setCadPackData] = useState(null);
   const [error, setError] = useState("");
   const [exporting, setExporting] = useState("");
   const [toast, setToast] = useState("");
@@ -621,13 +656,21 @@ function AgentApp() {
         return { ok: false, error: "Engine lookup was blocked (" + resp.status + "). Your agent session may have expired — reload /agent and log in again." };
       }
     } catch (e) { /* lookup failed — fall through with our=null */ }
+    // Capture the engine row BEFORE we drop a stale one: even a stale row carries
+    // correct geo/county the CAD packet lacks. null when the engine had nothing.
+    const engineGeo = our;
     if (engineStale && cad) our = null;
     stepFn(2);
     if (!cad && !our) return { ok: false, error: "Couldn't read the evidence or find this property. Check the address and that the PDF is the county's evidence packet (not a scan)." };
     const r = decide(cad, our, address.trim());
     stepFn(3);
     if (!r.ok || r.notice == null) return { ok: false, error: "Read the evidence but couldn't determine a noticed value. Try the standalone Evidence Analyzer for a manual review." };
-    return { ok: true, r, cad, our, cadRaw: cadRawLocal, cadMethod: cadMethodLocal, lookupAddr };
+    // When the engine row is stale/missing (`our` is null here) but we have a real
+    // packet, build a pack-ready report from the packet so the exportable report
+    // shows the packet's current-year notice + comps instead of stale engine data.
+    const useCadForPack = !!(cadRawLocal && !cadRawLocal.demo && !our);
+    const cadPackData = useCadForPack ? cadToPackData(cadRawLocal, engineGeo, lookupAddr) : null;
+    return { ok: true, r, cad, our, cadRaw: cadRawLocal, cadMethod: cadMethodLocal, lookupAddr, cadPackData };
   }, [address, files]);
 
   const analyze = useCallback(async () => {
@@ -637,12 +680,12 @@ function AgentApp() {
       const d = await computeDraft(setStep);
       if (!d.ok) { setError(d.error); setStatus("error"); return; }
       await new Promise((res) => setTimeout(res, 250));
-      setResult(d.r); setCadRaw(d.cadRaw); setCadMethod(d.cadMethod); setStatus("done");
+      setResult(d.r); setCadRaw(d.cadRaw); setCadMethod(d.cadMethod); setCadPackData(d.cadPackData || null); setStatus("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) { setError("Something went wrong analyzing this property. Please try again."); setStatus("error"); }
   }, [address, computeDraft]);
 
-  const reset = () => { setStatus("idle"); setStep(0); setResult(null); setError(""); setCadRaw(null); setCadMethod(""); setFiles([]); setAddress(""); setExporting(""); };
+  const reset = () => { setStatus("idle"); setStep(0); setResult(null); setError(""); setCadRaw(null); setCadMethod(""); setCadPackData(null); setFiles([]); setAddress(""); setExporting(""); };
   const showToast = (m) => { setToast(m); setTimeout(() => setToast(""), 3500); };
   const hasCad = !!cadRaw && !cadRaw.demo;
 
@@ -654,7 +697,12 @@ function AgentApp() {
     const addr = encodeURIComponent((address || "").trim());
     let url = "";
     if (which === "our") {
-      url = "/test/evidence-pack-v3?address=" + addr + "&export=" + format;
+      if (cadPackData) {
+        try { localStorage.setItem(PACK_HANDOFF_KEY, JSON.stringify({ ts: Date.now(), data: cadPackData })); } catch (_) {}
+        url = "/test/evidence-pack-v3?source=cad&export=" + format;
+      } else {
+        url = "/test/evidence-pack-v3?address=" + addr + "&export=" + format;
+      }
     } else if (which === "cad" || which === "cad-county") {
       if (!hasCad) { setExporting(""); showToast("Upload the county's evidence packet to export the analyzer pack."); return; }
       try { localStorage.setItem(HANDOFF_KEY, JSON.stringify({ ts: Date.now(), data: cadRaw, method: cadMethod || "ai" })); } catch (_) {}
@@ -676,7 +724,13 @@ function AgentApp() {
   const openEditor = () => {
     const addr = (address || "").trim();
     if (!addr) { showToast("Enter an address and analyze it first."); return; }
-    const url = "/test/evidence-pack-v3?address=" + encodeURIComponent(addr) + "&edit=1";
+    let url;
+    if (cadPackData) {
+      try { localStorage.setItem(PACK_HANDOFF_KEY, JSON.stringify({ ts: Date.now(), data: cadPackData })); } catch (_) {}
+      url = "/test/evidence-pack-v3?source=cad&edit=1";
+    } else {
+      url = "/test/evidence-pack-v3?address=" + encodeURIComponent(addr) + "&edit=1";
+    }
     const w = window.open(url, "taxdrop-edit-" + Date.now(), "width=1100,height=900,scrollbars=yes,resizable=yes");
     if (!w) { showToast("Pop-up blocked — allow pop-ups so the editor can open."); return; }
   };
